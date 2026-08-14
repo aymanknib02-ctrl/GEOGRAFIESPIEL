@@ -191,14 +191,14 @@
   }
 
   #difficulty-menu, #continent-menu, #category-type-menu, #category-pick-menu,
-  #online-menu, #online-format-menu, #online-waiting {
+  #online-menu, #online-waiting {
     display: none;
     height: 100%;
     align-items: center;
     justify-content: center;
   }
   #difficulty-menu.show, #continent-menu.show, #category-type-menu.show, #category-pick-menu.show,
-  #online-menu.show, #online-format-menu.show, #online-waiting.show {
+  #online-menu.show, #online-waiting.show {
     display: flex;
   }
   #category-pick-menu .buttons {
@@ -271,7 +271,7 @@
     opacity: 0.6;
   }
 
-  #online-menu .buttons, #online-format-menu .buttons { width: 320px; }
+  #online-menu .buttons { width: 320px; }
   .online-nickname-row {
     display: flex;
     flex-direction: column;
@@ -304,7 +304,7 @@
   .online-join-row button {
     white-space: nowrap;
   }
-  #btn-online-back, #online-format-back, #btn-online-format-back {
+  #btn-online-back {
     background: transparent;
     opacity: 0.6;
   }
@@ -313,14 +313,6 @@
     color: #ff6b6b;
     font-size: 13px;
     margin-top: 10px;
-  }
-  #online-format-menu .settings-section {
-    width: 320px;
-  }
-  #btn-online-format-continue {
-    display: block;
-    width: 100%;
-    margin-top: 12px;
   }
   .online-code-display {
     margin-bottom: 20px;
@@ -368,7 +360,7 @@
   #online-game.show {
     display: flex;
   }
-  .online-hud #online-me-score, .online-hud #online-opponent-score {
+  .online-hud #online-me-health, .online-hud #online-opp-health {
     font-size: 22px;
     color: #4fd1c5;
   }
@@ -448,55 +440,94 @@
     font-weight: 800;
     color: #4fd1c5;
   }
-  .online-prompt-area {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  .online-prompt-text {
-    font-size: 26px;
-    font-weight: bold;
-    max-width: 700px;
-  }
-  #online-landmark-img {
-    max-width: 420px;
-    max-height: 280px;
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  }
-  #online-sil-shape {
-    width: 340px;
-    height: 340px;
-    border-radius: 16px;
+  .online-health-bar {
+    width: 130px;
+    height: 10px;
+    border-radius: 5px;
+    background: #2b3245;
     overflow: hidden;
-    background: #bcdcf0;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    margin: 4px 0;
   }
-  #online-sil-map {
-    width: 100%;
+  .online-health-fill {
     height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    transition: width 0.6s ease, background 0.4s ease;
   }
-  #online-sil-map .leaflet-tile-pane {
-    opacity: 0;
+  .online-health-fill.low {
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
   }
-  .online-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    width: 560px;
+  .geo-photo-area {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #05070c;
   }
-  .online-option-btn {
+  .geo-photo-loading {
     font-size: 18px;
-    padding: 20px 22px;
+    opacity: 0.7;
   }
-  .online-option-btn.correct {
-    background: #2ecc71;
-    color: #06210f;
-    animation: valuePop 0.4s ease;
+  #geo-street-photo {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
   }
-  .online-option-btn.wrong {
-    background: #e74c3c;
-    color: #2b0705;
-    animation: shakeX 0.4s ease;
+  .geo-guess-panel {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: rgba(15, 18, 26, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 12px;
+    transition: transform 0.25s ease;
+  }
+  .geo-guess-panel:hover {
+    transform: scale(1.04);
+  }
+  #geo-guess-map {
+    width: 420px;
+    height: 300px;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+  #btn-geo-guess-confirm {
+    width: 100%;
+  }
+  .geo-round-result {
+    display: none;
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1600;
+    background: rgba(15, 18, 26, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px 26px;
+    text-align: center;
+    font-size: 16px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+    animation: popIn 0.3s ease;
+  }
+  .geo-round-result.show {
+    display: block;
+  }
+  .geo-round-result b {
+    color: #4fd1c5;
   }
 
   #game {
@@ -1296,32 +1327,6 @@
     </div>
   </div>
 
-  <div id="online-format-menu">
-    <div class="menu-box">
-      <h1>MODUS &amp; SCHWIERIGKEIT</h1>
-      <div class="settings-section">
-        <div class="settings-label">Format</div>
-        <div class="settings-row" id="online-format-options">
-          <button class="opt-btn" data-online-mode="country">Länder</button>
-          <button class="opt-btn" data-online-mode="landmark">Sehenswürdigkeiten</button>
-          <button class="opt-btn" data-online-mode="silhouette">Silhouette</button>
-          <button class="opt-btn" data-online-mode="capital">Hauptstädte</button>
-        </div>
-      </div>
-      <div class="settings-section">
-        <div class="settings-label">Schwierigkeit</div>
-        <div class="settings-row" id="online-difficulty-options">
-          <button class="opt-btn" data-online-difficulty="easy">Leicht</button>
-          <button class="opt-btn" data-online-difficulty="medium">Mittel</button>
-          <button class="opt-btn" data-online-difficulty="hard">Schwer</button>
-        </div>
-      </div>
-      <div class="online-error" id="online-format-error"></div>
-      <button id="btn-online-format-continue">Los geht's</button>
-      <button id="btn-online-format-back">Zurück</button>
-    </div>
-  </div>
-
   <div id="online-waiting">
     <div class="menu-box">
       <h1 id="online-waiting-title">WARTE...</h1>
@@ -1341,15 +1346,17 @@
       <div>
         <img id="online-me-avatar" alt="" style="display:none;" />
         <span class="label" id="online-me-name">Du</span>
-        <span class="value" id="online-me-score">0</span>
+        <div class="online-health-bar"><div class="online-health-fill" id="online-me-health-fill"></div></div>
+        <span class="value" id="online-me-health">5000</span>
       </div>
       <div>
         <span class="label">Runde</span>
-        <span class="value"><span id="online-round-value">1</span>/<span id="online-total-rounds">10</span></span>
+        <span class="value" id="online-round-value">1</span>
       </div>
       <div>
         <span class="label" id="online-opponent-name">Gegner</span>
-        <span class="value" id="online-opponent-score">0</span>
+        <div class="online-health-bar"><div class="online-health-fill" id="online-opp-health-fill"></div></div>
+        <span class="value" id="online-opp-health">5000</span>
       </div>
       <button id="btn-online-leave" class="menu-btn">Verlassen</button>
     </div>
@@ -1369,14 +1376,16 @@
         <div class="online-intro-country" id="online-intro-opp-country"></div>
       </div>
     </div>
-    <div class="online-prompt-area" id="online-prompt-area">
-      <div class="online-prompt-text" id="online-prompt-text"></div>
-      <img id="online-landmark-img" alt="Sehenswürdigkeit" style="display:none;" />
-      <div id="online-sil-shape" style="display:none;">
-        <div id="online-sil-map"></div>
-      </div>
+
+    <div class="geo-photo-area" id="geo-photo-area">
+      <div class="geo-photo-loading" id="geo-photo-loading">Suche Straßenfoto...</div>
+      <img id="geo-street-photo" alt="Straßenansicht" style="display:none;" />
     </div>
-    <div class="online-options" id="online-options"></div>
+    <div class="geo-guess-panel" id="geo-guess-panel">
+      <div id="geo-guess-map"></div>
+      <button id="btn-geo-guess-confirm" disabled>Rätst du hier?</button>
+    </div>
+    <div class="geo-round-result" id="geo-round-result"></div>
   </div>
 
   <div id="online-end-overlay" class="overlay">
@@ -2105,6 +2114,7 @@ function awardCorrect(mode) {
   rewards.correct[mode] = (rewards.correct[mode] || 0) + 1;
   rewards.streaks[mode] = (rewards.streaks[mode] || 0) + 1;
   if (rewards.streaks[mode] > (rewards.bestStreaks[mode] || 0)) rewards.bestStreaks[mode] = rewards.streaks[mode];
+  if (!rewards.unlocked[mode]) rewards.unlocked[mode] = [];
 
   let newlyUnlocked = null;
   REWARD_MILESTONES.forEach(m => {
@@ -4152,11 +4162,12 @@ document.getElementById('btn-shop-prev').addEventListener('click', () => shopSte
 document.getElementById('btn-shop-next').addEventListener('click', () => shopStep(1));
 updateEquippedSkinDisplays();
 
-// ================= ONLINE 1v1 (Firebase Realtime Database) =================
+// ================= ONLINE 1v1: GeoGuessr-Duell (Firebase Realtime Database) =================
 // Beitreten per Code (Peer-zu-Peer über eine gemeinsame Datenbank) oder Matchmaking
-// gegen zufällige Spieler. Modus + Schwierigkeit werden vor Spielstart festgelegt.
-// Vereinheitlichtes Format über alle 4 Modi: Prompt/Bild/Silhouette + 4 Antwort-Buttons,
-// wer zuerst richtig klickt bekommt den Punkt (fair für Echtzeit-Duelle).
+// gegen zufällige Spieler. Beide Spieler sehen dasselbe echte Straßenfoto (Mapillary,
+// kostenlos, community-basiert) und raten den Ort auf einer Weltkarte. Wer weiter vom
+// echten Ort entfernt tippt, bekommt Schaden - der Multiplikator steigt pro Runde um
+// 0,5, damit sich das Duell nicht ewig hinzieht. Wer zuerst 0 Leben hat, verliert.
 const firebaseConfig = {
   apiKey: "AIzaSyB4sjWtekGEyd0pvVmQhlwq8MQLHozr2Gk",
   authDomain: "geographie-spiel.firebaseapp.com",
@@ -4170,8 +4181,263 @@ firebase.initializeApp(firebaseConfig);
 const onlineDb = firebase.database();
 
 const ONLINE_ROUNDS_COUNT = 10;
-const ONLINE_MODE_LABELS = { country: 'Länder', landmark: 'Sehenswürdigkeiten', silhouette: 'Silhouette', capital: 'Hauptstädte' };
-const ONLINE_DIFFICULTY_LABELS = { easy: 'Leicht', medium: 'Mittel', hard: 'Schwer' };
+
+// ---------- GeoGuessr-Duell: Konstanten ----------
+const MAPILLARY_TOKEN = 'MLY|37524770027167928|66536178a06eab1f77bf2fd6b0ba35fc';
+const GEO_START_HEALTH = 5000;
+const GEO_MAX_ROUND_DAMAGE = 1000;
+const GEO_DAMAGE_STEP = 0.5; // Schadens-Multiplikator steigt pro Runde um diesen Wert
+
+// Kuratierte Standorte (grob Stadtzentren) mit hoher Wahrscheinlichkeit für Mapillary-
+// Abdeckung, über alle bewohnten Kontinente verteilt. Mapillary-Fotos sind community-
+// basiert und decken längst nicht die ganze Welt ab (anders als Google Street View),
+// daher wird pro Runde zufällig einer dieser Orte (mit leichtem Zufalls-Versatz) probiert.
+const GEOGUESSR_LOCATIONS = [
+  { name: 'Paris', lat: 48.8566, lng: 2.3522 },
+  { name: 'London', lat: 51.5074, lng: -0.1278 },
+  { name: 'Berlin', lat: 52.5200, lng: 13.4050 },
+  { name: 'Amsterdam', lat: 52.3676, lng: 4.9041 },
+  { name: 'Madrid', lat: 40.4168, lng: -3.7038 },
+  { name: 'Rom', lat: 41.9028, lng: 12.4964 },
+  { name: 'Wien', lat: 48.2082, lng: 16.3738 },
+  { name: 'Prag', lat: 50.0755, lng: 14.4378 },
+  { name: 'Warschau', lat: 52.2297, lng: 21.0122 },
+  { name: 'Stockholm', lat: 59.3293, lng: 18.0686 },
+  { name: 'Oslo', lat: 59.9139, lng: 10.7522 },
+  { name: 'Kopenhagen', lat: 55.6761, lng: 12.5683 },
+  { name: 'Dublin', lat: 53.3498, lng: -6.2603 },
+  { name: 'Lissabon', lat: 38.7223, lng: -9.1393 },
+  { name: 'Athen', lat: 37.9838, lng: 23.7275 },
+  { name: 'Budapest', lat: 47.4979, lng: 19.0402 },
+  { name: 'Zürich', lat: 47.3769, lng: 8.5417 },
+  { name: 'Brüssel', lat: 50.8503, lng: 4.3517 },
+  { name: 'New York', lat: 40.7128, lng: -74.0060 },
+  { name: 'San Francisco', lat: 37.7749, lng: -122.4194 },
+  { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
+  { name: 'Chicago', lat: 41.8781, lng: -87.6298 },
+  { name: 'Toronto', lat: 43.6532, lng: -79.3832 },
+  { name: 'Vancouver', lat: 49.2827, lng: -123.1207 },
+  { name: 'Mexiko-Stadt', lat: 19.4326, lng: -99.1332 },
+  { name: 'Miami', lat: 25.7617, lng: -80.1918 },
+  { name: 'Seattle', lat: 47.6062, lng: -122.3321 },
+  { name: 'Boston', lat: 42.3601, lng: -71.0589 },
+  { name: 'São Paulo', lat: -23.5505, lng: -46.6333 },
+  { name: 'Buenos Aires', lat: -34.6037, lng: -58.3816 },
+  { name: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729 },
+  { name: 'Santiago', lat: -33.4489, lng: -70.6693 },
+  { name: 'Bogotá', lat: 4.7110, lng: -74.0721 },
+  { name: 'Lima', lat: -12.0464, lng: -77.0428 },
+  { name: 'Tokio', lat: 35.6762, lng: 139.6503 },
+  { name: 'Seoul', lat: 37.5665, lng: 126.9780 },
+  { name: 'Bangkok', lat: 13.7563, lng: 100.5018 },
+  { name: 'Singapur', lat: 1.3521, lng: 103.8198 },
+  { name: 'Taipeh', lat: 25.0330, lng: 121.5654 },
+  { name: 'Hongkong', lat: 22.3193, lng: 114.1694 },
+  { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
+  { name: 'Delhi', lat: 28.7041, lng: 77.1025 },
+  { name: 'Jakarta', lat: -6.2088, lng: 106.8456 },
+  { name: 'Manila', lat: 14.5995, lng: 120.9842 },
+  { name: 'Istanbul', lat: 41.0082, lng: 28.9784 },
+  { name: 'Dubai', lat: 25.2048, lng: 55.2708 },
+  { name: 'Tel Aviv', lat: 32.0853, lng: 34.7818 },
+  { name: 'Kapstadt', lat: -33.9249, lng: 18.4241 },
+  { name: 'Nairobi', lat: -1.2921, lng: 36.8219 },
+  { name: 'Kairo', lat: 30.0444, lng: 31.2357 },
+  { name: 'Lagos', lat: 6.5244, lng: 3.3792 },
+  { name: 'Marrakesch', lat: 31.6295, lng: -7.9811 },
+  { name: 'Sydney', lat: -33.8688, lng: 151.2093 },
+  { name: 'Melbourne', lat: -37.8136, lng: 144.9631 },
+  { name: 'Auckland', lat: -36.8485, lng: 174.7633 },
+];
+
+// ---------- Minimaler Vector-Tile/Protobuf-Parser ----------
+// Mapillarys dokumentierte Bildsuche per bbox liefert dauerhaft Fehler zurück; der
+// Vector-Tile-Endpunkt (dasselbe, was mapillary.com selbst für die Kartenansicht nutzt)
+// funktioniert zuverlässig. Es gibt aber keine fertige Browser-Bibliothek zum Parsen
+// von Vector Tiles ohne Build-Schritt, daher hier ein schlanker Parser, der nur das
+// ausliest, was wir brauchen: die "image"-Ebene mit Foto-IDs und Positionen.
+function readVarint(bytes, pos) {
+  let result = 0, shift = 1, b;
+  do {
+    b = bytes[pos.i++];
+    result += (b & 0x7f) * shift;
+    shift *= 128;
+  } while (b & 0x80);
+  return result;
+}
+function zigzagDecode(n) {
+  return (n % 2 === 0) ? n / 2 : -(n + 1) / 2;
+}
+function skipProtoField(bytes, pos, wireType) {
+  if (wireType === 0) readVarint(bytes, pos);
+  else if (wireType === 2) { const l = readVarint(bytes, pos); pos.i += l; }
+  else if (wireType === 5) pos.i += 4;
+  else if (wireType === 1) pos.i += 8;
+}
+function readProtoString(bytes, pos, len) {
+  const s = new TextDecoder('utf-8').decode(bytes.subarray(pos.i, pos.i + len));
+  pos.i += len;
+  return s;
+}
+function parseVectorTileFeature(bytes, pos, end) {
+  const feature = { id: null, geometry: [] };
+  while (pos.i < end) {
+    const tag = readVarint(bytes, pos);
+    const field = tag >>> 3, wireType = tag & 0x7;
+    if (field === 1 && wireType === 0) {
+      feature.id = readVarint(bytes, pos);
+    } else if (field === 4 && wireType === 2) {
+      const l = readVarint(bytes, pos);
+      const geomEnd = pos.i + l;
+      while (pos.i < geomEnd) feature.geometry.push(readVarint(bytes, pos));
+      pos.i = geomEnd;
+    } else {
+      skipProtoField(bytes, pos, wireType);
+    }
+  }
+  return feature;
+}
+function parseVectorTileLayer(bytes, pos, end) {
+  const layer = { name: '', features: [], extent: 4096 };
+  while (pos.i < end) {
+    const tag = readVarint(bytes, pos);
+    const field = tag >>> 3, wireType = tag & 0x7;
+    if (field === 1 && wireType === 2) {
+      const l = readVarint(bytes, pos);
+      layer.name = readProtoString(bytes, pos, l);
+    } else if (field === 2 && wireType === 2) {
+      const l = readVarint(bytes, pos);
+      const featEnd = pos.i + l;
+      layer.features.push(parseVectorTileFeature(bytes, pos, featEnd));
+      pos.i = featEnd;
+    } else if (field === 5 && wireType === 0) {
+      layer.extent = readVarint(bytes, pos);
+    } else {
+      skipProtoField(bytes, pos, wireType);
+    }
+  }
+  return layer;
+}
+function findVectorTileLayer(buffer, targetName) {
+  const bytes = new Uint8Array(buffer);
+  const pos = { i: 0 };
+  const len = bytes.length;
+  let found = null;
+  while (pos.i < len) {
+    const tag = readVarint(bytes, pos);
+    const field = tag >>> 3, wireType = tag & 0x7;
+    if (field === 3 && wireType === 2) {
+      const l = readVarint(bytes, pos);
+      const layerEnd = pos.i + l;
+      const layer = parseVectorTileLayer(bytes, pos, layerEnd);
+      if (layer.name === targetName) found = layer;
+      pos.i = layerEnd;
+    } else {
+      skipProtoField(bytes, pos, wireType);
+    }
+  }
+  return found;
+}
+function decodeFirstPointGeometry(geometry) {
+  let i = 0, x = 0, y = 0;
+  while (i < geometry.length) {
+    const cmdInt = geometry[i++];
+    const cmdId = cmdInt & 0x7;
+    const count = cmdInt >> 3;
+    if (cmdId === 1) { // MoveTo
+      for (let c = 0; c < count; c++) {
+        x += zigzagDecode(geometry[i++]);
+        y += zigzagDecode(geometry[i++]);
+        return { x, y };
+      }
+    } else if (cmdId === 2) { // LineTo
+      i += count * 2;
+    }
+    // ClosePath (cmdId 7) hat keine Parameter
+  }
+  return null;
+}
+function lngLatToTile(lng, lat, z) {
+  const n = Math.pow(2, z);
+  const x = Math.floor((lng + 180) / 360 * n);
+  const latRad = lat * Math.PI / 180;
+  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+  return { x, y };
+}
+function tileLocalToLngLat(localX, localY, extent, z, tileX, tileY) {
+  const n = Math.pow(2, z);
+  const lng = ((tileX + localX / extent) / n) * 360 - 180;
+  const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * (tileY + localY / extent) / n)));
+  return { lat: latRad * 180 / Math.PI, lng };
+}
+
+// Holt die Foto-Punkte einer Mapillary-Vector-Tile an der gegebenen Position.
+async function fetchMapillaryTileImages(lat, lng, z) {
+  const { x, y } = lngLatToTile(lng, lat, z);
+  const url = `https://tiles.mapillary.com/maps/vtp/mly1_public/2/${z}/${x}/${y}?access_token=${MAPILLARY_TOKEN}`;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) return [];
+    const buffer = await resp.arrayBuffer();
+    const layer = findVectorTileLayer(buffer, 'image');
+    if (!layer) return [];
+    const results = [];
+    layer.features.forEach(f => {
+      const pt = decodeFirstPointGeometry(f.geometry);
+      if (pt && f.id != null) {
+        const coord = tileLocalToLngLat(pt.x, pt.y, layer.extent, z, x, y);
+        results.push({ id: f.id, lat: coord.lat, lng: coord.lng });
+      }
+    });
+    return results;
+  } catch (e) {
+    return [];
+  }
+}
+
+// Sucht ein zufälliges echtes Straßenfoto: kuratierten Ort wählen, Vector-Tile laden,
+// zufälliges Foto daraus nehmen, volle Bilddaten (URL + genaue Position) einzeln abrufen.
+async function pickGeoGuessrRound() {
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const loc = GEOGUESSR_LOCATIONS[Math.floor(Math.random() * GEOGUESSR_LOCATIONS.length)];
+    const jitterLat = loc.lat + (Math.random() - 0.5) * 0.06;
+    const jitterLng = loc.lng + (Math.random() - 0.5) * 0.06;
+    const images = await fetchMapillaryTileImages(jitterLat, jitterLng, 14);
+    if (images.length === 0) continue;
+    const pick = images[Math.floor(Math.random() * images.length)];
+    try {
+      const detailUrl = `https://graph.mapillary.com/${pick.id}?access_token=${MAPILLARY_TOKEN}&fields=id,thumb_2048_url,computed_geometry`;
+      const detailResp = await fetch(detailUrl);
+      if (!detailResp.ok) continue;
+      const detail = await detailResp.json();
+      if (!detail.thumb_2048_url) continue;
+      const coords = detail.computed_geometry ? detail.computed_geometry.coordinates : [pick.lng, pick.lat];
+      return { imageUrl: detail.thumb_2048_url, lat: coords[1], lng: coords[0] };
+    } catch (e) { continue; }
+  }
+  return null;
+}
+
+async function generateGeoGuessrRounds(count) {
+  const rounds = [];
+  for (let i = 0; i < count; i++) {
+    const round = await pickGeoGuessrRound();
+    if (round) rounds.push(round);
+  }
+  return rounds;
+}
+
+function geoDistanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function geoRoundDamage(distanceKm, multiplier) {
+  const base = Math.min(GEO_MAX_ROUND_DAMAGE, Math.round((distanceKm / 10000) * GEO_MAX_ROUND_DAMAGE));
+  return Math.round(base * multiplier);
+}
 
 function getOnlinePlayerId() {
   let id = localStorage.getItem('geoquiz-online-id');
@@ -4209,8 +4475,6 @@ function populateOnlineCountrySelect() {
 }
 
 let onlineFlow = null;
-let onlineSelectedMode = null;
-let onlineSelectedDifficulty = null;
 let onlineIsHost = false;
 let onlineRoomCode = null;
 let onlineRoomRef = null;
@@ -4219,21 +4483,21 @@ let onlineMatchmakingNotifyRef = null;
 let onlineRounds = [];
 let onlineCurrentRound = 0;
 let onlineTotalRounds = ONLINE_ROUNDS_COUNT;
-let onlineMyScore = 0;
-let onlineOpponentScore = 0;
+let onlineMyHealth = GEO_START_HEALTH;
+let onlineOpponentHealth = GEO_START_HEALTH;
 let onlineOpponentId = null;
 let onlineOpponentName = 'Gegner';
 let onlineOpponentCountry = null;
 let onlineOpponentSkin = null;
-let onlineRoomMode = null;
-let onlineRoomDifficulty = null;
 let onlineAnswered = false;
 let onlineGameStarted = false;
 let onlineRoundsBeingGenerated = false;
 let onlineRoundResolving = false;
-let onlineSilMap = null;
-let onlineSilLayer = null;
-let onlineSilMapReady = false;
+let geoGuessMap = null;
+let geoGuessMapReady = false;
+let geoGuessMarker = null;
+let geoRevealLayer = null;
+let geoMyGuess = null;
 
 function makeRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -4246,72 +4510,13 @@ function buildOnlinePlayerProfile(name, isHost) {
   return { name, host: isHost, country: getOnlineCountry() || null, skin: inventory.equipped || null };
 }
 
-function buildOnlinePool(difficulty) {
-  if (difficulty === 'easy') return allCountries.filter(c => EASY_IDS.has(c.id));
-  if (difficulty === 'hard') return allCountries.filter(c => !EASY_IDS.has(c.id));
-  return allCountries;
-}
-
-function buildOnlineLandmarkPool(difficulty) {
-  const seen = new Set();
-  const strict = [];
-  const any = [];
-  shuffle(LANDMARKS).forEach(l => {
-    if (seen.has(l.id)) return;
-    const country = allCountries.find(c => c.id === l.id);
-    if (!country) return;
-    seen.add(l.id);
-    const entry = { name: country.name, id: country.id, imageTitle: l.title };
-    any.push(entry);
-    const isEasy = EASY_IDS.has(l.id);
-    if (difficulty === 'easy' && isEasy) strict.push(entry);
-    else if (difficulty === 'hard' && !isEasy) strict.push(entry);
-    else if (difficulty !== 'easy' && difficulty !== 'hard') strict.push(entry);
-  });
-  return strict.length >= 4 ? strict : any;
-}
-
-function pickOnlineOptions(pool, correctName, count) {
-  const others = shuffle(pool.filter(c => c.name !== correctName)).slice(0, count - 1).map(c => c.name);
-  return shuffle([correctName, ...others]);
-}
-
-function generateOnlineRounds(mode, difficulty, count) {
-  const rounds = [];
-  if (mode === 'landmark') {
-    const pool = buildOnlineLandmarkPool(difficulty);
-    shuffle(pool).slice(0, count).forEach(item => {
-      rounds.push({ type: 'landmark', target: item.name, imageTitle: item.imageTitle, options: pickOnlineOptions(pool, item.name, 4) });
-    });
-  } else if (mode === 'capital') {
-    const pool = buildOnlinePool(difficulty).filter(c => countryCapitals[c.id]);
-    const capPool = pool.map(c => ({ name: countryCapitals[c.id] }));
-    shuffle(pool).slice(0, count).forEach(item => {
-      const capName = countryCapitals[item.id];
-      rounds.push({ type: 'capital', target: capName, countryName: item.name, options: pickOnlineOptions(capPool, capName, 4) });
-    });
-  } else if (mode === 'silhouette') {
-    const pool = buildOnlinePool(difficulty);
-    shuffle(pool).slice(0, count).forEach(item => {
-      rounds.push({ type: 'silhouette', target: item.name, countryId: item.id, options: pickOnlineOptions(pool, item.name, 4) });
-    });
-  } else {
-    const pool = buildOnlinePool(difficulty);
-    shuffle(pool).slice(0, count).forEach(item => {
-      rounds.push({ type: 'country', target: item.name, options: pickOnlineOptions(pool, item.name, 4) });
-    });
-  }
-  return rounds;
-}
-
 const onlineMenuEl = document.getElementById('online-menu');
-const onlineFormatMenuEl = document.getElementById('online-format-menu');
 const onlineWaitingEl = document.getElementById('online-waiting');
 const onlineGameEl = document.getElementById('online-game');
 const onlineEndOverlayEl = document.getElementById('online-end-overlay');
 
 function hideAllOnlineMenus() {
-  [onlineMenuEl, onlineFormatMenuEl, onlineWaitingEl].forEach(el => el.classList.remove('show'));
+  [onlineMenuEl, onlineWaitingEl].forEach(el => el.classList.remove('show'));
 }
 function showOnlineScreen(el) {
   hideAllOnlineMenus();
@@ -4319,9 +4524,6 @@ function showOnlineScreen(el) {
 }
 function showOnlineMenuError(text) {
   document.getElementById('online-menu-error').textContent = text;
-}
-function showOnlineFormatError(text) {
-  document.getElementById('online-format-error').textContent = text;
 }
 
 let onlineStatusTimeout = null;
@@ -4341,7 +4543,7 @@ function showOnlineWaitingScreen({ isHost, code, matchmaking }) {
   if (matchmaking && isHost === null) {
     codeDisplay.style.display = 'none';
     titleEl.textContent = 'SUCHE GEGNER';
-    statusEl.textContent = `Suche einen Gegner für ${ONLINE_MODE_LABELS[onlineSelectedMode]} (${ONLINE_DIFFICULTY_LABELS[onlineSelectedDifficulty]})...`;
+    statusEl.textContent = 'Suche einen Gegner für ein GeoGuessr-Duell...';
   } else if (isHost) {
     codeDisplay.style.display = 'block';
     document.getElementById('online-code-value').textContent = code;
@@ -4361,16 +4563,15 @@ function createOnlineRoom() {
   onlineRoomCode = code;
   onlineRoomRef = onlineDb.ref('rooms/' + code);
   onlineRoomRef.set({
-    mode: onlineSelectedMode,
-    difficulty: onlineSelectedDifficulty,
     status: 'waiting',
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     players: { [onlinePlayerId]: buildOnlinePlayerProfile(myName, true) },
+    health: { [onlinePlayerId]: GEO_START_HEALTH },
   }).then(() => {
     showOnlineWaitingScreen({ isHost: true, code });
     listenToOnlineRoom();
   }).catch(err => {
-    showOnlineFormatError('Fehler beim Erstellen: ' + err.message);
+    showOnlineMenuError('Fehler beim Erstellen: ' + err.message);
   });
 }
 
@@ -4394,17 +4595,19 @@ function joinOnlineRoomByCode(rawCode) {
     onlineRoomCode = code;
     onlineRoomRef = ref;
     const myName = getOnlineNickname() || 'Spieler';
-    ref.child('players/' + onlinePlayerId).set(buildOnlinePlayerProfile(myName, false)).then(() => {
-      showOnlineWaitingScreen({ isHost: false, code });
-      listenToOnlineRoom();
-    });
+    ref.child('players/' + onlinePlayerId).set(buildOnlinePlayerProfile(myName, false))
+      .then(() => ref.child('health/' + onlinePlayerId).set(GEO_START_HEALTH))
+      .then(() => {
+        showOnlineWaitingScreen({ isHost: false, code });
+        listenToOnlineRoom();
+      });
   }).catch(err => {
     showOnlineMenuError('Fehler beim Beitreten: ' + err.message);
   });
 }
 
 function startOnlineMatchmaking() {
-  const modeKey = onlineSelectedMode + '_' + onlineSelectedDifficulty;
+  const modeKey = 'geoguessr';
   const myName = getOnlineNickname() || 'Spieler';
   showOnlineWaitingScreen({ isHost: null, code: null, matchmaking: true });
 
@@ -4427,11 +4630,10 @@ function startOnlineMatchmaking() {
       onlineRoomCode = code;
       const roomRef = onlineDb.ref('rooms/' + code);
       roomRef.set({
-        mode: onlineSelectedMode,
-        difficulty: onlineSelectedDifficulty,
         status: 'waiting',
         createdAt: firebase.database.ServerValue.TIMESTAMP,
         players: { [onlinePlayerId]: buildOnlinePlayerProfile(myName, true) },
+        health: { [onlinePlayerId]: GEO_START_HEALTH },
       }).then(() => onlineDb.ref('matchmaking/' + modeKey + '/notify/' + matchedWith.playerId).set(code))
         .then(() => {
           onlineRoomRef = roomRef;
@@ -4452,10 +4654,12 @@ function startOnlineMatchmaking() {
         onlineIsHost = false;
         onlineRoomCode = code;
         onlineRoomRef = onlineDb.ref('rooms/' + code);
-        onlineRoomRef.child('players/' + onlinePlayerId).set(buildOnlinePlayerProfile(myName, false)).then(() => {
-          listenToOnlineRoom();
-          showOnlineWaitingScreen({ isHost: false, code });
-        });
+        onlineRoomRef.child('players/' + onlinePlayerId).set(buildOnlinePlayerProfile(myName, false))
+          .then(() => onlineRoomRef.child('health/' + onlinePlayerId).set(GEO_START_HEALTH))
+          .then(() => {
+            listenToOnlineRoom();
+            showOnlineWaitingScreen({ isHost: false, code });
+          });
       });
     }
   });
@@ -4496,11 +4700,13 @@ function handleOnlineRoomUpdate(room) {
       if (statusEl) statusEl.textContent = `${players[opponentId].name} ist beigetreten! Spiel startet...`;
       if (onlineIsHost && !onlineRoundsBeingGenerated) {
         onlineRoundsBeingGenerated = true;
-        loadCountryData(() => {
-          loadCapitalsData(() => {
-            const rounds = generateOnlineRounds(room.mode, room.difficulty, ONLINE_ROUNDS_COUNT);
-            onlineRoomRef.update({ status: 'playing', rounds, totalRounds: rounds.length });
-          });
+        generateGeoGuessrRounds(ONLINE_ROUNDS_COUNT).then(rounds => {
+          if (!rounds.length) {
+            onlineRoundsBeingGenerated = false;
+            showOnlineMenuError('Konnte keine Straßenfotos laden. Bitte versuche es erneut.');
+            return;
+          }
+          onlineRoomRef.update({ status: 'playing', rounds, totalRounds: rounds.length });
         });
       }
     }
@@ -4510,14 +4716,12 @@ function handleOnlineRoomUpdate(room) {
   if (room.status === 'playing') {
     if (!onlineGameStarted) {
       loadCountryData(() => {
-        loadCapitalsData(() => {
-          startOnlineGameScreen(room, opponentId);
-        });
+        startOnlineGameScreen(room, opponentId);
       });
       return;
     }
-    updateOnlineScoresFromRoom(room);
-    handleOnlineRoundWinners(room);
+    updateOnlineHealthFromRoom(room);
+    handleOnlineRoundResult(room);
   }
 }
 
@@ -4529,45 +4733,45 @@ function startOnlineGameScreen(room, opponentId) {
   onlineOpponentName = (room.players[opponentId] && room.players[opponentId].name) || 'Gegner';
   onlineOpponentCountry = (room.players[opponentId] && room.players[opponentId].country) || null;
   onlineOpponentSkin = (room.players[opponentId] && room.players[opponentId].skin) || null;
-  onlineRoomMode = room.mode;
-  onlineRoomDifficulty = room.difficulty;
-  // Münzbelohnung beim Sieg einer Runde soll den Schwierigkeitsgrad DES RAUMS nutzen,
-  // nicht einen evtl. veralteten Wert aus einer vorherigen lokalen Solo-Runde.
-  currentDifficulty = room.difficulty;
   onlineCurrentRound = 0;
-  onlineMyScore = 0;
-  onlineOpponentScore = 0;
+  onlineMyHealth = GEO_START_HEALTH;
+  onlineOpponentHealth = GEO_START_HEALTH;
   onlineRoundResolving = false;
 
   hideAllOnlineMenus();
   document.getElementById('online-me-name').textContent = getOnlineNickname() || 'Du';
   document.getElementById('online-opponent-name').textContent = onlineOpponentName;
-  document.getElementById('online-me-score').textContent = '0';
-  document.getElementById('online-opponent-score').textContent = '0';
-  document.getElementById('online-total-rounds').textContent = onlineTotalRounds;
+  document.getElementById('online-me-health').textContent = GEO_START_HEALTH;
+  document.getElementById('online-opp-health').textContent = GEO_START_HEALTH;
+  document.getElementById('online-me-health-fill').style.width = '100%';
+  document.getElementById('online-opp-health-fill').style.width = '100%';
   onlineGameEl.classList.add('show');
 
   renderOnlineRound();
 }
 
-function updateOnlineScoresFromRoom(room) {
-  const winners = room.roundWinners || {};
-  let my = 0, opp = 0;
-  Object.values(winners).forEach(pid => {
-    if (pid === onlinePlayerId) my++;
-    else if (pid === onlineOpponentId) opp++;
-  });
-  if (my !== onlineMyScore) {
-    onlineMyScore = my;
-    const el = document.getElementById('online-me-score');
-    el.textContent = my;
-    bumpValue(el);
+function updateOnlineHealthFromRoom(room) {
+  const health = room.health || {};
+  const myHealth = health[onlinePlayerId] !== undefined ? health[onlinePlayerId] : onlineMyHealth;
+  const oppHealth = health[onlineOpponentId] !== undefined ? health[onlineOpponentId] : onlineOpponentHealth;
+
+  if (myHealth !== onlineMyHealth) {
+    onlineMyHealth = myHealth;
+    const fillEl = document.getElementById('online-me-health-fill');
+    const valEl = document.getElementById('online-me-health');
+    valEl.textContent = Math.max(0, Math.round(myHealth));
+    fillEl.style.width = Math.max(0, myHealth / GEO_START_HEALTH * 100) + '%';
+    fillEl.classList.toggle('low', myHealth / GEO_START_HEALTH < 0.25);
+    bumpValue(valEl);
   }
-  if (opp !== onlineOpponentScore) {
-    onlineOpponentScore = opp;
-    const el = document.getElementById('online-opponent-score');
-    el.textContent = opp;
-    bumpValue(el);
+  if (oppHealth !== onlineOpponentHealth) {
+    onlineOpponentHealth = oppHealth;
+    const fillEl = document.getElementById('online-opp-health-fill');
+    const valEl = document.getElementById('online-opp-health');
+    valEl.textContent = Math.max(0, Math.round(oppHealth));
+    fillEl.style.width = Math.max(0, oppHealth / GEO_START_HEALTH * 100) + '%';
+    fillEl.classList.toggle('low', oppHealth / GEO_START_HEALTH < 0.25);
+    bumpValue(valEl);
   }
 }
 
@@ -4599,140 +4803,145 @@ function showOnlineRoundIntro() {
   setOnlineIntroAvatar('opp', onlineOpponentSkin);
 
   document.getElementById('online-round-intro').classList.add('show');
-  document.getElementById('online-prompt-area').style.visibility = 'hidden';
-  document.getElementById('online-options').style.visibility = 'hidden';
+  document.getElementById('geo-photo-area').style.visibility = 'hidden';
+  document.getElementById('geo-guess-panel').style.visibility = 'hidden';
 }
 
 function hideOnlineRoundIntro() {
   document.getElementById('online-round-intro').classList.remove('show');
-  document.getElementById('online-prompt-area').style.visibility = 'visible';
-  document.getElementById('online-options').style.visibility = 'visible';
+  document.getElementById('geo-photo-area').style.visibility = 'visible';
+  document.getElementById('geo-guess-panel').style.visibility = 'visible';
 }
 
 function renderOnlineRound() {
   onlineAnswered = false;
   const round = onlineRounds[onlineCurrentRound];
-  if (!round) return;
+  if (!round) { endOnlineGame(); return; }
   document.getElementById('online-round-value').textContent = onlineCurrentRound + 1;
 
   showOnlineRoundIntro();
   setTimeout(() => {
     hideOnlineRoundIntro();
-    renderOnlineRoundQuestion(round);
+    renderGeoGuessrRoundQuestion(round);
   }, 1700);
 }
 
-function renderOnlineRoundQuestion(round) {
-  const promptTextEl = document.getElementById('online-prompt-text');
-  const imgEl = document.getElementById('online-landmark-img');
-  const silShapeEl = document.getElementById('online-sil-shape');
-  promptTextEl.style.display = 'none';
-  imgEl.style.display = 'none';
-  silShapeEl.style.display = 'none';
-
-  if (round.type === 'country') {
-    promptTextEl.textContent = `Welches Land ist: ${round.target}?`;
-    promptTextEl.style.display = 'block';
-  } else if (round.type === 'capital') {
-    promptTextEl.textContent = `Hauptstadt von ${round.countryName}?`;
-    promptTextEl.style.display = 'block';
-  } else if (round.type === 'landmark') {
-    imgEl.style.display = 'block';
-    imgEl.src = '';
-    fetchLandmarkImage(round.imageTitle).then(src => { if (src) imgEl.src = src; });
-  } else if (round.type === 'silhouette') {
-    silShapeEl.style.display = 'block';
-    showOnlineSilhouette(round.countryId);
-  }
-
-  const optionsEl = document.getElementById('online-options');
-  optionsEl.innerHTML = '';
-  round.options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'online-option-btn';
-    btn.textContent = opt;
-    btn.addEventListener('click', () => handleOnlineAnswer(opt, round, btn));
-    optionsEl.appendChild(btn);
-  });
-}
-
-function initOnlineSilMap() {
-  onlineSilMap = L.map('online-sil-map', {
-    zoomControl: false, dragging: false, scrollWheelZoom: false,
-    doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false,
+function initGeoGuessMap() {
+  geoGuessMap = L.map('geo-guess-map', {
+    worldCopyJump: true,
+    zoomControl: true,
     attributionControl: false,
-  });
-  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 8, maxNativeZoom: 8 }).addTo(onlineSilMap);
-  onlineSilLayer = L.geoJSON(countryGeoJsonData, { style: silHiddenStyle }).addTo(onlineSilMap);
-  onlineSilMapReady = true;
-}
-
-function showOnlineSilhouette(targetId) {
-  if (!onlineSilMapReady) initOnlineSilMap();
-  onlineSilMap.invalidateSize();
-  let targetLayer = null;
-  onlineSilLayer.eachLayer(l => {
-    if (l.feature.id === targetId) {
-      targetLayer = l;
-      l.setStyle({ fillColor: colorForFeature(l.feature), fillOpacity: 1, color: '#ffffff', weight: 1, opacity: 1 });
-      l.bringToFront();
+  }).setView([20, 0], 2);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 18,
+    subdomains: 'abcd',
+  }).addTo(geoGuessMap);
+  geoGuessMap.on('click', (e) => {
+    if (onlineAnswered) return;
+    geoMyGuess = { lat: e.latlng.lat, lng: e.latlng.lng };
+    if (geoGuessMarker) {
+      geoGuessMarker.setLatLng(e.latlng);
     } else {
-      l.setStyle(silHiddenStyle());
+      geoGuessMarker = L.circleMarker(e.latlng, {
+        radius: 8, color: '#ffffff', weight: 2, fillColor: '#3388ff', fillOpacity: 1,
+      }).addTo(geoGuessMap);
     }
+    document.getElementById('btn-geo-guess-confirm').disabled = false;
   });
-  if (targetLayer) {
-    onlineSilMap.fitBounds(targetLayer.getBounds(), { padding: [16, 16], animate: false });
+  geoGuessMapReady = true;
+}
+
+function renderGeoGuessrRoundQuestion(round) {
+  geoMyGuess = null;
+  document.getElementById('btn-geo-guess-confirm').disabled = true;
+  const resultEl = document.getElementById('geo-round-result');
+  resultEl.classList.remove('show');
+  resultEl.innerHTML = '';
+
+  const loadingEl = document.getElementById('geo-photo-loading');
+  const imgEl = document.getElementById('geo-street-photo');
+  loadingEl.style.display = 'block';
+  imgEl.style.display = 'none';
+  imgEl.onload = () => {
+    loadingEl.style.display = 'none';
+    imgEl.style.display = 'block';
+  };
+  imgEl.src = round.imageUrl;
+
+  if (!geoGuessMapReady) initGeoGuessMap();
+  geoGuessMap.invalidateSize();
+  geoGuessMap.setView([20, 0], 2);
+  if (geoGuessMarker) {
+    geoGuessMap.removeLayer(geoGuessMarker);
+    geoGuessMarker = null;
+  }
+  if (geoRevealLayer) {
+    geoGuessMap.removeLayer(geoRevealLayer);
+    geoRevealLayer = null;
   }
 }
 
-function handleOnlineAnswer(selected, round, btn) {
-  if (onlineAnswered) return;
+function submitGeoGuess() {
+  if (onlineAnswered || !geoMyGuess) return;
   onlineAnswered = true;
-  document.querySelectorAll('#online-options .online-option-btn').forEach(b => { b.disabled = true; });
-
-  const correct = selected === round.target;
-  btn.classList.add(correct ? 'correct' : 'wrong');
-  if (!correct) {
-    document.querySelectorAll('#online-options .online-option-btn').forEach(b => {
-      if (b.textContent === round.target) b.classList.add('correct');
-    });
-  }
-
-  if (correct) {
-    onlineDb.ref(`rooms/${onlineRoomCode}/roundWinners/${onlineCurrentRound}`).transaction(current => {
-      if (current === null || current === undefined) return onlinePlayerId;
-      return;
-    });
-  }
+  document.getElementById('btn-geo-guess-confirm').disabled = true;
+  showOnlineStatus('Warte auf Gegner...');
+  onlineRoomRef.child(`guesses/${onlineCurrentRound}/${onlinePlayerId}`).set(geoMyGuess).catch(() => {});
 }
 
-function handleOnlineRoundWinners(room) {
-  const winners = room.roundWinners || {};
-  const winnerForCurrent = winners[onlineCurrentRound];
-  if (winnerForCurrent !== undefined && !onlineRoundResolving) {
-    onlineRoundResolving = true;
-    const iWon = winnerForCurrent === onlinePlayerId;
-    showOnlineStatus(iWon ? 'Punkt für dich!' : `Punkt für ${onlineOpponentName}!`);
-    if (iWon) awardCorrect(onlineRoomMode);
+function handleOnlineRoundResult(room) {
+  if (onlineRoundResolving) return;
+  const guesses = (room.guesses && room.guesses[onlineCurrentRound]) || {};
+  const myGuess = guesses[onlinePlayerId];
+  const oppGuess = guesses[onlineOpponentId];
+  if (!myGuess || !oppGuess) return;
 
-    if (!onlineAnswered) {
-      onlineAnswered = true;
-      document.querySelectorAll('#online-options .online-option-btn').forEach(b => {
-        b.disabled = true;
-        if (b.textContent === onlineRounds[onlineCurrentRound].target) b.classList.add('correct');
-      });
-    }
+  onlineRoundResolving = true;
+  const round = onlineRounds[onlineCurrentRound];
+  const myDist = geoDistanceKm(myGuess.lat, myGuess.lng, round.lat, round.lng);
+  const oppDist = geoDistanceKm(oppGuess.lat, oppGuess.lng, round.lat, round.lng);
+  const multiplier = 1 + onlineCurrentRound * GEO_DAMAGE_STEP;
 
-    setTimeout(() => {
-      onlineRoundResolving = false;
-      onlineCurrentRound++;
-      if (onlineCurrentRound >= onlineTotalRounds) {
-        endOnlineGame();
-      } else {
-        renderOnlineRound();
-      }
-    }, 1800);
+  if (myDist > oppDist) {
+    const damage = geoRoundDamage(myDist, multiplier);
+    onlineRoomRef.child(`health/${onlinePlayerId}`).transaction(current => {
+      const base = current === null || current === undefined ? GEO_START_HEALTH : current;
+      return Math.max(0, base - damage);
+    });
+  } else if (oppDist > myDist) {
+    awardCorrect('online');
   }
+
+  const actualLatLng = [round.lat, round.lng];
+  const myLatLng = [myGuess.lat, myGuess.lng];
+  const oppLatLng = [oppGuess.lat, oppGuess.lng];
+  const pinIcon = L.divIcon({ className: '', html: '<div style="font-size:26px;line-height:26px;">📍</div>', iconSize: [26, 26], iconAnchor: [13, 26] });
+
+  if (geoGuessMarker) { geoGuessMap.removeLayer(geoGuessMarker); geoGuessMarker = null; }
+  const revealGroup = L.layerGroup();
+  L.marker(actualLatLng, { icon: pinIcon }).addTo(revealGroup);
+  L.circleMarker(myLatLng, { radius: 7, color: '#fff', weight: 2, fillColor: '#3388ff', fillOpacity: 1 }).addTo(revealGroup);
+  L.circleMarker(oppLatLng, { radius: 7, color: '#fff', weight: 2, fillColor: '#ff4444', fillOpacity: 1 }).addTo(revealGroup);
+  L.polyline([myLatLng, actualLatLng], { color: '#3388ff', dashArray: '4,6', weight: 2 }).addTo(revealGroup);
+  L.polyline([oppLatLng, actualLatLng], { color: '#ff4444', dashArray: '4,6', weight: 2 }).addTo(revealGroup);
+  revealGroup.addTo(geoGuessMap);
+  geoRevealLayer = revealGroup;
+  geoGuessMap.flyToBounds(L.latLngBounds([actualLatLng, myLatLng, oppLatLng]), { padding: [40, 40], maxZoom: 8, animate: true, duration: 0.8 });
+
+  const fmtDist = (km) => km < 1 ? Math.round(km * 1000) + ' m' : Math.round(km) + ' km';
+  const resultEl = document.getElementById('geo-round-result');
+  resultEl.innerHTML = `<b>Du:</b> ${fmtDist(myDist)} entfernt &nbsp;|&nbsp; <b>${onlineOpponentName}:</b> ${fmtDist(oppDist)} entfernt`;
+  resultEl.classList.add('show');
+
+  setTimeout(() => {
+    onlineRoundResolving = false;
+    onlineCurrentRound++;
+    if (onlineCurrentRound >= onlineTotalRounds || onlineMyHealth <= 0 || onlineOpponentHealth <= 0) {
+      endOnlineGame();
+    } else {
+      renderOnlineRound();
+    }
+  }, 3200);
 }
 
 function cleanupOnlineRoom() {
@@ -4741,15 +4950,22 @@ function cleanupOnlineRoom() {
   onlineRoomCode = null;
   onlineGameStarted = false;
   onlineRoundsBeingGenerated = false;
+  if (geoGuessMap) {
+    geoGuessMap.remove();
+    geoGuessMap = null;
+    geoGuessMapReady = false;
+    geoGuessMarker = null;
+    geoRevealLayer = null;
+  }
 }
 
 function endOnlineGame() {
   onlineGameEl.classList.remove('show');
-  const title = onlineMyScore > onlineOpponentScore ? 'Du hast gewonnen! 🎉' : onlineMyScore < onlineOpponentScore ? 'Verloren!' : 'Unentschieden!';
+  const title = onlineMyHealth > onlineOpponentHealth ? 'Du hast gewonnen! 🎉' : onlineMyHealth < onlineOpponentHealth ? 'Verloren!' : 'Unentschieden!';
   document.getElementById('online-end-title').textContent = title;
-  document.getElementById('online-end-text').textContent = `${onlineMyScore} : ${onlineOpponentScore} gegen ${onlineOpponentName}`;
+  document.getElementById('online-end-text').textContent = `${Math.max(0, Math.round(onlineMyHealth))} HP : ${Math.max(0, Math.round(onlineOpponentHealth))} HP gegen ${onlineOpponentName}`;
   onlineEndOverlayEl.classList.add('show');
-  if (onlineMyScore > onlineOpponentScore) launchConfetti(70);
+  if (onlineMyHealth > onlineOpponentHealth) launchConfetti(70);
   cleanupOnlineRoom();
 }
 
@@ -4795,42 +5011,14 @@ document.getElementById('online-join-code-input').addEventListener('keydown', (e
 
 document.getElementById('btn-online-create').addEventListener('click', () => {
   onlineFlow = 'create';
-  showOnlineFormatError('');
-  showOnlineScreen(onlineFormatMenuEl);
+  createOnlineRoom();
 });
 document.getElementById('btn-online-matchmaking').addEventListener('click', () => {
   onlineFlow = 'matchmaking';
-  showOnlineFormatError('');
-  showOnlineScreen(onlineFormatMenuEl);
+  startOnlineMatchmaking();
 });
 
-document.querySelectorAll('#online-format-options .opt-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    onlineSelectedMode = btn.dataset.onlineMode;
-    document.querySelectorAll('#online-format-options .opt-btn').forEach(b => b.classList.toggle('active', b === btn));
-  });
-});
-document.querySelectorAll('#online-difficulty-options .opt-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    onlineSelectedDifficulty = btn.dataset.onlineDifficulty;
-    document.querySelectorAll('#online-difficulty-options .opt-btn').forEach(b => b.classList.toggle('active', b === btn));
-  });
-});
-
-document.getElementById('btn-online-format-back').addEventListener('click', () => {
-  showOnlineScreen(onlineMenuEl);
-});
-document.getElementById('btn-online-format-continue').addEventListener('click', () => {
-  if (!onlineSelectedMode || !onlineSelectedDifficulty) {
-    showOnlineFormatError('Bitte Format und Schwierigkeit auswählen.');
-    return;
-  }
-  if (onlineFlow === 'create') {
-    createOnlineRoom();
-  } else {
-    startOnlineMatchmaking();
-  }
-});
+document.getElementById('btn-geo-guess-confirm').addEventListener('click', submitGeoGuess);
 
 document.getElementById('btn-online-copy-code').addEventListener('click', () => {
   if (onlineRoomCode && navigator.clipboard) navigator.clipboard.writeText(onlineRoomCode).catch(() => {});
