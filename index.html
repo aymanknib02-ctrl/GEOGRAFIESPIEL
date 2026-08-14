@@ -482,6 +482,35 @@
   #geo-street-photo.dragging {
     cursor: grabbing;
   }
+  .geo-street-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1100;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(15, 18, 26, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+  .geo-street-nav:hover {
+    background: rgba(79, 209, 197, 0.5);
+  }
+  .geo-street-nav:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    background: rgba(15, 18, 26, 0.55);
+  }
+  .geo-street-nav-back { left: 20px; }
+  .geo-street-nav-forward { right: 20px; }
   .geo-guess-panel {
     position: absolute;
     right: 24px;
@@ -1387,6 +1416,8 @@
     <div class="geo-photo-area" id="geo-photo-area">
       <div class="geo-photo-loading" id="geo-photo-loading">Suche Straßenfoto...</div>
       <img id="geo-street-photo" alt="Straßenansicht" style="display:none;" />
+      <button id="btn-geo-street-back" class="geo-street-nav geo-street-nav-back" disabled>&#10094;</button>
+      <button id="btn-geo-street-forward" class="geo-street-nav geo-street-nav-forward" disabled>&#10095;</button>
     </div>
     <div class="geo-guess-panel" id="geo-guess-panel">
       <div id="geo-guess-map"></div>
@@ -4455,7 +4486,8 @@ async function fetchMapillaryTileImages(lat, lng, z) {
       const realId = featureProperty(layer, f, 'id');
       if (pt && realId != null) {
         const coord = tileLocalToLngLat(pt.x, pt.y, layer.extent, z, x, y);
-        results.push({ id: realId, lat: coord.lat, lng: coord.lng });
+        const sequenceId = featureProperty(layer, f, 'sequence_id');
+        results.push({ id: realId, lat: coord.lat, lng: coord.lng, sequenceId });
       }
     });
     return results;
@@ -4488,11 +4520,28 @@ async function pickGeoGuessrRound(usedNames) {
         const detail = await detailResp.json();
         if (!detail.thumb_2048_url) continue;
         const coords = detail.computed_geometry ? detail.computed_geometry.coordinates : [pick.lng, pick.lat];
-        return { imageUrl: detail.thumb_2048_url, lat: coords[1], lng: coords[0] };
+        return { imageUrl: detail.thumb_2048_url, lat: coords[1], lng: coords[0], imageId: String(pick.id), sequenceId: pick.sequenceId || null };
       } catch (e) { continue; }
     }
   }
   return null;
+}
+
+// Holt die geordnete Liste aller Foto-IDs einer Mapillary-Sequenz (= ein zusammen-
+// hängender Weg/eine Straße), damit man sich per Vor/Zurück am Ziel-Standort entlang
+// bewegen kann. Der eigentliche Rundenzielpunkt (round.lat/round.lng) bleibt dabei immer
+// fest auf dem Startfoto - Bewegen dient nur der Erkundung, nicht der Zielverschiebung.
+async function fetchSequenceImageIds(sequenceId) {
+  if (!sequenceId) return [];
+  try {
+    const url = `https://graph.mapillary.com/image_ids?sequence_id=${encodeURIComponent(sequenceId)}&access_token=${MAPILLARY_TOKEN}`;
+    const resp = await fetchWithTimeout(url, 8000);
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return (data.data || []).map(d => String(d.id));
+  } catch (e) {
+    return [];
+  }
 }
 
 async function generateGeoGuessrRounds(count) {
@@ -4577,6 +4626,8 @@ let geoMyGuess = null;
 let geoPhotoZoom = 1;
 let geoPhotoPanX = 0;
 let geoPhotoPanY = 0;
+let geoSequenceIds = [];
+let geoSequenceIndex = -1;
 
 function makeRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -4930,14 +4981,24 @@ function initGeoGuessMap() {
   geoGuessMapReady = true;
 }
 
-// Foto-Zoom/Pan: Mausrad zoomt, Ziehen verschiebt (nur wenn gezoomt), zwei Finger
-// zoomen per Pinch-Geste. Nutzt Pointer Events, die Maus UND Touch einheitlich abdecken.
+// Foto-Zoom/Pan: Mausrad zoomt, Ziehen schaut sich um (immer aktiv - das Foto startet
+// leicht übervergrößert, damit von Anfang an Spielraum zum Umschauen da ist, wie bei
+// einer Straßenansicht), zwei Finger zoomen per Pinch-Geste. Nutzt Pointer Events, die
+// Maus UND Touch einheitlich abdecken.
+const GEO_PHOTO_BASE_ZOOM = 1.3;
 function applyGeoPhotoTransform() {
   document.getElementById('geo-street-photo').style.transform =
     `translate(${geoPhotoPanX}px, ${geoPhotoPanY}px) scale(${geoPhotoZoom})`;
 }
+function clampGeoPhotoPan(areaEl) {
+  const rect = areaEl.getBoundingClientRect();
+  const maxX = (geoPhotoZoom - 1) * rect.width / 2;
+  const maxY = (geoPhotoZoom - 1) * rect.height / 2;
+  geoPhotoPanX = Math.min(maxX, Math.max(-maxX, geoPhotoPanX));
+  geoPhotoPanY = Math.min(maxY, Math.max(-maxY, geoPhotoPanY));
+}
 function resetGeoPhotoZoom() {
-  geoPhotoZoom = 1;
+  geoPhotoZoom = GEO_PHOTO_BASE_ZOOM;
   geoPhotoPanX = 0;
   geoPhotoPanY = 0;
   applyGeoPhotoTransform();
@@ -4957,7 +5018,7 @@ function resetGeoPhotoZoom() {
     e.preventDefault();
     const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
     geoPhotoZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, geoPhotoZoom * factor));
-    if (geoPhotoZoom === MIN_ZOOM) { geoPhotoPanX = 0; geoPhotoPanY = 0; }
+    clampGeoPhotoPan(areaEl);
     applyGeoPhotoTransform();
   }, { passive: false });
 
@@ -4983,11 +5044,12 @@ function resetGeoPhotoZoom() {
       const pts = [...activePointers.values()];
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       geoPhotoZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, pinchStartZoom * (dist / pinchStartDist)));
-      if (geoPhotoZoom === MIN_ZOOM) { geoPhotoPanX = 0; geoPhotoPanY = 0; }
+      clampGeoPhotoPan(areaEl);
       applyGeoPhotoTransform();
-    } else if (dragging && geoPhotoZoom > MIN_ZOOM) {
+    } else if (dragging) {
       geoPhotoPanX = panStart.x + (e.clientX - dragStart.x);
       geoPhotoPanY = panStart.y + (e.clientY - dragStart.y);
+      clampGeoPhotoPan(areaEl);
       applyGeoPhotoTransform();
     }
   });
@@ -5000,13 +5062,28 @@ function resetGeoPhotoZoom() {
   areaEl.addEventListener('pointercancel', endPointer);
 })();
 
-function renderGeoGuessrRoundQuestion(round) {
-  geoMyGuess = null;
-  document.getElementById('btn-geo-guess-confirm').disabled = true;
-  const resultEl = document.getElementById('geo-round-result');
-  resultEl.classList.remove('show');
-  resultEl.innerHTML = '';
+function updateGeoStreetNavButtons() {
+  const ready = geoSequenceIndex !== -1;
+  document.getElementById('btn-geo-street-back').disabled = !ready || geoSequenceIndex <= 0;
+  document.getElementById('btn-geo-street-forward').disabled = !ready || geoSequenceIndex >= geoSequenceIds.length - 1;
+}
 
+// Lädt beim Anzeigen des Fotos im Hintergrund die geordnete Sequenz (= zusammenhängender
+// Weg) nach, damit die Vor/Zurück-Buttons aktiviert werden, sobald sie bereitsteht.
+function loadGeoStreetSequence(round) {
+  geoSequenceIds = [];
+  geoSequenceIndex = -1;
+  updateGeoStreetNavButtons();
+  if (!round.sequenceId) return;
+  fetchSequenceImageIds(round.sequenceId).then(ids => {
+    if (onlineRounds[onlineCurrentRound] !== round) return; // Runde inzwischen gewechselt
+    geoSequenceIds = ids;
+    geoSequenceIndex = ids.indexOf(round.imageId);
+    updateGeoStreetNavButtons();
+  });
+}
+
+function swapGeoStreetPhoto(url) {
   resetGeoPhotoZoom();
   const loadingEl = document.getElementById('geo-photo-loading');
   const imgEl = document.getElementById('geo-street-photo');
@@ -5016,7 +5093,43 @@ function renderGeoGuessrRoundQuestion(round) {
     loadingEl.style.display = 'none';
     imgEl.style.display = 'block';
   };
-  imgEl.src = round.imageUrl;
+  imgEl.src = url;
+}
+
+// Bewegt sich entlang der aktuellen Straßen-Sequenz vor/zurück. Der Rundenzielpunkt
+// (round.lat/round.lng vom Startfoto) ändert sich dabei NICHT - nur die Ansicht.
+async function moveGeoStreet(direction) {
+  if (geoSequenceIndex === -1) return;
+  const newIndex = geoSequenceIndex + direction;
+  if (newIndex < 0 || newIndex >= geoSequenceIds.length) return;
+  const targetId = geoSequenceIds[newIndex];
+  const btnBack = document.getElementById('btn-geo-street-back');
+  const btnFwd = document.getElementById('btn-geo-street-forward');
+  btnBack.disabled = true;
+  btnFwd.disabled = true;
+  try {
+    const detailUrl = `https://graph.mapillary.com/${targetId}?access_token=${MAPILLARY_TOKEN}&fields=id,thumb_2048_url`;
+    const resp = await fetchWithTimeout(detailUrl, 8000);
+    if (resp.ok) {
+      const detail = await resp.json();
+      if (detail.thumb_2048_url) {
+        geoSequenceIndex = newIndex;
+        swapGeoStreetPhoto(detail.thumb_2048_url);
+      }
+    }
+  } catch (e) { /* Foto bleibt wie es ist */ }
+  updateGeoStreetNavButtons();
+}
+
+function renderGeoGuessrRoundQuestion(round) {
+  geoMyGuess = null;
+  document.getElementById('btn-geo-guess-confirm').disabled = true;
+  const resultEl = document.getElementById('geo-round-result');
+  resultEl.classList.remove('show');
+  resultEl.innerHTML = '';
+
+  swapGeoStreetPhoto(round.imageUrl);
+  loadGeoStreetSequence(round);
 
   if (!geoGuessMapReady) initGeoGuessMap();
   geoGuessMap.invalidateSize();
@@ -5169,6 +5282,8 @@ document.getElementById('btn-online-matchmaking').addEventListener('click', () =
 });
 
 document.getElementById('btn-geo-guess-confirm').addEventListener('click', submitGeoGuess);
+document.getElementById('btn-geo-street-back').addEventListener('click', () => moveGeoStreet(-1));
+document.getElementById('btn-geo-street-forward').addEventListener('click', () => moveGeoStreet(1));
 
 document.getElementById('btn-online-copy-code').addEventListener('click', () => {
   if (onlineRoomCode && navigator.clipboard) navigator.clipboard.writeText(onlineRoomCode).catch(() => {});
