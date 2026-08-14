@@ -40,15 +40,132 @@
     box-sizing: border-box;
     padding: 44px 60px;
     display: grid;
-    grid-template-columns: auto 3fr auto;
-    align-items: stretch;
-    column-gap: 50px;
+    overflow: hidden;
+  }
+  /* ---------- Startbildschirm: Skin auf Weltkugel + Spielen/Skins-Knöpfe,
+     analog zu GeoGuessr. Nach Klick auf "Spielen" rutscht die Kugel nach links
+     (menu.mode-select) und die Modus-Auswahl fährt rechts rein. ---------- */
+  .menu-globe-stage {
+    position: absolute;
+    top: 46%;
+    left: 50%;
+    width: min(50vh, 38vw, 440px);
+    height: min(50vh, 38vw, 440px);
+    transform: translate(-50%, -50%) scale(1);
+    transform-origin: center center;
+    transition: left 0.7s cubic-bezier(0.65, 0, 0.35, 1), top 0.7s cubic-bezier(0.65, 0, 0.35, 1), transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+  #menu-globe-canvas {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5));
+  }
+  #menu-globe-canvas:active {
+    cursor: grabbing;
+  }
+  .menu-globe-loading {
+    position: absolute;
+    font-size: 15px;
+    opacity: 0.6;
+  }
+  .menu-online-count {
+    position: absolute;
+    bottom: 2%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 18, 26, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+  .menu-online-count .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2ecc71;
+    box-shadow: 0 0 8px #2ecc71;
+    animation: onlineDotPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes onlineDotPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .menu-home-actions {
+    position: absolute;
+    top: calc(46% + min(25vh, 19vw, 220px) + 56px);
+    left: 50%;
+    transform: translate(-50%, 0);
+    display: flex;
+    gap: 18px;
+    opacity: 1;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    animation: popIn 0.5s ease;
+    z-index: 5;
+  }
+  .menu-home-btn {
+    min-width: 170px;
+    font-size: 18px;
+    padding: 16px 26px;
+  }
+  #btn-menu-play {
+    background: linear-gradient(135deg, #4fd1c5, #2b9e93);
+  }
+  #btn-menu-play:hover {
+    background: linear-gradient(135deg, #63e6d9, #35b4a8);
+  }
+  #menu.mode-select .menu-globe-stage {
+    top: 50%;
+    left: 19%;
+    transform: translate(-50%, -50%) scale(0.62);
+  }
+  #menu.mode-select .menu-home-actions {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 24px);
+  }
+  .menu-mode-panel {
+    position: absolute;
+    top: 50%;
+    right: 5%;
+    transform: translate(0, -50%) translateX(60px);
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s;
+  }
+  #menu.mode-select .menu-mode-panel {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(0, -50%) translateX(0);
+  }
+  .menu-back-btn {
+    background: transparent;
+    opacity: 0.65;
+    padding: 8px 10px;
+    margin-bottom: 14px;
+  }
+  .menu-back-btn:hover {
+    opacity: 1;
   }
   .menu-rewards-panel {
-    grid-column: 1;
-    justify-self: start;
-    width: 320px;
-    max-height: 100%;
+    width: 300px;
+    max-height: 70vh;
     overflow-y: auto;
     box-sizing: border-box;
     padding: 30px 24px;
@@ -58,7 +175,6 @@
     -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 255, 255, 0.09);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
-    animation: popIn 0.4s ease;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
@@ -80,8 +196,7 @@
     background: linear-gradient(135deg, #f1c40f, #b8860b);
     color: #2b1f00;
   }
-  .menu-skin-showcase {
-    grid-column: 2;
+  #skins-menu .menu-skin-showcase {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -95,6 +210,7 @@
     -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 255, 255, 0.09);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    position: relative;
   }
   .menu-skin-showcase .shop-carousel-btn {
     width: 280px;
@@ -104,9 +220,8 @@
   .menu-skin-showcase .shop-carousel-price {
     font-size: 18px;
   }
-  #menu .menu-box {
-    grid-column: 3;
-    justify-self: end;
+  .menu-skin-showcase .menu-back-btn {
+    align-self: flex-start;
   }
   .menu-box {
     text-align: center;
@@ -197,14 +312,14 @@
   }
 
   #difficulty-menu, #continent-menu, #category-type-menu, #category-pick-menu,
-  #online-menu, #online-waiting {
+  #online-menu, #online-waiting, #skins-menu {
     display: none;
     height: 100%;
     align-items: center;
     justify-content: center;
   }
   #difficulty-menu.show, #continent-menu.show, #category-type-menu.show, #category-pick-menu.show,
-  #online-menu.show, #online-waiting.show {
+  #online-menu.show, #online-waiting.show, #skins-menu.show {
     display: flex;
   }
   #category-pick-menu .buttons {
@@ -1270,10 +1385,61 @@
       <button id="btn-fullscreen" aria-label="Vollbild">&#9974;</button>
       <button id="btn-settings" aria-label="Einstellungen">&#9881;</button>
     </div>
-    <div class="menu-rewards-panel" id="menu-rewards-panel">
-      <div class="rewards-modes" id="rewards-modes"></div>
+
+    <div class="menu-globe-stage" id="menu-globe-stage">
+      <canvas id="menu-globe-canvas" style="display:none;"></canvas>
+      <div class="menu-globe-loading" id="menu-globe-loading">Lädt...</div>
+      <div class="menu-online-count" id="menu-online-count"><span class="dot"></span>&#8211;</div>
     </div>
+
+    <div class="menu-home-actions" id="menu-home-actions">
+      <button id="btn-menu-play" class="menu-home-btn">&#9654;&#65039; Spielen</button>
+      <button id="btn-menu-skins" class="menu-home-btn">&#128100; Skins</button>
+    </div>
+
+    <div class="menu-mode-panel" id="menu-mode-panel">
+      <div class="menu-rewards-panel" id="menu-rewards-panel">
+        <div class="rewards-modes" id="rewards-modes"></div>
+      </div>
+      <div class="menu-box">
+        <button id="btn-menu-back" class="menu-back-btn">&#8592; Zurück</button>
+        <div class="buttons">
+          <button class="diff-btn" data-mode="country">
+            <span class="diff-title-row"><span class="diff-icon">&#127757;</span><span class="diff-title" data-i18n="menu.country.title">Länder-Quiz</span></span>
+            <span class="diff-desc" data-i18n="menu.country.desc">Land wird als Name genannt</span>
+          </button>
+          <button class="diff-btn" data-mode="landmark">
+            <span class="diff-title-row"><span class="diff-icon">&#127963;&#65039;</span><span class="diff-title" data-i18n="menu.landmark.title">Sehenswürdigkeiten</span></span>
+            <span class="diff-desc" data-i18n="menu.landmark.desc">Bild einer Sehenswürdigkeit &ndash; du klickst das Land</span>
+          </button>
+          <button class="diff-btn" data-mode="silhouette">
+            <span class="diff-title-row"><span class="diff-icon">&#128506;&#65039;</span><span class="diff-title" data-i18n="menu.silhouette.title">Silhouette</span></span>
+            <span class="diff-desc" data-i18n="menu.silhouette.desc">Nur der Umriss &ndash; welches Land ist das?</span>
+          </button>
+          <button class="diff-btn" data-mode="border">
+            <span class="diff-title-row"><span class="diff-icon">&#9939;&#65039;</span><span class="diff-title" data-i18n="menu.border.title">Länderkette</span></span>
+            <span class="diff-desc" data-i18n="menu.border.desc">Von Land A nach B &ndash; über die wenigsten Grenzen</span>
+          </button>
+          <button class="diff-btn" data-mode="capital">
+            <span class="diff-title-row"><span class="diff-icon">&#127961;&#65039;</span><span class="diff-title" data-i18n="menu.capital.title">Hauptstädte</span></span>
+            <span class="diff-desc" data-i18n="menu.capital.desc">10 Marker in der Umgebung &ndash; du klickst die richtige Hauptstadt</span>
+          </button>
+          <button class="diff-btn" data-mode="category">
+            <span class="diff-title-row"><span class="diff-icon">&#127922;</span><span class="diff-title" data-i18n="menu.category.title">Kategorien</span></span>
+            <span class="diff-desc" data-i18n="menu.category.desc">Kategorie wählen &ndash; dann Format wie Länder oder Städte</span>
+          </button>
+          <button class="diff-btn" id="btn-open-online">
+            <span class="diff-title-row"><span class="diff-icon">&#9876;&#65039;</span><span class="diff-title">Online 1v1</span></span>
+            <span class="diff-desc">Mit Freund per Code oder gegen zufällige Spieler</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="skins-menu">
     <div class="menu-skin-showcase" id="menu-skin-showcase">
+      <button id="btn-skins-back" class="menu-back-btn">&#8592; Zurück</button>
       <div class="shop-carousel">
         <button id="btn-shop-prev" class="shop-arrow" aria-label="Vorheriger Skin">&#10094;</button>
         <div class="shop-carousel-display" id="shop-carousel-display">
@@ -1285,39 +1451,6 @@
       </div>
       <div class="shop-carousel-price" id="shop-carousel-price"></div>
       <button class="shop-carousel-btn" id="shop-carousel-btn"></button>
-    </div>
-    <div class="menu-box">
-      <div class="buttons">
-        <button class="diff-btn" data-mode="country">
-          <span class="diff-title-row"><span class="diff-icon">&#127757;</span><span class="diff-title" data-i18n="menu.country.title">Länder-Quiz</span></span>
-          <span class="diff-desc" data-i18n="menu.country.desc">Land wird als Name genannt</span>
-        </button>
-        <button class="diff-btn" data-mode="landmark">
-          <span class="diff-title-row"><span class="diff-icon">&#127963;&#65039;</span><span class="diff-title" data-i18n="menu.landmark.title">Sehenswürdigkeiten</span></span>
-          <span class="diff-desc" data-i18n="menu.landmark.desc">Bild einer Sehenswürdigkeit &ndash; du klickst das Land</span>
-        </button>
-        <button class="diff-btn" data-mode="silhouette">
-          <span class="diff-title-row"><span class="diff-icon">&#128506;&#65039;</span><span class="diff-title" data-i18n="menu.silhouette.title">Silhouette</span></span>
-          <span class="diff-desc" data-i18n="menu.silhouette.desc">Nur der Umriss &ndash; welches Land ist das?</span>
-        </button>
-        <button class="diff-btn" data-mode="border">
-          <span class="diff-title-row"><span class="diff-icon">&#9939;&#65039;</span><span class="diff-title" data-i18n="menu.border.title">Länderkette</span></span>
-          <span class="diff-desc" data-i18n="menu.border.desc">Von Land A nach B &ndash; über die wenigsten Grenzen</span>
-        </button>
-        <button class="diff-btn" data-mode="capital">
-          <span class="diff-title-row"><span class="diff-icon">&#127961;&#65039;</span><span class="diff-title" data-i18n="menu.capital.title">Hauptstädte</span></span>
-          <span class="diff-desc" data-i18n="menu.capital.desc">10 Marker in der Umgebung &ndash; du klickst die richtige Hauptstadt</span>
-        </button>
-        <button class="diff-btn" data-mode="category">
-          <span class="diff-title-row"><span class="diff-icon">&#127922;</span><span class="diff-title" data-i18n="menu.category.title">Kategorien</span></span>
-          <span class="diff-desc" data-i18n="menu.category.desc">Kategorie wählen &ndash; dann Format wie Länder oder Städte</span>
-        </button>
-        <button class="diff-btn" id="btn-open-online">
-          <span class="diff-title-row"><span class="diff-icon">&#9876;&#65039;</span><span class="diff-title">Online 1v1</span></span>
-          <span class="diff-desc">Mit Freund per Code oder gegen zufällige Spieler</span>
-        </button>
-
-      </div>
     </div>
   </div>
 
@@ -2353,13 +2486,131 @@ function equipSkin(key) {
 }
 
 // Aktualisiert alle Stellen außerhalb des Shop-Karussells selbst, die den aktuell
-// ausgerüsteten Skin zeigen (aktuell: der eigene Avatar im Online-Modus-HUD).
-// Skins sind jetzt 3D-Modelle (.fbx), die kleine Avatar-Anzeige im Online-HUD kann
-// keine Live-3D-Vorschau leisten - bleibt daher ausgeblendet, das große Karussell
-// auf der Startseite ist die Stelle, an der Skins wirklich sichtbar sind.
+// ausgerüsteten Skin zeigen: der eigene Avatar im Online-Modus-HUD (Skins sind
+// 3D-Modelle, dort gibt's daher nur ein Emoji-Platzhalter) und der Charakter,
+// der auf der Startbildschirm-Weltkugel steht.
 function updateEquippedSkinDisplays() {
   const avatarEl = document.getElementById('online-me-avatar');
   if (avatarEl) avatarEl.style.display = 'none';
+  refreshMenuGlobeCharacter();
+}
+
+// ---------- Startbildschirm-Globus: derselbe ausgerüstete Skin, aber auf einer
+// Weltkugel stehend statt frei schwebend, in einem eigenen kleinen Three.js-Viewer
+// (eigener Canvas/Szene, damit das Shop-Karussell unangetastet bleibt). Die Kugel
+// selbst ist ein einfaches Kugel-Mesh mit Wireframe-Overlay im App-Akzentton statt
+// einer geladenen Erd-Textur, damit keine externe Bilddatei benötigt wird. ----------
+let menuGlobeViewer = null;
+let menuGlobeLoader = null;
+let menuGlobeModelToken = 0;
+
+function initMenuGlobeViewer() {
+  if (menuGlobeViewer) return menuGlobeViewer;
+  const canvas = document.getElementById('menu-globe-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
+  camera.position.set(0, 1.4, 11.5);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  keyLight.position.set(5, 8, 6);
+  scene.add(keyLight);
+  const rimLight = new THREE.DirectionalLight(0x4fd1c5, 0.5);
+  rimLight.position.set(-6, 2, -4);
+  scene.add(rimLight);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.enableZoom = false;
+  controls.enablePan = false;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.3;
+  controls.target.set(0, 1.2, 0);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const globeRadius = 3;
+  const globeMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(globeRadius, 40, 28),
+    new THREE.MeshStandardMaterial({ color: 0x1c2842, roughness: 0.75, metalness: 0.1 })
+  );
+  group.add(globeMesh);
+  const wireMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(globeRadius * 1.004, 20, 14),
+    new THREE.MeshBasicMaterial({ color: 0x4fd1c5, wireframe: true, transparent: true, opacity: 0.35 })
+  );
+  group.add(wireMesh);
+
+  const charGroup = new THREE.Group();
+  charGroup.position.set(0, globeRadius, 0);
+  group.add(charGroup);
+
+  menuGlobeViewer = { renderer, scene, camera, controls, group, charGroup, globeRadius };
+  menuGlobeLoader = new THREE.FBXLoader();
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+
+  window.addEventListener('resize', resizeMenuGlobeViewer);
+  return menuGlobeViewer;
+}
+
+function resizeMenuGlobeViewer() {
+  if (!menuGlobeViewer) return;
+  const stageEl = document.getElementById('menu-globe-stage');
+  const size = stageEl.clientWidth || 300;
+  menuGlobeViewer.renderer.setSize(size, size, false);
+  menuGlobeViewer.camera.aspect = 1;
+  menuGlobeViewer.camera.updateProjectionMatrix();
+}
+
+function loadMenuGlobeCharacter(file) {
+  const viewer = initMenuGlobeViewer();
+  resizeMenuGlobeViewer();
+  while (viewer.charGroup.children.length) viewer.charGroup.remove(viewer.charGroup.children[0]);
+  const myToken = ++menuGlobeModelToken;
+  const loadingEl = document.getElementById('menu-globe-loading');
+  const canvasEl = document.getElementById('menu-globe-canvas');
+  loadingEl.textContent = 'Lädt...';
+  loadingEl.style.display = 'block';
+  canvasEl.style.display = 'none';
+
+  menuGlobeLoader.load(file, (fbx) => {
+    if (myToken !== menuGlobeModelToken) return;
+    try {
+      const box = new THREE.Box3().setFromObject(fbx);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const scale = 2.6 / maxDim;
+      fbx.scale.setScalar(scale);
+      fbx.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+      viewer.charGroup.add(fbx);
+      loadingEl.style.display = 'none';
+      canvasEl.style.display = 'block';
+    } catch (err) {
+      console.error('Globus-Charakter Verarbeitungsfehler:', file, err);
+      loadingEl.textContent = 'Fehler beim Anzeigen';
+    }
+  }, undefined, (err) => {
+    if (myToken !== menuGlobeModelToken) return;
+    console.error('Globus-Charakter Ladefehler:', file, err);
+    loadingEl.textContent = 'Ladefehler';
+  });
+}
+
+function refreshMenuGlobeCharacter() {
+  loadMenuGlobeCharacter(equippedSkinFile() || 'standartskin.fbx');
 }
 
 // Karussell: "Standard" + alle Skins in einer Reihe, mit Pfeilen durchblätterbar.
@@ -4287,6 +4538,31 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const onlineDb = firebase.database();
 
+// ---------- Startbildschirm: "X Spieler weltweit online" ----------
+// Standard-Firebase-Präsenzmuster: jede offene Sitzung trägt sich unter einer
+// zufälligen Sitzungs-ID ein und entfernt sich automatisch bei Verbindungsabbruch
+// (onDisconnect), damit die Zahl auch bei geschlossenem Tab/Absturz korrekt sinkt.
+function setupOnlinePresence() {
+  const sessionId = 'sess_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  const myPresenceRef = onlineDb.ref('presence/' + sessionId);
+  onlineDb.ref('.info/connected').on('value', snap => {
+    if (snap.val() === true) {
+      myPresenceRef.onDisconnect().remove().then(() => {
+        myPresenceRef.set(true);
+      });
+    }
+  });
+  onlineDb.ref('presence').on('value', snap => {
+    updateOnlinePlayerCountDisplay(snap.numChildren());
+  });
+}
+function updateOnlinePlayerCountDisplay(count) {
+  const el = document.getElementById('menu-online-count');
+  if (!el) return;
+  el.innerHTML = `<span class="dot"></span>${count} Spieler weltweit online`;
+}
+setupOnlinePresence();
+
 const ONLINE_ROUNDS_COUNT = 10;
 
 // ---------- GeoGuessr-Duell: Konstanten ----------
@@ -5580,6 +5856,24 @@ document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
 if (!document.documentElement.requestFullscreen && !document.documentElement.webkitRequestFullscreen) {
   btnFullscreenEl.style.display = 'none';
 }
+
+// ---------- Startbildschirm-Navigation: Globus+Skin <-> Modus-Auswahl <-> Skins-Menü ----------
+const skinsMenuEl = document.getElementById('skins-menu');
+document.getElementById('btn-menu-play').addEventListener('click', () => {
+  menuEl.classList.add('mode-select');
+});
+document.getElementById('btn-menu-back').addEventListener('click', () => {
+  menuEl.classList.remove('mode-select');
+});
+document.getElementById('btn-menu-skins').addEventListener('click', () => {
+  menuEl.style.display = 'none';
+  skinsMenuEl.classList.add('show');
+  renderShop();
+});
+document.getElementById('btn-skins-back').addEventListener('click', () => {
+  skinsMenuEl.classList.remove('show');
+  menuEl.style.display = 'grid';
+});
 
 applyLanguage(settings.language);
 updateSettingsUI();
