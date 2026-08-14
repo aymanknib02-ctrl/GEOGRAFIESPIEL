@@ -2530,11 +2530,15 @@ function updateEquippedSkinDisplays() {
 let menuGlobeViewer = null;
 let menuGlobeLoader = null;
 let menuGlobeModelToken = 0;
+let menuGlobeRenderPaused = false;
 
 function initMenuGlobeViewer() {
   if (menuGlobeViewer) return menuGlobeViewer;
   const canvas = document.getElementById('menu-globe-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  // preserveDrawingBuffer: dieser Renderer wird auch zur Skin-Vorschau-Erzeugung
+  // wiederverwendet (siehe generateSkinThumbnails) - ohne dieses Flag könnte toDataURL()
+  // ein leeres Bild liefern, weil der Zeichenpuffer nach dem Compositing geleert wird.
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
   const scene = new THREE.Scene();
@@ -2582,6 +2586,7 @@ function initMenuGlobeViewer() {
 
   (function animate() {
     requestAnimationFrame(animate);
+    if (menuGlobeRenderPaused) return;
     controls.update();
     renderer.render(scene, camera);
   })();
@@ -2744,19 +2749,21 @@ const SHOP_ITEMS = [{ key: DEFAULT_SKIN_KEY, name: 'Standard', file: 'standartsk
 let skinThumbCache = {};
 let skinThumbsGenerating = null;
 
+// Nutzt bewusst KEINEN eigenen zweiten WebGLRenderer/Kontext mehr (das hatte den
+// Browser-Limit für gleichzeitige WebGL-Kontexte gesprengt und dadurch den Globus-
+// Viewer selbst zum Absturz gebracht). Stattdessen wird der bereits vorhandene
+// Globus-Renderer kurz zweckentfremdet: seine Animationsschleife wird pausiert (der
+// Globus ist während der Vorschau-Erzeugung ohnehin unsichtbar hinter #skins-menu),
+// eine separate Szene/Kamera wird hineingerendert und danach wieder freigegeben.
 function generateSkinThumbnails() {
   if (skinThumbsGenerating) return skinThumbsGenerating;
-  const canvas = document.createElement('canvas');
-  canvas.width = 280;
-  canvas.height = 280;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-  renderer.setSize(280, 280, false);
+  const viewer = initMenuGlobeViewer();
+  const renderer = viewer.renderer;
+  const THUMB_SIZE = 280;
+
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
   camera.position.set(0, 0, 10);
-  // Kräftigere, rundum ausgeleuchtete Beleuchtung als beim Globus-Viewer: ohne die
-  // Kugel als Kontrastfläche dahinter würden dunkel eingefärbte Skins (z.B. der
-  // Standard-Skin) auf dem jetzt transparenten Vorschau-Hintergrund kaum zu erkennen sein.
   scene.add(new THREE.AmbientLight(0xffffff, 1.3));
   const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
   keyLight.position.set(5, 8, 6);
@@ -2768,6 +2775,9 @@ function generateSkinThumbnails() {
   rimLight.position.set(-6, 2, -4);
   scene.add(rimLight);
   const loader = new THREE.FBXLoader();
+
+  menuGlobeRenderPaused = true;
+  renderer.setSize(THUMB_SIZE, THUMB_SIZE, false);
 
   function renderOne(item) {
     return new Promise((resolve) => {
@@ -2786,11 +2796,11 @@ function generateSkinThumbnails() {
           scene.add(fbx);
           // Einmal sofort rendern (damit Materialien/Texturen anlaufen) und erst einen
           // Frame später erneut rendern+erfassen - direkt nach onLoad war das erste Bild
-          // bei manchen Modellen noch nicht vollständig fertig (z.B. der Standard-Skin).
+          // bei manchen Modellen noch nicht vollständig fertig.
           renderer.render(scene, camera);
           requestAnimationFrame(() => {
             renderer.render(scene, camera);
-            skinThumbCache[item.key] = canvas.toDataURL('image/png');
+            skinThumbCache[item.key] = renderer.domElement.toDataURL('image/png');
             scene.remove(fbx);
             resolve();
           });
@@ -2807,7 +2817,12 @@ function generateSkinThumbnails() {
 
   let chain = Promise.resolve();
   SHOP_ITEMS.forEach(item => { chain = chain.then(() => renderOne(item)); });
-  skinThumbsGenerating = chain.then(() => { renderer.dispose(); });
+  // Größe wird NICHT hier zurückgesetzt: #menu ist während der Galerie-Ansicht
+  // display:none, #menu-globe-stage hat dann clientWidth=0 - die richtige Größe wird
+  // erst gemessen, wenn "Zurück" tatsächlich zu #menu zurückschaltet (siehe unten).
+  skinThumbsGenerating = chain.then(() => {
+    menuGlobeRenderPaused = false;
+  });
   return skinThumbsGenerating;
 }
 
@@ -6000,6 +6015,9 @@ document.getElementById('btn-menu-skins').addEventListener('click', openSkinsGal
 document.getElementById('btn-skins-back').addEventListener('click', () => {
   document.getElementById('skins-menu').classList.remove('show');
   menuEl.style.display = 'grid';
+  // Erst jetzt ist #menu-globe-stage wieder sichtbar/layoutet - vorher (während die
+  // Galerie offen war) hätte eine Größenmessung 0 ergeben.
+  resizeMenuGlobeViewer();
 });
 // Zusätzlich: in der Modus-Auswahl auch per Klick auf die Kugel/den Skin selbst
 // zurückgehen - großer, leicht zu findender Klickbereich statt nur der kleine Button.
