@@ -291,12 +291,11 @@
     overflow: hidden;
     font-size: 80px;
   }
-  .skin-card-thumb img {
+  .skin-card-thumb canvas {
     width: 100%;
     height: 100%;
-    object-fit: contain;
   }
-  .skin-card.locked .skin-card-thumb img {
+  .skin-card.locked .skin-card-thumb canvas {
     filter: grayscale(1) brightness(0.55);
   }
   .skin-card-name {
@@ -2737,78 +2736,50 @@ function refreshMenuGlobeCharacter() {
 // als Karussell zum Durchblättern.
 const SHOP_ITEMS = [{ key: DEFAULT_SKIN_KEY, name: 'Standard', file: 'standartskin.fbx', price: 0 }, ...SKINS];
 
-// Vorschaubilder: statt für jede Karte einen eigenen Live-3D-Viewer laufen zu lassen,
-// wird jedes Modell einmalig in einen unsichtbaren Offscreen-Canvas gerendert und als
-// Bild eingefroren (toDataURL) - danach reicht ein normales <img>, spart Ressourcen und
-// vermeidet mehrere gleichzeitige WebGL-Kontexte.
-let skinThumbCache = {};
-let skinThumbsGenerating = null;
+// Vorschau je Karte: eigener kleiner Live-3D-Viewer pro Skin, der EINMAL rendert (kein
+// Animations-Loop nötig - WebGL-Canvases behalten ihr zuletzt gezeichnetes Bild von
+// selbst). Bewusst OHNE toDataURL()/Offscreen-Snapshot: Brave blockiert bzw. verfälscht
+// aus Anti-Fingerprinting-Gründen standardmäßig genau solche Canvas/WebGL-Datenauslesen,
+// wodurch vorher sogar der komplett unabhängige Startbildschirm-Globus abgestürzt ist.
+// Reines Live-Rendern auf sichtbare Canvases (wie das Shop-Karussell die ganze Session
+// über zuverlässig gemacht hat) umgeht dieses Problem vollständig.
+function initSkinCardPreview(canvas, file) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const size = canvas.clientWidth || 190;
+  renderer.setSize(size, size, false);
 
-function generateSkinThumbnails() {
-  if (skinThumbsGenerating) return skinThumbsGenerating;
-  const canvas = document.createElement('canvas');
-  canvas.width = 280;
-  canvas.height = 280;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-  renderer.setSize(280, 280, false);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
   camera.position.set(0, 0, 10);
-  // Kräftigere, rundum ausgeleuchtete Beleuchtung als beim Globus-Viewer: ohne die
-  // Kugel als Kontrastfläche dahinter würden dunkel eingefärbte Skins (z.B. der
-  // Standard-Skin) auf dem jetzt transparenten Vorschau-Hintergrund kaum zu erkennen sein.
-  scene.add(new THREE.AmbientLight(0xffffff, 1.3));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
   keyLight.position.set(5, 8, 6);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xffffff, 0.7);
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
   fillLight.position.set(-5, 2, 8);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0x4fd1c5, 0.5);
-  rimLight.position.set(-6, 2, -4);
-  scene.add(rimLight);
-  const loader = new THREE.FBXLoader();
 
-  function renderOne(item) {
-    return new Promise((resolve) => {
-      if (skinThumbCache[item.key]) { resolve(); return; }
-      loader.load(item.file, (fbx) => {
-        try {
-          const box = new THREE.Box3().setFromObject(fbx);
-          const size = new THREE.Vector3();
-          box.getSize(size);
-          const center = new THREE.Vector3();
-          box.getCenter(center);
-          const maxDim = Math.max(size.x, size.y, size.z) || 1;
-          const scale = 4.4 / maxDim;
-          fbx.scale.setScalar(scale);
-          fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-          scene.add(fbx);
-          // Einmal sofort rendern (damit Materialien/Texturen anlaufen) und erst einen
-          // Frame später erneut rendern+erfassen - direkt nach onLoad war das erste Bild
-          // bei manchen Modellen noch nicht vollständig fertig (z.B. der Standard-Skin).
-          renderer.render(scene, camera);
-          requestAnimationFrame(() => {
-            renderer.render(scene, camera);
-            skinThumbCache[item.key] = canvas.toDataURL('image/png');
-            scene.remove(fbx);
-            resolve();
-          });
-        } catch (err) {
-          console.error('Skin-Vorschau Fehler:', item.file, err);
-          resolve();
-        }
-      }, undefined, (err) => {
-        console.error('Skin-Vorschau Ladefehler:', item.file, err);
-        resolve();
-      });
-    });
-  }
-
-  let chain = Promise.resolve();
-  SHOP_ITEMS.forEach(item => { chain = chain.then(() => renderOne(item)); });
-  skinThumbsGenerating = chain.then(() => { renderer.dispose(); });
-  return skinThumbsGenerating;
+  new THREE.FBXLoader().load(file, (fbx) => {
+    try {
+      const box = new THREE.Box3().setFromObject(fbx);
+      const boxSize = new THREE.Vector3();
+      box.getSize(boxSize);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      const maxDim = Math.max(boxSize.x, boxSize.y, boxSize.z) || 1;
+      const scale = 4.4 / maxDim;
+      fbx.scale.setScalar(scale);
+      fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+      scene.add(fbx);
+      renderer.render(scene, camera);
+      requestAnimationFrame(() => renderer.render(scene, camera));
+    } catch (err) {
+      console.error('Skin-Vorschau Fehler:', file, err);
+    }
+  }, undefined, (err) => {
+    console.error('Skin-Vorschau Ladefehler:', file, err);
+  });
 }
 
 // Baut die Skins-Galerie neu auf (z.B. nach Kauf/Ausrüsten oder beim ersten Öffnen).
@@ -2826,14 +2797,8 @@ function renderSkinsGallery() {
 
     const thumb = document.createElement('div');
     thumb.className = 'skin-card-thumb';
-    if (skinThumbCache[item.key]) {
-      const img = document.createElement('img');
-      img.src = skinThumbCache[item.key];
-      img.alt = item.name;
-      thumb.appendChild(img);
-    } else {
-      thumb.textContent = '🙂';
-    }
+    const canvas = document.createElement('canvas');
+    thumb.appendChild(canvas);
     card.appendChild(thumb);
 
     const nameEl = document.createElement('div');
@@ -2866,16 +2831,16 @@ function renderSkinsGallery() {
     card.appendChild(btn);
 
     galleryEl.appendChild(card);
+    // Canvas muss erst im DOM sein (für eine korrekte clientWidth-Messung), bevor der
+    // Viewer dafür aufgesetzt wird.
+    initSkinCardPreview(canvas, item.file);
   });
 }
 
-// Öffnet die Galerie: Vorschaubilder werden nur beim allerersten Mal generiert
-// (danach aus dem Cache wiederverwendet), damit spätere Öffnungen sofort da sind.
 function openSkinsGallery() {
   menuEl.style.display = 'none';
   document.getElementById('skins-menu').classList.add('show');
   renderSkinsGallery();
-  generateSkinThumbnails().then(renderSkinsGallery);
 }
 
 // Kartenstile: 'ocean' ist der normale Kachel-Hintergrund, 'colorful' ist kein eigener
