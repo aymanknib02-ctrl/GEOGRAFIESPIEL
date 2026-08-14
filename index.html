@@ -1,0 +1,4860 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Geo Quiz</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/fflate@0.7.4/umd/index.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: linear-gradient(135deg, #0f1220, #1a2140, #120f22, #16233a);
+    background-size: 300% 300%;
+    animation: bgShift 20s ease infinite;
+    font-family: 'Baloo 2', 'Segoe UI', sans-serif;
+    color: #fff;
+    overflow: hidden;
+  }
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  #menu {
+    position: relative;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 44px 60px;
+    display: grid;
+    grid-template-columns: auto 3fr auto;
+    align-items: stretch;
+    column-gap: 50px;
+  }
+  .menu-rewards-panel {
+    grid-column: 1;
+    justify-self: start;
+    width: 320px;
+    max-height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 30px 24px;
+    border-radius: 24px;
+    background: rgba(22, 26, 42, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    animation: popIn 0.4s ease;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .menu-rewards-panel::-webkit-scrollbar {
+    display: none;
+  }
+  .menu-rewards-panel .rewards-modes {
+    margin-bottom: 0;
+  }
+  .coin-badge {
+    height: 52px;
+    padding: 0 18px;
+    border-radius: 26px;
+    font-size: 17px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #f1c40f, #b8860b);
+    color: #2b1f00;
+  }
+  .menu-skin-showcase {
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: popIn 0.4s ease;
+    padding: 30px 36px;
+    border-radius: 24px;
+    background: rgba(22, 26, 42, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  }
+  .menu-skin-showcase .shop-carousel-btn {
+    width: 280px;
+    font-size: 18px;
+    padding: 16px 10px;
+  }
+  .menu-skin-showcase .shop-carousel-price {
+    font-size: 18px;
+  }
+  #menu .menu-box {
+    grid-column: 3;
+    justify-self: end;
+  }
+  .menu-box {
+    text-align: center;
+    animation: popIn 0.35s ease;
+    background: rgba(22, 26, 42, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 26px;
+    padding: 42px 46px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  }
+  h1 {
+    font-size: 48px;
+    margin: 0 0 40px 0;
+    letter-spacing: 4px;
+  }
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 260px;
+  }
+  .buttons .diff-btn {
+    animation: tileIn 0.35s ease backwards;
+  }
+  .buttons .diff-btn:nth-child(1) { animation-delay: 0.03s; }
+  .buttons .diff-btn:nth-child(2) { animation-delay: 0.08s; }
+  .buttons .diff-btn:nth-child(3) { animation-delay: 0.13s; }
+  .buttons .diff-btn:nth-child(4) { animation-delay: 0.18s; }
+  .buttons .diff-btn:nth-child(5) { animation-delay: 0.23s; }
+  .buttons .diff-btn:nth-child(6) { animation-delay: 0.28s; }
+  .buttons .diff-btn:nth-child(7) { animation-delay: 0.33s; }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.9) translateY(14px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes valuePop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+  @keyframes tileIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shakeX {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 18px;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #333c56, #262c40);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #3f4d6b, #2e3650);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 209, 197, 0.25);
+  }
+  button:active:not(:disabled) {
+    transform: translateY(0) scale(0.96);
+  }
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  #difficulty-menu, #continent-menu, #category-type-menu, #category-pick-menu,
+  #online-menu, #online-format-menu, #online-waiting {
+    display: none;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  #difficulty-menu.show, #continent-menu.show, #category-type-menu.show, #category-pick-menu.show,
+  #online-menu.show, #online-format-menu.show, #online-waiting.show {
+    display: flex;
+  }
+  #category-pick-menu .buttons {
+    gap: 10px;
+    width: 320px;
+  }
+  .category-pick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  #btn-category-reroll {
+    background: #2f6f5e;
+  }
+  #btn-category-pick-back {
+    background: transparent;
+    opacity: 0.6;
+  }
+  #category-banner {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #1c2130;
+    border: 1px solid #4fd1c5;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 15px;
+    z-index: 2500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  #category-banner.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  #continent-menu h1 {
+    font-size: 36px;
+    margin-bottom: 24px;
+  }
+  #continent-menu .buttons {
+    gap: 10px;
+  }
+  .diff-btn {
+    text-align: left;
+  }
+  .diff-btn .diff-title {
+    display: block;
+    font-size: 18px;
+  }
+  .diff-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .diff-icon {
+    font-size: 22px;
+    line-height: 1;
+  }
+  .diff-btn .diff-desc {
+    display: block;
+    font-size: 12px;
+    opacity: 0.6;
+    margin-top: 2px;
+  }
+  #btn-diff-back {
+    background: transparent;
+    opacity: 0.6;
+  }
+
+  #online-menu .buttons, #online-format-menu .buttons { width: 320px; }
+  .online-nickname-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+    margin-bottom: 4px;
+  }
+  .online-nickname-row label {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+  #online-nickname-input, #online-join-code-input, #online-country-select {
+    font-size: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 2px solid #2b3245;
+    background: #1c2130;
+    color: #fff;
+  }
+  #online-join-code-input {
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-align: center;
+    flex: 1;
+  }
+  .online-join-row {
+    display: flex;
+    gap: 8px;
+  }
+  .online-join-row button {
+    white-space: nowrap;
+  }
+  #btn-online-back, #online-format-back, #btn-online-format-back {
+    background: transparent;
+    opacity: 0.6;
+  }
+  .online-error {
+    min-height: 20px;
+    color: #ff6b6b;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  #online-format-menu .settings-section {
+    width: 320px;
+  }
+  #btn-online-format-continue {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+  }
+  .online-code-display {
+    margin-bottom: 20px;
+  }
+  .online-code-label {
+    font-size: 13px;
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+  .online-code-value {
+    font-size: 40px;
+    font-weight: bold;
+    letter-spacing: 10px;
+    color: #4fd1c5;
+    margin-bottom: 12px;
+  }
+  .online-spinner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 4px solid #2b3245;
+    border-top-color: #4fd1c5;
+    margin: 10px auto;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .online-waiting-status {
+    font-size: 15px;
+    opacity: 0.8;
+    margin-bottom: 20px;
+  }
+
+  #online-game {
+    display: none;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    animation: fadeIn 0.4s ease;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #online-game.show {
+    display: flex;
+  }
+  .online-hud #online-me-score, .online-hud #online-opponent-score {
+    font-size: 22px;
+    color: #4fd1c5;
+  }
+  #online-me-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  .online-status-msg {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.95);
+    z-index: 1000;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    background: rgba(46, 204, 113, 0.9);
+    color: #06210f;
+  }
+  .online-status-msg.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  .online-round-intro {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 44px;
+    margin-bottom: 30px;
+    animation: popIn 0.3s ease;
+  }
+  .online-round-intro.show {
+    display: flex;
+  }
+  .online-intro-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .online-intro-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+  }
+  .online-intro-emoji {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+    background: #232a3f;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+  }
+  .online-intro-name {
+    font-weight: bold;
+    font-size: 19px;
+  }
+  .online-intro-country {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+  .online-intro-vs {
+    font-size: 30px;
+    font-weight: 800;
+    color: #4fd1c5;
+  }
+  .online-prompt-area {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .online-prompt-text {
+    font-size: 26px;
+    font-weight: bold;
+    max-width: 700px;
+  }
+  #online-landmark-img {
+    max-width: 420px;
+    max-height: 280px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  #online-sil-shape {
+    width: 340px;
+    height: 340px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #bcdcf0;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  #online-sil-map {
+    width: 100%;
+    height: 100%;
+  }
+  #online-sil-map .leaflet-tile-pane {
+    opacity: 0;
+  }
+  .online-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    width: 560px;
+  }
+  .online-option-btn {
+    font-size: 18px;
+    padding: 20px 22px;
+  }
+  .online-option-btn.correct {
+    background: #2ecc71;
+    color: #06210f;
+    animation: valuePop 0.4s ease;
+  }
+  .online-option-btn.wrong {
+    background: #e74c3c;
+    color: #2b0705;
+    animation: shakeX 0.4s ease;
+  }
+
+  #game {
+    display: none;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    animation: fadeIn 0.4s ease;
+  }
+  #map {
+    width: 100%;
+    height: 100%;
+    background: #bcdcf0;
+  }
+  .leaflet-container {
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .hud-bar {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(15, 18, 26, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 24px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .hud-bar .label {
+    opacity: 0.6;
+    font-size: 13px;
+    display: block;
+  }
+  .hud-bar .value {
+    font-weight: bold;
+  }
+  #target-value {
+    color: #4fd1c5;
+    font-size: 22px;
+  }
+  #border-path-value {
+    max-width: 320px;
+    display: inline-block;
+    white-space: normal;
+    font-size: 14px;
+  }
+  .menu-btn {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+  .status-msg {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px) scale(0.95);
+    z-index: 1000;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .status-msg.show-correct {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+    background: rgba(46, 204, 113, 0.9);
+    color: #06210f;
+  }
+  .status-msg.show-wrong {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+    background: rgba(231, 76, 60, 0.9);
+    color: #2b0705;
+  }
+  .status-msg.show-reveal {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+    background: rgba(241, 196, 15, 0.95);
+    color: #3a2c00;
+  }
+  .giveup-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+    padding: 12px 20px;
+    font-size: 15px;
+    background: #4a3a1a;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .giveup-btn:hover {
+    background: #6b552a;
+  }
+  #btn-check, #btn-border-next, #btn-capital-check {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    padding: 16px 40px;
+    font-size: 17px;
+    font-weight: bold;
+    background: #4a4a1a;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  #btn-check:hover, #btn-border-next:hover, #btn-capital-check:hover {
+    background: #6b6b2a;
+  }
+  #btn-check:disabled, #btn-capital-check:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #4a4a1a;
+  }
+
+  #border-game {
+    display: none;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+  #border-game.show {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+  #border-map {
+    width: 100%;
+    height: 100%;
+    background: #bcdcf0;
+  }
+
+  #capital-game {
+    display: none;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+  #capital-game.show {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+  #capital-map {
+    width: 100%;
+    height: 100%;
+    background: #bcdcf0;
+  }
+
+  #landmark-panel {
+    display: none;
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 1000;
+    width: 320px;
+    background: rgba(15, 18, 26, 0.9);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .value-pop {
+    display: inline-block;
+    animation: valuePop 0.35s ease;
+  }
+  #landmark-img {
+    display: block;
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    background: #2b3245;
+    cursor: zoom-in;
+    opacity: 0;
+    transition: transform 0.25s ease, filter 0.25s ease, opacity 0.3s ease;
+  }
+  #landmark-img.loaded {
+    opacity: 1;
+  }
+  #landmark-img:hover {
+    transform: scale(1.08);
+    filter: brightness(1.1);
+  }
+  #landmark-caption {
+    padding: 10px 14px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  #silhouette-game {
+    display: none;
+    position: relative;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+  }
+  #silhouette-game.show {
+    display: flex;
+    animation: fadeIn 0.4s ease;
+  }
+  #silhouette-shape {
+    position: relative;
+    width: 460px;
+    height: 460px;
+    background: #bcdcf0;
+    border-radius: 20px;
+    box-shadow: 0 8px 36px rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #silhouette-shape.sil-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    z-index: 2500;
+  }
+  #sil-map {
+    width: 100%;
+    height: 100%;
+    background: #bcdcf0;
+  }
+  #sil-map .leaflet-interactive {
+    transition: none;
+    cursor: default;
+  }
+  #sil-map .leaflet-tile-pane {
+    opacity: 0;
+    transition: none;
+  }
+  #sil-map.sil-animating .leaflet-interactive {
+    transition: fill-opacity 1s ease, stroke-opacity 1s ease, stroke-width 0.6s ease, stroke 0.6s ease;
+  }
+  #sil-map.sil-animating .leaflet-tile-pane {
+    transition: opacity 1s ease;
+  }
+  #sil-map.sil-revealed .leaflet-tile-pane {
+    opacity: 1;
+  }
+  #silhouette-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    width: 560px;
+  }
+  .sil-option {
+    font-size: 18px;
+    padding: 20px 22px;
+  }
+  .sil-option.correct {
+    background: #2ecc71;
+    color: #06210f;
+    animation: valuePop 0.4s ease;
+  }
+  .sil-option.wrong {
+    background: #e74c3c;
+    color: #2b0705;
+    animation: shakeX 0.4s ease;
+  }
+
+  #image-lightbox {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(5, 6, 10, 0.9);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+  }
+  #image-lightbox.show {
+    display: flex;
+  }
+  #lightbox-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 0 60px rgba(0,0,0,0.6);
+    animation: lightbox-in 0.2s ease;
+  }
+  @keyframes lightbox-in {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .overlay {
+    display: none;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(10, 12, 18, 0.85);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay.show {
+    display: flex;
+    animation: fadeIn 0.25s ease;
+  }
+  .end-box {
+    text-align: center;
+    background: rgba(24, 28, 44, 0.75);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 40px 60px;
+    border-radius: 20px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    animation: popIn 0.3s ease;
+  }
+  .end-box h2 {
+    margin-top: 0;
+    font-size: 32px;
+  }
+  .end-box p {
+    font-size: 20px;
+    margin: 12px 0 28px 0;
+  }
+  .end-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .menu-top-icons {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #btn-settings {
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #btn-settings:hover:not(:disabled) {
+    transform: rotate(35deg) scale(1.1);
+  }
+  .rewards-modes {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .rewards-mode-section {
+    text-align: left;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #232a3f;
+  }
+  .rewards-mode-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .rewards-mode-title {
+    font-weight: bold;
+    font-size: 15px;
+  }
+  .rewards-mode-stats {
+    font-size: 12px;
+    opacity: 0.65;
+  }
+  .rewards-mode-progress-label {
+    font-size: 11px;
+    opacity: 0.7;
+    margin: 6px 0;
+  }
+  .rewards-mode-progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #2b3245;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .rewards-mode-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f1c40f, #2ecc71);
+    transition: width 0.5s ease;
+  }
+  .rewards-mode-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .reward-badge-mini {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    background: #2b3245;
+    opacity: 0.35;
+    filter: grayscale(1);
+    transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s ease;
+  }
+  .reward-badge-mini.unlocked {
+    opacity: 1;
+    filter: grayscale(0);
+    box-shadow: 0 0 0 2px #f1c40f inset;
+  }
+  .shop-box {
+    text-align: center;
+  }
+  .shop-carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 16px;
+  }
+  .shop-arrow {
+    width: 62px;
+    height: 62px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 22px;
+  }
+  .shop-carousel-display {
+    position: relative;
+    width: min(60vh, 46vw, 520px);
+    height: min(60vh, 46vw, 520px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: popIn 0.25s ease;
+  }
+  .shop-carousel-canvas {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    filter: drop-shadow(0 20px 34px rgba(0, 0, 0, 0.5));
+  }
+  .shop-carousel-canvas:active {
+    cursor: grabbing;
+  }
+  .shop-carousel-canvas.locked {
+    filter: grayscale(1) brightness(0.55) drop-shadow(0 20px 34px rgba(0, 0, 0, 0.5));
+    pointer-events: none;
+  }
+  .shop-carousel-loading {
+    font-size: 16px;
+    opacity: 0.7;
+  }
+  .shop-carousel-emoji {
+    font-size: min(30vh, 23vw, 260px);
+    filter: drop-shadow(0 20px 34px rgba(0, 0, 0, 0.5));
+  }
+  .shop-carousel-price {
+    font-size: 14px;
+    color: #f1c40f;
+    opacity: 0.9;
+    margin-bottom: 16px;
+  }
+  .shop-carousel-btn {
+    width: 100%;
+    font-size: 15px;
+    padding: 12px 10px;
+    margin-bottom: 10px;
+  }
+  .shop-carousel-btn.equip-btn {
+    background: linear-gradient(135deg, #2ecc71, #1e9e57);
+  }
+  .shop-carousel-btn.equip-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #3ee081, #26b566);
+  }
+  .shop-carousel-btn.equipped-btn {
+    background: #1e2536;
+    opacity: 0.7;
+    cursor: default;
+  }
+  .coin-block .value {
+    color: #f1c40f;
+  }
+  #menu-coin-value {
+    font-variant-numeric: tabular-nums;
+  }
+  @keyframes coinPopup {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
+    25% { opacity: 1; transform: translate(-50%, -10px) scale(1.1); }
+    100% { opacity: 0; transform: translate(-50%, -46px) scale(1); }
+  }
+  .coin-popup {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    z-index: 1600;
+    font-size: 20px;
+    font-weight: bold;
+    color: #f1c40f;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    pointer-events: none;
+    animation: coinPopup 1s ease forwards;
+  }
+  @keyframes rewardToastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-16px) scale(0.9); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  }
+  .reward-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5000;
+    background: linear-gradient(135deg, #f1c40f, #b8860b);
+    color: #2b1f00;
+    padding: 14px 26px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: rewardToastIn 0.4s ease, fadeIn 0.4s ease 2.6s reverse forwards;
+  }
+  .reward-toast .reward-icon {
+    font-size: 26px;
+  }
+  .confetti-piece {
+    position: fixed;
+    top: -20px;
+    width: 9px;
+    height: 14px;
+    z-index: 6000;
+    pointer-events: none;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0.4; }
+  }
+  .streak-badge {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ff9f43;
+    margin-top: 2px;
+  }
+  .streak-badge.show {
+    display: flex;
+    animation: valuePop 0.35s ease;
+  }
+  .settings-box {
+    text-align: left;
+    background: rgba(24, 28, 44, 0.75);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 36px 44px;
+    border-radius: 20px;
+    width: 520px;
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    animation: popIn 0.3s ease;
+  }
+  .settings-box h2 {
+    margin: 0 0 24px 0;
+    text-align: center;
+    letter-spacing: 2px;
+  }
+  .settings-section {
+    margin-bottom: 22px;
+  }
+  .settings-label {
+    font-size: 13px;
+    opacity: 0.6;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .settings-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .opt-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    border: 2px solid transparent;
+  }
+  .opt-btn.active {
+    border-color: #4fd1c5;
+    background: #3b4460;
+  }
+  .settings-volume-row {
+    align-items: center;
+  }
+  #settings-volume {
+    flex: 1;
+  }
+  #settings-volume-value {
+    min-width: 42px;
+    text-align: right;
+    font-size: 14px;
+    opacity: 0.8;
+  }
+  #btn-settings-close {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+  <div id="menu">
+    <div class="menu-top-icons">
+      <div id="btn-rewards" class="coin-badge">
+        <span id="menu-coin-value">0</span> &#129689;
+      </div>
+      <button id="btn-settings" aria-label="Einstellungen">&#9881;</button>
+    </div>
+    <div class="menu-rewards-panel" id="menu-rewards-panel">
+      <div class="rewards-modes" id="rewards-modes"></div>
+    </div>
+    <div class="menu-skin-showcase" id="menu-skin-showcase">
+      <div class="shop-carousel">
+        <button id="btn-shop-prev" class="shop-arrow" aria-label="Vorheriger Skin">&#10094;</button>
+        <div class="shop-carousel-display" id="shop-carousel-display">
+          <canvas class="shop-carousel-canvas" id="shop-carousel-canvas" style="display:none;"></canvas>
+          <div class="shop-carousel-loading" id="shop-carousel-loading" style="display:none;">Lädt...</div>
+          <div class="shop-carousel-emoji" id="shop-carousel-emoji" style="display:none;">&#128578;</div>
+        </div>
+        <button id="btn-shop-next" class="shop-arrow" aria-label="Nächster Skin">&#10095;</button>
+      </div>
+      <div class="shop-carousel-price" id="shop-carousel-price"></div>
+      <button class="shop-carousel-btn" id="shop-carousel-btn"></button>
+    </div>
+    <div class="menu-box">
+      <div class="buttons">
+        <button class="diff-btn" data-mode="country">
+          <span class="diff-title-row"><span class="diff-icon">&#127757;</span><span class="diff-title" data-i18n="menu.country.title">Länder-Quiz</span></span>
+          <span class="diff-desc" data-i18n="menu.country.desc">Land wird als Name genannt</span>
+        </button>
+        <button class="diff-btn" data-mode="landmark">
+          <span class="diff-title-row"><span class="diff-icon">&#127963;&#65039;</span><span class="diff-title" data-i18n="menu.landmark.title">Sehenswürdigkeiten</span></span>
+          <span class="diff-desc" data-i18n="menu.landmark.desc">Bild einer Sehenswürdigkeit &ndash; du klickst das Land</span>
+        </button>
+        <button class="diff-btn" data-mode="silhouette">
+          <span class="diff-title-row"><span class="diff-icon">&#128506;&#65039;</span><span class="diff-title" data-i18n="menu.silhouette.title">Silhouette</span></span>
+          <span class="diff-desc" data-i18n="menu.silhouette.desc">Nur der Umriss &ndash; welches Land ist das?</span>
+        </button>
+        <button class="diff-btn" data-mode="border">
+          <span class="diff-title-row"><span class="diff-icon">&#9939;&#65039;</span><span class="diff-title" data-i18n="menu.border.title">Länderkette</span></span>
+          <span class="diff-desc" data-i18n="menu.border.desc">Von Land A nach B &ndash; über die wenigsten Grenzen</span>
+        </button>
+        <button class="diff-btn" data-mode="capital">
+          <span class="diff-title-row"><span class="diff-icon">&#127961;&#65039;</span><span class="diff-title" data-i18n="menu.capital.title">Hauptstädte</span></span>
+          <span class="diff-desc" data-i18n="menu.capital.desc">10 Marker in der Umgebung &ndash; du klickst die richtige Hauptstadt</span>
+        </button>
+        <button class="diff-btn" data-mode="category">
+          <span class="diff-title-row"><span class="diff-icon">&#127922;</span><span class="diff-title" data-i18n="menu.category.title">Kategorien</span></span>
+          <span class="diff-desc" data-i18n="menu.category.desc">Kategorie wählen &ndash; dann Format wie Länder oder Städte</span>
+        </button>
+        <button class="diff-btn" id="btn-open-online">
+          <span class="diff-title-row"><span class="diff-icon">&#9876;&#65039;</span><span class="diff-title">Online 1v1</span></span>
+          <span class="diff-desc">Mit Freund per Code oder gegen zufällige Spieler</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="category-pick-menu">
+    <div class="menu-box">
+      <h1>KATEGORIE</h1>
+      <div class="buttons" id="category-pick-buttons"></div>
+      <div class="category-pick-actions">
+        <button id="btn-category-reroll">Neu mischen</button>
+        <button id="btn-category-pick-back">Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="category-type-menu">
+    <div class="menu-box">
+      <h1>FORMAT</h1>
+      <div class="buttons">
+        <button class="diff-btn" data-subtype="country">
+          <span class="diff-title">Länder</span>
+        </button>
+        <button class="diff-btn" data-subtype="capital">
+          <span class="diff-title">Städte</span>
+        </button>
+        <button class="diff-btn" data-subtype="landmark">
+          <span class="diff-title">Sehenswürdigkeiten</span>
+        </button>
+        <button class="diff-btn" data-subtype="silhouette">
+          <span class="diff-title">Silhouetten</span>
+        </button>
+        <button id="btn-category-back">Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="category-banner"></div>
+
+  <div id="settings-overlay" class="overlay">
+    <div class="settings-box">
+      <h2 data-i18n="settings.title">Einstellungen</h2>
+
+      <div class="settings-section">
+        <div class="settings-label" data-i18n="settings.mapStyle">Kartenstil</div>
+        <div class="settings-row" id="settings-maps">
+          <button class="opt-btn" data-map="ocean" data-i18n="settings.mapStyle.ocean">Normal</button>
+          <button class="opt-btn" data-map="colorful" data-i18n="settings.mapStyle.colorful">Bunt</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label" data-i18n="settings.language">Sprache</div>
+        <div class="settings-row" id="settings-languages">
+          <button class="opt-btn" data-lang="de">Deutsch</button>
+          <button class="opt-btn" data-lang="en">English</button>
+          <button class="opt-btn" data-lang="fr">Français</button>
+          <button class="opt-btn" data-lang="es">Español</button>
+          <button class="opt-btn" data-lang="zh">中文</button>
+          <button class="opt-btn" data-lang="ar">العربية</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label" data-i18n="settings.volume">Lautstärke</div>
+        <div class="settings-row settings-volume-row">
+          <span id="settings-volume-icon">&#128266;</span>
+          <input type="range" id="settings-volume" min="0" max="100" value="60" />
+          <span id="settings-volume-value">60%</span>
+        </div>
+      </div>
+
+      <button id="btn-settings-close" data-i18n="settings.close">Schließen</button>
+    </div>
+  </div>
+
+  <div id="online-menu">
+    <div class="menu-box">
+      <h1>ONLINE 1V1</h1>
+      <div class="buttons">
+        <div class="online-nickname-row">
+          <label for="online-nickname-input">Dein Name</label>
+          <input type="text" id="online-nickname-input" maxlength="16" placeholder="Spieler" />
+        </div>
+        <div class="online-nickname-row">
+          <label for="online-country-select">Dein Land</label>
+          <select id="online-country-select"></select>
+        </div>
+        <button id="btn-online-create">Raum erstellen (Freund einladen)</button>
+        <button id="btn-online-show-join">Mit Code beitreten</button>
+        <div class="online-join-row" id="online-join-row" style="display:none;">
+          <input type="text" id="online-join-code-input" maxlength="6" placeholder="CODE" autocapitalize="characters" />
+          <button id="btn-online-join">Beitreten</button>
+        </div>
+        <button id="btn-online-matchmaking">Zufälligen Gegner finden</button>
+        <button id="btn-online-back">Zurück</button>
+      </div>
+      <div class="online-error" id="online-menu-error"></div>
+    </div>
+  </div>
+
+  <div id="online-format-menu">
+    <div class="menu-box">
+      <h1>MODUS &amp; SCHWIERIGKEIT</h1>
+      <div class="settings-section">
+        <div class="settings-label">Format</div>
+        <div class="settings-row" id="online-format-options">
+          <button class="opt-btn" data-online-mode="country">Länder</button>
+          <button class="opt-btn" data-online-mode="landmark">Sehenswürdigkeiten</button>
+          <button class="opt-btn" data-online-mode="silhouette">Silhouette</button>
+          <button class="opt-btn" data-online-mode="capital">Hauptstädte</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">Schwierigkeit</div>
+        <div class="settings-row" id="online-difficulty-options">
+          <button class="opt-btn" data-online-difficulty="easy">Leicht</button>
+          <button class="opt-btn" data-online-difficulty="medium">Mittel</button>
+          <button class="opt-btn" data-online-difficulty="hard">Schwer</button>
+        </div>
+      </div>
+      <div class="online-error" id="online-format-error"></div>
+      <button id="btn-online-format-continue">Los geht's</button>
+      <button id="btn-online-format-back">Zurück</button>
+    </div>
+  </div>
+
+  <div id="online-waiting">
+    <div class="menu-box">
+      <h1 id="online-waiting-title">WARTE...</h1>
+      <div class="online-code-display" id="online-code-display" style="display:none;">
+        <div class="online-code-label">Code für deinen Freund</div>
+        <div class="online-code-value" id="online-code-value">-----</div>
+        <button id="btn-online-copy-code">Code kopieren</button>
+      </div>
+      <div class="online-spinner"></div>
+      <div class="online-waiting-status" id="online-waiting-status">Warte auf Mitspieler...</div>
+      <button id="btn-online-cancel">Abbrechen</button>
+    </div>
+  </div>
+
+  <div id="online-game">
+    <div class="hud-bar online-hud">
+      <div>
+        <img id="online-me-avatar" alt="" style="display:none;" />
+        <span class="label" id="online-me-name">Du</span>
+        <span class="value" id="online-me-score">0</span>
+      </div>
+      <div>
+        <span class="label">Runde</span>
+        <span class="value"><span id="online-round-value">1</span>/<span id="online-total-rounds">10</span></span>
+      </div>
+      <div>
+        <span class="label" id="online-opponent-name">Gegner</span>
+        <span class="value" id="online-opponent-score">0</span>
+      </div>
+      <button id="btn-online-leave" class="menu-btn">Verlassen</button>
+    </div>
+    <div class="online-status-msg" id="online-status-msg"></div>
+    <div class="online-round-intro" id="online-round-intro">
+      <div class="online-intro-player">
+        <img class="online-intro-avatar" id="online-intro-me-avatar" alt="" style="display:none;" />
+        <div class="online-intro-emoji" id="online-intro-me-emoji">&#128578;</div>
+        <div class="online-intro-name" id="online-intro-me-name">Du</div>
+        <div class="online-intro-country" id="online-intro-me-country"></div>
+      </div>
+      <div class="online-intro-vs">VS</div>
+      <div class="online-intro-player">
+        <img class="online-intro-avatar" id="online-intro-opp-avatar" alt="" style="display:none;" />
+        <div class="online-intro-emoji" id="online-intro-opp-emoji">&#128578;</div>
+        <div class="online-intro-name" id="online-intro-opp-name">Gegner</div>
+        <div class="online-intro-country" id="online-intro-opp-country"></div>
+      </div>
+    </div>
+    <div class="online-prompt-area" id="online-prompt-area">
+      <div class="online-prompt-text" id="online-prompt-text"></div>
+      <img id="online-landmark-img" alt="Sehenswürdigkeit" style="display:none;" />
+      <div id="online-sil-shape" style="display:none;">
+        <div id="online-sil-map"></div>
+      </div>
+    </div>
+    <div class="online-options" id="online-options"></div>
+  </div>
+
+  <div id="online-end-overlay" class="overlay">
+    <div class="end-box">
+      <h2 id="online-end-title">Spiel beendet!</h2>
+      <p id="online-end-text"></p>
+      <div class="end-buttons">
+        <button id="btn-online-again">Neues Online-Spiel</button>
+        <button id="btn-online-end-menu">Zum Menü</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="continent-menu">
+    <div class="menu-box">
+      <h1>KONTINENT</h1>
+      <div class="buttons">
+        <button class="diff-btn" data-continent="">
+          <span class="diff-title">Alle Kontinente</span>
+        </button>
+        <button class="diff-btn" data-continent="Europe">
+          <span class="diff-title">Europa</span>
+        </button>
+        <button class="diff-btn" data-continent="Asia">
+          <span class="diff-title">Asien</span>
+        </button>
+        <button class="diff-btn" data-continent="Africa">
+          <span class="diff-title">Afrika</span>
+        </button>
+        <button class="diff-btn" data-continent="North America">
+          <span class="diff-title">Nordamerika</span>
+        </button>
+        <button class="diff-btn" data-continent="South America">
+          <span class="diff-title">Südamerika</span>
+        </button>
+        <button class="diff-btn" data-continent="Oceania">
+          <span class="diff-title">Ozeanien</span>
+        </button>
+        <button id="btn-continent-back">Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="difficulty-menu">
+    <div class="menu-box">
+      <h1>SCHWIERIGKEIT</h1>
+      <div class="buttons">
+        <button class="diff-btn" data-difficulty="easy">
+          <span class="diff-title">Leicht</span>
+          <span class="diff-desc">Nur bekannte, große Länder &middot; +5 &#129689; pro richtiger Antwort</span>
+        </button>
+        <button class="diff-btn" data-difficulty="medium">
+          <span class="diff-title">Mittel</span>
+          <span class="diff-desc">Alle Länder gemischt &middot; +10 &#129689; pro richtiger Antwort</span>
+        </button>
+        <button class="diff-btn" data-difficulty="hard">
+          <span class="diff-title">Schwer</span>
+          <span class="diff-desc">Nur weniger bekannte Länder &middot; +20 &#129689; pro richtiger Antwort</span>
+        </button>
+        <button id="btn-diff-back">Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="game">
+    <div id="hud" class="hud-bar">
+      <div id="target-block">
+        <span class="label" id="target-label">Gesucht</span>
+        <span class="value" id="target-value">-</span>
+      </div>
+      <div id="score-block">
+        <span class="label">Richtig</span>
+        <span class="value" id="score-value">0</span> / <span id="round-value">0</span>
+        <span class="streak-badge" id="streak-badge-main"></span>
+      </div>
+      <div id="wrong-block">
+        <span class="label">Falsch</span>
+        <span class="value" id="wrong-value">0</span>
+      </div>
+      <div class="coin-block">
+        <span class="label">&#129689;</span>
+        <span class="value coin-value">0</span>
+      </div>
+      <button id="btn-menu" class="menu-btn">Menü</button>
+    </div>
+    <button id="btn-giveup" class="giveup-btn">Aufgeben</button>
+    <button id="btn-check" disabled>Prüfen</button>
+    <div id="landmark-panel">
+      <img id="landmark-img" alt="Sehenswürdigkeit" />
+      <div id="landmark-caption">In welchem Land steht das?</div>
+    </div>
+    <div id="status-msg" class="status-msg"></div>
+    <div id="map"></div>
+
+    <div id="image-lightbox">
+      <img id="lightbox-img" alt="Sehenswürdigkeit vergrößert" />
+    </div>
+
+    <div id="end-overlay" class="overlay">
+      <div class="end-box">
+        <h2>Runde beendet!</h2>
+        <p id="end-text"></p>
+        <div class="end-buttons">
+          <button id="btn-replay">Nochmal</button>
+          <button id="btn-back-menu">Zum Menü</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="border-game">
+    <div class="hud-bar">
+      <div>
+        <span class="label">Ziel</span>
+        <span class="value" id="border-target-value">-</span>
+      </div>
+      <div>
+        <span class="label">Schritte übrig &middot; Runde <span id="border-round-value">0</span>/<span id="border-total-value">0</span></span>
+        <span class="value" id="border-steps-value">0</span>
+      </div>
+      <div>
+        <span class="label">Weg</span>
+        <span class="value" id="border-path-value">-</span>
+      </div>
+      <div class="coin-block">
+        <span class="label">&#129689;</span>
+        <span class="value coin-value">0</span>
+      </div>
+      <button id="btn-border-menu" class="menu-btn">Menü</button>
+    </div>
+    <button id="btn-border-giveup" class="giveup-btn">Lösung zeigen</button>
+    <button id="btn-border-next" style="display:none;">Weiter</button>
+    <div id="border-status-msg" class="status-msg"></div>
+    <div id="border-map"></div>
+
+    <div id="border-end-overlay" class="overlay">
+      <div class="end-box">
+        <h2>Runde beendet!</h2>
+        <p id="border-end-text"></p>
+        <div class="end-buttons">
+          <button id="btn-border-replay">Nochmal</button>
+          <button id="btn-border-back-menu">Zum Menü</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="capital-game">
+    <div class="hud-bar">
+      <div>
+        <span class="label">Hauptstadt</span>
+        <span class="value" id="capital-target-value">-</span>
+      </div>
+      <div>
+        <span class="label">Richtig</span>
+        <span class="value" id="capital-score-value">0</span> / <span id="capital-round-value">0</span>
+        <span class="streak-badge" id="streak-badge-capital"></span>
+      </div>
+      <div>
+        <span class="label">Falsch</span>
+        <span class="value" id="capital-wrong-value">0</span>
+      </div>
+      <div class="coin-block">
+        <span class="label">&#129689;</span>
+        <span class="value coin-value">0</span>
+      </div>
+      <button id="btn-capital-menu" class="menu-btn">Menü</button>
+    </div>
+    <button id="btn-capital-giveup" class="giveup-btn">Aufgeben</button>
+    <button id="btn-capital-check" disabled>Prüfen</button>
+    <div id="capital-status-msg" class="status-msg"></div>
+    <div id="capital-map"></div>
+
+    <div id="capital-end-overlay" class="overlay">
+      <div class="end-box">
+        <h2>Runde beendet!</h2>
+        <p id="capital-end-text"></p>
+        <div class="end-buttons">
+          <button id="btn-capital-replay">Nochmal</button>
+          <button id="btn-capital-back-menu">Zum Menü</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="silhouette-game">
+    <div class="hud-bar">
+      <div>
+        <span class="label">Richtig</span>
+        <span class="value" id="sil-score-value">0</span> / <span id="sil-round-value">0</span>
+        <span class="streak-badge" id="streak-badge-silhouette"></span>
+      </div>
+      <div>
+        <span class="label">Falsch</span>
+        <span class="value" id="sil-wrong-value">0</span>
+      </div>
+      <div class="coin-block">
+        <span class="label">&#129689;</span>
+        <span class="value coin-value">0</span>
+      </div>
+      <button id="btn-sil-menu" class="menu-btn">Menü</button>
+    </div>
+
+    <div id="silhouette-shape">
+      <div id="sil-map"></div>
+    </div>
+
+    <div id="silhouette-options">
+      <button class="sil-option" data-idx="0"></button>
+      <button class="sil-option" data-idx="1"></button>
+      <button class="sil-option" data-idx="2"></button>
+      <button class="sil-option" data-idx="3"></button>
+    </div>
+
+    <div id="sil-end-overlay" class="overlay">
+      <div class="end-box">
+        <h2>Runde beendet!</h2>
+        <p id="sil-end-text"></p>
+        <div class="end-buttons">
+          <button id="btn-sil-replay">Nochmal</button>
+          <button id="btn-sil-back-menu">Zum Menü</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Natural Earth 1:50m Admin-0 - deutlich präzisere Küsten-/Grenzlinien als die
+// stark vereinfachte Standardquelle (die 10m-Variante wäre noch genauer, ist mit
+// ~13 MB aber für den Erstladevorgang zu groß).
+const GEOJSON_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson';
+const BORDERS_URL = 'https://raw.githubusercontent.com/mledoze/countries/master/countries.json';
+const TOTAL_ROUNDS = 15;
+const BORDER_ROUNDS = 5;
+const BORDER_STEP_BUDGET = 7;
+const CAPITAL_ROUNDS = 12;
+const CAPITAL_MARKER_COUNT = 10;
+
+// ISO-A3-Codes bekannter/großer Länder für den Schwierigkeitsgrad "Leicht"
+const EASY_IDS = new Set([
+  'USA', 'CAN', 'MEX', 'BRA', 'ARG', 'GBR', 'FRA', 'DEU', 'ITA', 'ESP',
+  'PRT', 'NLD', 'BEL', 'CHE', 'AUT', 'SWE', 'NOR', 'DNK', 'FIN', 'POL',
+  'GRC', 'IRL', 'RUS', 'UKR', 'TUR', 'CHN', 'JPN', 'KOR', 'IND', 'IDN',
+  'THA', 'VNM', 'PHL', 'AUS', 'NZL', 'EGY', 'ZAF', 'NGA', 'KEN', 'MAR',
+  'DZA', 'SAU', 'ARE', 'ISR', 'PAK', 'CUB', 'COL', 'PER', 'CHL', 'ISL',
+  'CZE', 'HUN',
+]);
+
+// Kontinent-Filter: 'null' = alle Kontinente (Normalmodus). Werte entsprechen dem
+// CONTINENT-Feld der Natural-Earth-Daten, damit kein zusätzliches Mapping nötig ist.
+const CONTINENTS = ['Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania'];
+let selectedContinent = null;
+let pendingMode = null;
+
+function inSelectedContinent(continent) {
+  return !selectedContinent || continent === selectedContinent;
+}
+
+let countryContinentById = {};
+function countryContinent(id) {
+  return countryContinentById[id] || null;
+}
+
+// Themen-Kategorien für den Kategorien-Modus: pro Runde wird zufällig genau eine
+// dieser Listen als Länderpool verwendet (ISO-A3-Codes, passend zu ADM0_A3).
+// Sprachgruppen und "historische Länder" sind naturgemäß etwas unscharf/subjektiv
+// (z.B. Amtssprachen-Zuordnung, "Alter" eines Staates) - als lockere Quiz-Kategorien gedacht.
+const CATEGORIES = [
+  {
+    key: 'arabic',
+    label: 'Arabische Länder',
+    ids: new Set(['DZA', 'BHR', 'COM', 'DJI', 'EGY', 'IRQ', 'JOR', 'KWT', 'LBN', 'LBY', 'MRT', 'MAR', 'OMN', 'QAT', 'SAU', 'SOM', 'SDN', 'SYR', 'TUN', 'ARE', 'YEM']),
+  },
+  {
+    key: 'spanish',
+    label: 'Spanischsprachige Länder',
+    ids: new Set(['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'DOM', 'ECU', 'SLV', 'GNQ', 'GTM', 'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'ESP', 'URY', 'VEN']),
+  },
+  {
+    key: 'english',
+    label: 'Englischsprachige Länder',
+    ids: new Set(['USA', 'GBR', 'CAN', 'AUS', 'NZL', 'IRL', 'ZAF', 'JAM', 'TTO', 'GHA', 'NGA', 'KEN', 'UGA', 'ZMB', 'ZWE', 'IND', 'PAK', 'PHL', 'SGP', 'MLT']),
+  },
+  {
+    key: 'french',
+    label: 'Französischsprachige Länder',
+    ids: new Set(['FRA', 'BEL', 'CHE', 'CAN', 'SEN', 'CIV', 'MLI', 'NER', 'BFA', 'TCD', 'COD', 'COG', 'CMR', 'GAB', 'MDG', 'HTI', 'LUX', 'MCO', 'TGO', 'BEN', 'GIN', 'DJI', 'RWA']),
+  },
+  {
+    key: 'ancient',
+    label: 'Länder mit über 1000 Jahren Geschichte',
+    ids: new Set(['CHN', 'JPN', 'EGY', 'IRN', 'ETH', 'ARM', 'GEO', 'SMR', 'DNK', 'FRA', 'GBR', 'BGR', 'OMN']),
+  },
+  { key: 'portuguese', label: 'Portugiesischsprachige Länder', ids: new Set(['PRT', 'BRA', 'AGO', 'MOZ', 'GNB', 'CPV', 'STP', 'TLS']) },
+  { key: 'german', label: 'Deutschsprachige Länder', ids: new Set(['DEU', 'AUT', 'CHE', 'LIE', 'LUX']) },
+  { key: 'russian', label: 'Länder mit bedeutender russischsprachiger Bevölkerung', ids: new Set(['RUS', 'BLR', 'KAZ', 'KGZ', 'TJK', 'UZB', 'ARM', 'GEO', 'AZE', 'MDA']) },
+  { key: 'eu', label: 'EU-Mitgliedsländer', ids: new Set(['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA', 'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE']) },
+  { key: 'nato', label: 'NATO-Mitgliedsländer', ids: new Set(['ALB', 'BEL', 'BGR', 'CAN', 'HRV', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'ISL', 'ITA', 'LVA', 'LTU', 'LUX', 'MNE', 'NLD', 'MKD', 'NOR', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE', 'TUR', 'GBR', 'USA']) },
+  { key: 'g7', label: 'G7-Länder', ids: new Set(['USA', 'GBR', 'FRA', 'DEU', 'ITA', 'JPN', 'CAN']) },
+  { key: 'g20', label: 'G20-Länder', ids: new Set(['ARG', 'AUS', 'BRA', 'CAN', 'CHN', 'FRA', 'DEU', 'IND', 'IDN', 'ITA', 'JPN', 'MEX', 'RUS', 'SAU', 'ZAF', 'KOR', 'TUR', 'GBR', 'USA']) },
+  { key: 'brics', label: 'BRICS-Staaten', ids: new Set(['BRA', 'RUS', 'IND', 'CHN', 'ZAF', 'EGY', 'ETH', 'IRN', 'ARE']) },
+  { key: 'opec', label: 'OPEC-Mitgliedsländer', ids: new Set(['SAU', 'ARE', 'KWT', 'IRQ', 'IRN', 'LBY', 'DZA', 'COG', 'GAB', 'GNQ', 'VEN', 'NGA']) },
+  { key: 'asean', label: 'ASEAN-Staaten', ids: new Set(['BRN', 'KHM', 'IDN', 'LAO', 'MYS', 'MMR', 'PHL', 'SGP', 'THA', 'VNM']) },
+  { key: 'commonwealth', label: 'Commonwealth-Staaten', ids: new Set(['GBR', 'CAN', 'AUS', 'NZL', 'IND', 'ZAF', 'NGA', 'KEN', 'GHA', 'JAM', 'MYS', 'SGP', 'PAK', 'BGD', 'TZA', 'UGA', 'ZMB', 'CYP', 'MLT']) },
+  { key: 'postsoviet', label: 'Ehemalige Sowjetrepubliken', ids: new Set(['RUS', 'UKR', 'BLR', 'EST', 'LVA', 'LTU', 'MDA', 'GEO', 'ARM', 'AZE', 'KAZ', 'UZB', 'TKM', 'KGZ', 'TJK']) },
+  { key: 'exyugoslavia', label: 'Ehemaliges Jugoslawien', ids: new Set(['SVN', 'HRV', 'BIH', 'SRB', 'MNE', 'MKD']) },
+  { key: 'nordic', label: 'Nordische Länder', ids: new Set(['NOR', 'SWE', 'DNK', 'FIN', 'ISL']) },
+  { key: 'balticsea', label: 'Länder an der Ostsee', ids: new Set(['EST', 'LVA', 'LTU', 'POL', 'DEU', 'DNK', 'SWE', 'FIN', 'RUS']) },
+  { key: 'balkan', label: 'Balkanländer', ids: new Set(['ALB', 'BIH', 'BGR', 'HRV', 'GRC', 'MNE', 'MKD', 'ROU', 'SRB', 'SVN']) },
+  { key: 'caribbean', label: 'Karibische Staaten', ids: new Set(['CUB', 'DOM', 'HTI', 'JAM', 'BHS', 'TTO', 'BRB', 'GRD', 'LCA', 'VCT', 'ATG', 'DMA', 'KNA']) },
+  { key: 'centralamerica', label: 'Zentralamerikanische Länder', ids: new Set(['BLZ', 'CRI', 'SLV', 'GTM', 'HND', 'NIC', 'PAN']) },
+  { key: 'southasia', label: 'Südasiatische Länder', ids: new Set(['IND', 'PAK', 'BGD', 'LKA', 'NPL', 'BTN', 'MDV', 'AFG']) },
+  { key: 'eastasia', label: 'Ostasiatische Länder', ids: new Set(['CHN', 'JPN', 'KOR', 'PRK', 'MNG', 'TWN']) },
+  { key: 'centralasia', label: 'Zentralasiatische Länder', ids: new Set(['KAZ', 'UZB', 'TKM', 'KGZ', 'TJK']) },
+  { key: 'middleeast', label: 'Nahost-Länder', ids: new Set(['SAU', 'ARE', 'QAT', 'KWT', 'BHR', 'OMN', 'YEM', 'IRQ', 'IRN', 'SYR', 'LBN', 'JOR', 'ISR']) },
+  { key: 'northafrica', label: 'Nordafrikanische Länder', ids: new Set(['MAR', 'DZA', 'TUN', 'LBY', 'EGY', 'SDN']) },
+  { key: 'westafrica', label: 'Westafrikanische Länder', ids: new Set(['NGA', 'GHA', 'SEN', 'CIV', 'MLI', 'NER', 'BFA', 'GIN', 'BEN', 'TGO', 'SLE', 'LBR', 'GMB', 'GNB', 'MRT']) },
+  { key: 'eastafrica', label: 'Ostafrikanische Länder', ids: new Set(['KEN', 'TZA', 'UGA', 'RWA', 'BDI', 'ETH', 'SOM', 'SSD', 'DJI', 'ERI']) },
+  { key: 'southernafrica', label: 'Länder im südlichen Afrika', ids: new Set(['ZAF', 'NAM', 'BWA', 'ZWE', 'ZMB', 'MOZ', 'MWI', 'LSO', 'SWZ', 'AGO']) },
+  { key: 'centralafrica', label: 'Zentralafrikanische Länder', ids: new Set(['COD', 'COG', 'CMR', 'GAB', 'TCD', 'CAF', 'GNQ']) },
+  { key: 'andean', label: 'Anden-Länder', ids: new Set(['COL', 'ECU', 'PER', 'BOL', 'CHL', 'ARG', 'VEN']) },
+  { key: 'pacificislands', label: 'Pazifikinselstaaten', ids: new Set(['FJI', 'PNG', 'SLB', 'VUT', 'WSM', 'TON', 'KIR', 'FSM', 'MHL', 'PLW', 'NRU', 'TUV']) },
+  { key: 'landlocked', label: 'Binnenländer ohne Meerzugang', ids: new Set(['AUT', 'CHE', 'CZE', 'SVK', 'HUN', 'LUX', 'LIE', 'BLR', 'MDA', 'SRB', 'MKD', 'ARM', 'AZE', 'KAZ', 'UZB', 'TKM', 'KGZ', 'TJK', 'AFG', 'NPL', 'BTN', 'MNG', 'LAO', 'ETH', 'SSD', 'TCD', 'CAF', 'NER', 'MLI', 'BFA', 'RWA', 'BDI', 'UGA', 'ZMB', 'ZWE', 'MWI', 'BWA', 'LSO', 'SWZ', 'PRY', 'BOL']) },
+  { key: 'islands', label: 'Inselstaaten', ids: new Set(['JPN', 'ISL', 'CUB', 'JAM', 'HTI', 'DOM', 'LKA', 'MDG', 'NZL', 'PHL', 'IDN', 'MDV', 'SYC', 'MUS', 'COM', 'FJI', 'WSM', 'TON', 'KIR', 'FSM', 'MHL', 'PLW', 'NRU', 'TUV', 'SGP', 'CPV', 'STP', 'BHS', 'BRB', 'GRD', 'LCA', 'VCT', 'ATG', 'DMA', 'KNA', 'TTO', 'MLT']) },
+  { key: 'mediterranean', label: 'Länder am Mittelmeer', ids: new Set(['ESP', 'FRA', 'ITA', 'MCO', 'SVN', 'HRV', 'BIH', 'MNE', 'ALB', 'GRC', 'TUR', 'SYR', 'LBN', 'ISR', 'EGY', 'LBY', 'TUN', 'DZA', 'MAR', 'MLT', 'CYP']) },
+  { key: 'equator', label: 'Länder am Äquator', ids: new Set(['ECU', 'COL', 'BRA', 'GAB', 'COG', 'COD', 'UGA', 'KEN', 'SOM', 'MDV', 'IDN', 'KIR', 'STP']) },
+  { key: 'persiangulf', label: 'Länder am Persischen Golf', ids: new Set(['SAU', 'ARE', 'QAT', 'KWT', 'BHR', 'OMN', 'IRN', 'IRQ']) },
+  { key: 'alps', label: 'Alpenländer', ids: new Set(['CHE', 'AUT', 'DEU', 'FRA', 'ITA', 'SVN', 'LIE']) },
+  { key: 'monarchies', label: 'Monarchien der Welt', ids: new Set(['GBR', 'ESP', 'NLD', 'BEL', 'SWE', 'NOR', 'DNK', 'LUX', 'MCO', 'LIE', 'AND', 'VAT', 'JPN', 'THA', 'MYS', 'KHM', 'BHR', 'KWT', 'QAT', 'SAU', 'ARE', 'OMN', 'JOR', 'MAR', 'SWZ', 'LSO', 'BTN', 'BRN', 'TON']) },
+  { key: 'deserts', label: 'Wüstenländer', ids: new Set(['DZA', 'LBY', 'EGY', 'SDN', 'MRT', 'MLI', 'NER', 'TCD', 'SAU', 'ARE', 'QAT', 'KWT', 'OMN', 'YEM', 'IRQ', 'IRN', 'AFG', 'TKM', 'UZB', 'MNG', 'AUS', 'NAM', 'BWA']) },
+  { key: 'manyneighbors', label: 'Länder mit besonders vielen Nachbarländern', ids: new Set(['CHN', 'RUS', 'BRA', 'COD', 'DEU', 'AUT', 'TUR']) },
+  { key: 'colonialpowers', label: 'Frühere Kolonialmächte', ids: new Set(['GBR', 'FRA', 'ESP', 'PRT', 'NLD', 'BEL', 'DEU', 'ITA']) },
+  { key: 'ringoffire', label: 'Länder am Pazifischen Feuerring', ids: new Set(['JPN', 'PHL', 'IDN', 'PNG', 'NZL', 'CHL', 'PER', 'ECU', 'MEX', 'USA', 'CAN', 'RUS', 'GTM', 'SLV', 'NIC', 'CRI', 'PAN']) },
+  { key: 'largestarea', label: 'Größte Länder nach Fläche', ids: new Set(['RUS', 'CAN', 'USA', 'CHN', 'BRA', 'AUS', 'IND', 'ARG', 'KAZ', 'DZA', 'COD', 'SAU', 'MEX', 'IDN', 'SDN']) },
+  { key: 'smalleststates', label: 'Kleinste Länder der Welt', ids: new Set(['VAT', 'MCO', 'NRU', 'TUV', 'SMR', 'LIE', 'MHL', 'KNA', 'MDV', 'MLT']) },
+  { key: 'mostpopulous', label: 'Bevölkerungsreichste Länder', ids: new Set(['CHN', 'IND', 'USA', 'IDN', 'PAK', 'NGA', 'BRA', 'BGD', 'RUS', 'MEX']) },
+  { key: 'wine', label: 'Weinanbauländer', ids: new Set(['FRA', 'ITA', 'ESP', 'PRT', 'DEU', 'ARG', 'CHL', 'ZAF', 'AUS', 'USA', 'GEO']) },
+  { key: 'coffee', label: 'Kaffeeanbauländer', ids: new Set(['BRA', 'COL', 'VNM', 'IDN', 'ETH', 'HND', 'UGA', 'MEX', 'GTM', 'PER', 'IND']) },
+  { key: 'tea', label: 'Tee-Anbauländer', ids: new Set(['CHN', 'IND', 'KEN', 'LKA', 'TUR', 'VNM', 'IDN']) },
+];
+
+let categoryFilterIds = null;
+function matchesCategory(id) {
+  return !categoryFilterIds || categoryFilterIds.has(id);
+}
+
+function matchesDifficulty(id) {
+  if (currentDifficulty === 'easy') return EASY_IDS.has(id);
+  if (currentDifficulty === 'hard') return !EASY_IDS.has(id);
+  return true;
+}
+
+function filteredPool() {
+  return allCountries.filter(c => inSelectedContinent(c.continent) && matchesCategory(c.id) && matchesDifficulty(c.id));
+}
+
+// Bekannte Sehenswürdigkeiten mit Wikipedia-Titel (für das Bild) und ISO-A3-Ländercode
+const LANDMARKS = [
+  { title: 'Eiffel Tower', id: 'FRA' },
+  { title: 'Colosseum', id: 'ITA' },
+  { title: 'Statue of Liberty', id: 'USA' },
+  { title: 'Great Wall of China', id: 'CHN' },
+  { title: 'Taj Mahal', id: 'IND' },
+  { title: 'Christ the Redeemer (statue)', id: 'BRA' },
+  { title: 'Sydney Opera House', id: 'AUS' },
+  { title: 'Machu Picchu', id: 'PER' },
+  { title: 'Big Ben', id: 'GBR' },
+  { title: 'Petra', id: 'JOR' },
+  { title: 'Acropolis of Athens', id: 'GRC' },
+  { title: 'Chichen Itza', id: 'MEX' },
+  { title: 'Neuschwanstein Castle', id: 'DEU' },
+  { title: 'Sagrada Família', id: 'ESP' },
+  { title: 'Burj Khalifa', id: 'ARE' },
+  { title: "Saint Basil's Cathedral", id: 'RUS' },
+  { title: 'Château Frontenac', id: 'CAN' },
+  { title: 'Mount Fuji', id: 'JPN' },
+  { title: 'Angkor Wat', id: 'KHM' },
+  { title: 'Golden Gate Bridge', id: 'USA' },
+  { title: 'Great Sphinx of Giza', id: 'EGY' },
+  { title: 'Leaning Tower of Pisa', id: 'ITA' },
+  { title: 'Table Mountain', id: 'ZAF' },
+  { title: 'Uluru', id: 'AUS' },
+  { title: 'Stonehenge', id: 'GBR' },
+  { title: 'Notre-Dame de Paris', id: 'FRA' },
+  { title: 'Brandenburg Gate', id: 'DEU' },
+  { title: 'Mount Rushmore', id: 'USA' },
+  { title: 'Grand Canyon', id: 'USA' },
+  { title: 'Forbidden City', id: 'CHN' },
+  { title: 'Hagia Sophia', id: 'TUR' },
+  { title: 'Charles Bridge', id: 'CZE' },
+  { title: 'Schönbrunn Palace', id: 'AUT' },
+  { title: 'Matterhorn', id: 'CHE' },
+  { title: 'Atomium', id: 'BEL' },
+  { title: 'Belém Tower', id: 'PRT' },
+  { title: 'Cliffs of Moher', id: 'IRL' },
+  { title: 'Hallgrímskirkja', id: 'ISL' },
+  { title: 'Bryggen', id: 'NOR' },
+  { title: 'Stockholm Palace', id: 'SWE' },
+  { title: 'Nyhavn', id: 'DNK' },
+  { title: 'Suomenlinna', id: 'FIN' },
+  { title: 'Saint Sophia Cathedral, Kyiv', id: 'UKR' },
+  { title: 'Borobudur', id: 'IDN' },
+  { title: 'Wat Arun', id: 'THA' },
+  { title: 'Ha Long Bay', id: 'VNM' },
+  { title: 'Gyeongbokgung', id: 'KOR' },
+  { title: 'Milford Sound', id: 'NZL' },
+  { title: 'Casa Rosada', id: 'ARG' },
+  { title: 'Easter Island', id: 'CHL' },
+  { title: 'Petronas Towers', id: 'MYS' },
+  { title: 'Marina Bay Sands', id: 'SGP' },
+  { title: 'Shwedagon Pagoda', id: 'MMR' },
+  { title: 'Banaue Rice Terraces', id: 'PHL' },
+  { title: 'Pha That Luang', id: 'LAO' },
+  { title: 'Sultan Omar Ali Saifuddin Mosque', id: 'BRN' },
+  { title: 'Badshahi Mosque', id: 'PAK' },
+  { title: 'Sigiriya', id: 'LKA' },
+  { title: 'Paro Taktsang', id: 'BTN' },
+  { title: 'Boudhanath', id: 'NPL' },
+  { title: 'Lalbagh Fort', id: 'BGD' },
+  { title: 'Registan', id: 'UZB' },
+  { title: 'Baiterek', id: 'KAZ' },
+  { title: 'Darvaza gas crater', id: 'TKM' },
+  { title: 'Issyk-Kul', id: 'KGZ' },
+  { title: 'Dushanbe', id: 'TJK' },
+  { title: 'Taipei 101', id: 'TWN' },
+  { title: 'Genghis Khan Equestrian Statue', id: 'MNG' },
+  { title: 'Juche Tower', id: 'PRK' },
+  { title: 'Sheikh Zayed Grand Mosque', id: 'ARE' },
+  { title: 'Masjid al-Haram', id: 'SAU' },
+  { title: 'Western Wall', id: 'ISR' },
+  { title: 'Baalbek', id: 'LBN' },
+  { title: 'Ziggurat of Ur', id: 'IRQ' },
+  { title: 'Golestan Palace', id: 'IRN' },
+  { title: 'Hassan II Mosque', id: 'MAR' },
+  { title: 'Amphitheatre of El Jem', id: 'TUN' },
+  { title: 'Leptis Magna', id: 'LBY' },
+  { title: 'Casbah of Algiers', id: 'DZA' },
+  { title: 'Pyramids of Meroë', id: 'SDN' },
+  { title: 'Zuma Rock', id: 'NGA' },
+  { title: 'Cape Coast Castle', id: 'GHA' },
+  { title: 'Gorée Island', id: 'SEN' },
+  { title: 'Great Mosque of Djenné', id: 'MLI' },
+  { title: 'Lalibela', id: 'ETH' },
+  { title: 'Maasai Mara', id: 'KEN' },
+  { title: 'Serengeti National Park', id: 'TZA' },
+  { title: 'Victoria Falls', id: 'ZWE' },
+  { title: 'Namib Desert', id: 'NAM' },
+  { title: 'Okavango Delta', id: 'BWA' },
+  { title: 'El Capitolio', id: 'CUB' },
+  { title: "Dunn's River Falls", id: 'JAM' },
+  { title: 'Citadelle Laferrière', id: 'HTI' },
+  { title: 'Tikal', id: 'GTM' },
+  { title: 'Arenal Volcano', id: 'CRI' },
+  { title: 'Panama Canal', id: 'PAN' },
+  { title: 'Salar de Uyuni', id: 'BOL' },
+  { title: 'Angel Falls', id: 'VEN' },
+  { title: 'Mount Yasur', id: 'VUT' },
+  { title: 'Kokoda Track', id: 'PNG' },
+];
+
+const menuEl = document.getElementById('menu');
+const continentMenuEl = document.getElementById('continent-menu');
+const categoryPickMenuEl = document.getElementById('category-pick-menu');
+const categoryPickButtonsEl = document.getElementById('category-pick-buttons');
+const categoryTypeMenuEl = document.getElementById('category-type-menu');
+const categoryBannerEl = document.getElementById('category-banner');
+const difficultyMenuEl = document.getElementById('difficulty-menu');
+const gameEl = document.getElementById('game');
+const targetBlockEl = document.getElementById('target-block');
+const targetLabelEl = document.getElementById('target-label');
+const targetValueEl = document.getElementById('target-value');
+const landmarkPanelEl = document.getElementById('landmark-panel');
+const landmarkImgEl = document.getElementById('landmark-img');
+const landmarkCaptionEl = document.getElementById('landmark-caption');
+const imageLightboxEl = document.getElementById('image-lightbox');
+const lightboxImgEl = document.getElementById('lightbox-img');
+const scoreValueEl = document.getElementById('score-value');
+const roundValueEl = document.getElementById('round-value');
+const wrongValueEl = document.getElementById('wrong-value');
+const statusMsgEl = document.getElementById('status-msg');
+const btnCheckEl = document.getElementById('btn-check');
+const endOverlayEl = document.getElementById('end-overlay');
+const endTextEl = document.getElementById('end-text');
+
+const borderGameEl = document.getElementById('border-game');
+const borderTargetValueEl = document.getElementById('border-target-value');
+const borderStepsValueEl = document.getElementById('border-steps-value');
+const borderRoundValueEl = document.getElementById('border-round-value');
+const borderTotalValueEl = document.getElementById('border-total-value');
+const borderPathValueEl = document.getElementById('border-path-value');
+const borderStatusMsgEl = document.getElementById('border-status-msg');
+const btnBorderNextEl = document.getElementById('btn-border-next');
+const borderEndOverlayEl = document.getElementById('border-end-overlay');
+const borderEndTextEl = document.getElementById('border-end-text');
+
+const capitalGameEl = document.getElementById('capital-game');
+const capitalTargetValueEl = document.getElementById('capital-target-value');
+const capitalScoreValueEl = document.getElementById('capital-score-value');
+const capitalRoundValueEl = document.getElementById('capital-round-value');
+const capitalWrongValueEl = document.getElementById('capital-wrong-value');
+const capitalStatusMsgEl = document.getElementById('capital-status-msg');
+const btnCapitalCheckEl = document.getElementById('btn-capital-check');
+const capitalEndOverlayEl = document.getElementById('capital-end-overlay');
+const capitalEndTextEl = document.getElementById('capital-end-text');
+
+const silhouetteGameEl = document.getElementById('silhouette-game');
+const silMapEl = document.getElementById('sil-map');
+const silhouetteShapeEl = document.getElementById('silhouette-shape');
+const silOptionEls = Array.from(document.querySelectorAll('.sil-option'));
+const silScoreValueEl = document.getElementById('sil-score-value');
+const silRoundValueEl = document.getElementById('sil-round-value');
+const silWrongValueEl = document.getElementById('sil-wrong-value');
+const silEndOverlayEl = document.getElementById('sil-end-overlay');
+const silEndTextEl = document.getElementById('sil-end-text');
+
+let map = null;
+let geoLayer = null;
+let mapReady = false;
+let allCountries = []; // { name, id, feature }
+let shuffledRounds = []; // { target, display, imageTitle?, feature? }
+let currentIndex = 0;
+let currentTarget = null;
+let selectedLayer = null;
+let selectedFeature = null;
+let pendingCorrectLayer = null;
+let checkPhase = 'idle'; // 'idle' | 'selected' | 'checked'
+let score = 0;
+let wrongCount = 0;
+let totalRounds = 0;
+let statusTimeout = null;
+let currentDifficulty = 'medium';
+let gameMode = 'country'; // 'country' | 'landmark' | 'silhouette' | 'border'
+const imageCache = {};
+
+let countryGeoJsonData = null;
+let countryDataReady = false;
+
+let countryCapitals = {};
+let countryFlags = {}; // ISO-A3 -> ISO-A2, für Flaggen-Emoji im Online-Modus
+let capitalsDataReady = false;
+
+let capitalMap = null;
+let capitalMarkersLayer = null;
+let capitalMapReady = false;
+let capitalStatusTimeout = null;
+let capitalPoints = []; // { id, countryName, capitalName, lat, lon }
+let capitalPointsReady = false;
+let capitalChallenges = [];
+let capitalIndex = 0;
+let capitalScore = 0;
+let capitalWrong = 0;
+let capitalCurrentTarget = null;
+let capitalSelectedPoint = null;
+let capitalSelectedMarker = null;
+let capitalCheckPhase = 'idle'; // 'idle' | 'selected' | 'checked'
+
+let borderMap = null;
+let borderGeoLayer = null;
+let borderMapReady = false;
+let borderStatusTimeout = null;
+
+let borderGraph = null;
+let borderGraphReady = false;
+let borderChallenges = [];
+let borderRoundIndex = 0;
+let borderCurrentChallenge = null;
+let borderTerritory = new Set();
+let borderTargetId = null;
+let borderLastAddedId = null;
+let borderSteps = 0;
+let borderWins = 0;
+let borderLosses = 0;
+let borderRoundOver = false;
+
+let silRounds = [];
+let silIndex = 0;
+let silScore = 0;
+let silWrong = 0;
+let silTotalRounds = 0;
+let silCurrentTarget = null;
+let silAnswering = false;
+
+let silMap = null;
+let silMapReady = false;
+let silCountriesLayer = null;
+
+// Deterministische Pastellfarbe pro Land (aus dem ISO-Code gehasht)
+function colorForFeature(feature) {
+  const key = feature.id || feature.properties.name || '';
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = key.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 62%, 68%)`;
+}
+
+function baseStyle(feature) {
+  return { color: '#ffffff', weight: 1.5, fillColor: colorForFeature(feature), fillOpacity: 0.7 };
+}
+
+// Globale Einstellungen (Kartenstil, Sprache, Lautstärke) - persistiert in localStorage
+const DEFAULT_SETTINGS = { mapStyle: 'ocean', language: 'de', volume: 60 };
+let settings = loadSettings();
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('geoquiz-settings');
+    if (!raw) return { ...DEFAULT_SETTINGS };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SETTINGS, ...parsed };
+  } catch (e) {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem('geoquiz-settings', JSON.stringify(settings));
+  } catch (e) { /* ignore */ }
+}
+
+// Belohnungssystem: jeder Modus hat seinen EIGENEN Belohnungspfad (eigene Serie,
+// eigener Fortschritt, eigene Abzeichen) - nur die Münzen sind eine gemeinsame
+// Kasse. Persistiert in localStorage, damit der Fortschritt erhalten bleibt.
+const REWARD_MODES = ['country', 'landmark', 'silhouette', 'capital', 'border'];
+const MODE_LABELS = {
+  country: 'Länder-Quiz',
+  landmark: 'Sehenswürdigkeiten',
+  silhouette: 'Silhouette',
+  capital: 'Hauptstädte',
+  border: 'Länderkette',
+};
+// Je höher der Schwierigkeitsgrad, desto mehr Münzen pro richtiger Antwort - Länderkette
+// hat keine eigene Schwierigkeitsauswahl und zählt daher immer als "Mittel".
+const COINS_BY_DIFFICULTY = { easy: 5, medium: 10, hard: 20 };
+function coinsForDifficulty(mode) {
+  const diff = mode === 'border' ? 'medium' : currentDifficulty;
+  return COINS_BY_DIFFICULTY[diff] || COINS_BY_DIFFICULTY.medium;
+}
+const REWARD_MILESTONES = [
+  { threshold: 5, icon: '🥉', label: 'Erste Schritte' },
+  { threshold: 15, icon: '🥈', label: 'Geübter Geograf' },
+  { threshold: 30, icon: '🥇', label: 'Kartenkenner' },
+  { threshold: 50, icon: '🎖️', label: 'Weltenbummler' },
+  { threshold: 75, icon: '🏅', label: 'Länderprofi' },
+  { threshold: 100, icon: '🏆', label: 'Geo-Experte' },
+  { threshold: 150, icon: '💎', label: 'Kartenmeister' },
+  { threshold: 200, icon: '👑', label: 'Weltmeister' },
+  { threshold: 300, icon: '🌍', label: 'Erdkugel-Legende' },
+  { threshold: 500, icon: '⭐', label: 'Geo-Genie' },
+];
+
+function emptyModeStats() {
+  const obj = {};
+  REWARD_MODES.forEach(m => { obj[m] = 0; });
+  return obj;
+}
+function emptyModeLists() {
+  const obj = {};
+  REWARD_MODES.forEach(m => { obj[m] = []; });
+  return obj;
+}
+
+let rewards = loadRewards();
+
+function loadRewards() {
+  const fresh = { coins: 0, correct: emptyModeStats(), streaks: emptyModeStats(), bestStreaks: emptyModeStats(), unlocked: emptyModeLists() };
+  try {
+    const raw = localStorage.getItem('geoquiz-rewards');
+    if (!raw) return fresh;
+    const parsed = JSON.parse(raw);
+    return {
+      coins: typeof parsed.coins === 'number' ? parsed.coins : 0,
+      correct: { ...fresh.correct, ...(parsed.correct || {}) },
+      streaks: { ...fresh.streaks, ...(parsed.streaks || {}) },
+      bestStreaks: { ...fresh.bestStreaks, ...(parsed.bestStreaks || {}) },
+      unlocked: { ...fresh.unlocked, ...(parsed.unlocked || {}) },
+    };
+  } catch (e) {
+    return fresh;
+  }
+}
+
+function saveRewards() {
+  try {
+    localStorage.setItem('geoquiz-rewards', JSON.stringify(rewards));
+  } catch (e) { /* ignore */ }
+}
+
+function updateCoinDisplays() {
+  document.querySelectorAll('.coin-value').forEach(el => {
+    el.textContent = rewards.coins;
+    bumpValue(el);
+  });
+  const menuCoinEl = document.getElementById('menu-coin-value');
+  if (menuCoinEl) menuCoinEl.textContent = rewards.coins;
+}
+
+function showCoinPopup(amount) {
+  const candidates = [gameEl, borderGameEl, capitalGameEl, silhouetteGameEl];
+  const host = candidates.find(el => el && el.offsetParent !== null) || document.body;
+  const popup = document.createElement('div');
+  popup.className = 'coin-popup';
+  popup.textContent = `+${amount} 🪙`;
+  host.appendChild(popup);
+  setTimeout(() => popup.remove(), 1000);
+}
+
+function showRewardToast(milestone, mode) {
+  const toast = document.createElement('div');
+  toast.className = 'reward-toast';
+  toast.innerHTML = `<span class="reward-icon">${milestone.icon}</span><span>${MODE_LABELS[mode]}: ${milestone.label} freigeschaltet!</span>`;
+  document.body.appendChild(toast);
+  launchConfetti(45);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Wird bei jeder richtigen Antwort aufgerufen - mode ist 'country'/'landmark'/
+// 'silhouette'/'capital'/'border', jeder hat seinen eigenen Fortschritt/Abzeichen.
+// Die Münzbelohnung skaliert mit dem Schwierigkeitsgrad (mehr Münzen bei "Schwer").
+function awardCorrect(mode) {
+  const coinsEarned = coinsForDifficulty(mode);
+  rewards.coins += coinsEarned;
+  rewards.correct[mode] = (rewards.correct[mode] || 0) + 1;
+  rewards.streaks[mode] = (rewards.streaks[mode] || 0) + 1;
+  if (rewards.streaks[mode] > (rewards.bestStreaks[mode] || 0)) rewards.bestStreaks[mode] = rewards.streaks[mode];
+
+  let newlyUnlocked = null;
+  REWARD_MILESTONES.forEach(m => {
+    if (rewards.correct[mode] >= m.threshold && !rewards.unlocked[mode].includes(m.threshold)) {
+      rewards.unlocked[mode].push(m.threshold);
+      newlyUnlocked = m;
+    }
+  });
+  saveRewards();
+  updateCoinDisplays();
+  showCoinPopup(coinsEarned);
+  renderRewardsScreen();
+  if (newlyUnlocked) showRewardToast(newlyUnlocked, mode);
+}
+
+// Wird bei falscher Antwort oder Aufgeben aufgerufen - beendet nur die Serie des
+// jeweiligen Modus, ändert aber nichts an bereits verdienten Münzen/Abzeichen.
+function resetStreak(mode) {
+  if (!rewards.streaks[mode]) return;
+  rewards.streaks[mode] = 0;
+  saveRewards();
+}
+
+function renderRewardsScreen() {
+  const modesEl = document.getElementById('rewards-modes');
+  modesEl.innerHTML = '';
+  REWARD_MODES.forEach(mode => {
+    const correct = rewards.correct[mode] || 0;
+    const bestStreak = rewards.bestStreaks[mode] || 0;
+    const unlocked = rewards.unlocked[mode] || [];
+    const nextMilestone = REWARD_MILESTONES.find(m => correct < m.threshold);
+
+    let progressLabel;
+    let pct;
+    if (nextMilestone) {
+      const prevThreshold = [...REWARD_MILESTONES].reverse().find(m => m.threshold <= correct);
+      const base = prevThreshold ? prevThreshold.threshold : 0;
+      pct = Math.max(4, Math.round(((correct - base) / (nextMilestone.threshold - base)) * 100));
+      progressLabel = `${correct} / ${nextMilestone.threshold} bis "${nextMilestone.label}" ${nextMilestone.icon}`;
+    } else {
+      pct = 100;
+      progressLabel = 'Alle Belohnungen freigeschaltet! 🎉';
+    }
+
+    const section = document.createElement('div');
+    section.className = 'rewards-mode-section';
+    section.innerHTML = `
+      <div class="rewards-mode-header">
+        <span class="rewards-mode-title">${MODE_LABELS[mode]}</span>
+        <span class="rewards-mode-stats">${correct} richtig &middot; beste Serie ${bestStreak} &#128293;</span>
+      </div>
+      <div class="rewards-mode-progress-label">${progressLabel}</div>
+      <div class="rewards-mode-progress-track"><div class="rewards-mode-progress-fill" style="width:${pct}%"></div></div>
+      <div class="rewards-mode-badges"></div>
+    `;
+    const badgesEl = section.querySelector('.rewards-mode-badges');
+    REWARD_MILESTONES.forEach(m => {
+      const badge = document.createElement('div');
+      badge.className = 'reward-badge-mini' + (unlocked.includes(m.threshold) ? ' unlocked' : '');
+      badge.title = `${m.label} (${m.threshold})`;
+      badge.textContent = m.icon;
+      badgesEl.appendChild(badge);
+    });
+    modesEl.appendChild(section);
+  });
+}
+
+// ================= SHOP: Skins gegen Münzen kaufen =================
+// Jeder Skin ist ein eigenes 3D-Modell (name.fbx) im Projektordner, das im Shop-
+// Karussell live per Three.js gerendert und automatisch gedreht wird.
+const SKINS = [
+  { key: 'entdecker', name: 'Entdecker', file: 'entdeckerskin.fbx', price: 200 },
+  { key: 'zombie', name: 'Zombie', file: 'zombieskin.fbx', price: 300 },
+  { key: 'drache', name: 'Drache', file: 'drachenskin.fbx', price: 600 },
+];
+const DEFAULT_SKIN_KEY = 'default';
+
+let inventory = loadInventory();
+
+function loadInventory() {
+  const fresh = { owned: [DEFAULT_SKIN_KEY], equipped: DEFAULT_SKIN_KEY };
+  try {
+    const raw = localStorage.getItem('geoquiz-inventory');
+    if (!raw) return fresh;
+    const parsed = JSON.parse(raw);
+    return {
+      owned: Array.isArray(parsed.owned) ? parsed.owned : fresh.owned,
+      equipped: parsed.equipped || DEFAULT_SKIN_KEY,
+    };
+  } catch (e) {
+    return fresh;
+  }
+}
+function saveInventory() {
+  try { localStorage.setItem('geoquiz-inventory', JSON.stringify(inventory)); } catch (e) { /* ignore */ }
+}
+
+function getSkinByKey(key) {
+  return SKINS.find(s => s.key === key) || null;
+}
+function equippedSkinFile() {
+  const skin = getSkinByKey(inventory.equipped);
+  return skin ? skin.file : null;
+}
+
+function buySkin(key) {
+  const skin = getSkinByKey(key);
+  if (!skin || inventory.owned.includes(key) || rewards.coins < skin.price) return;
+  rewards.coins -= skin.price;
+  inventory.owned.push(key);
+  saveRewards();
+  saveInventory();
+  updateCoinDisplays();
+  renderShop();
+  launchConfetti(40);
+  const toast = document.createElement('div');
+  toast.className = 'reward-toast';
+  toast.innerHTML = `<span class="reward-icon">🛍️</span><span>${skin.name}-Skin gekauft!</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function equipSkin(key) {
+  if (key !== DEFAULT_SKIN_KEY && !inventory.owned.includes(key)) return;
+  inventory.equipped = key;
+  saveInventory();
+  renderShop();
+  updateEquippedSkinDisplays();
+}
+
+// Aktualisiert alle Stellen außerhalb des Shop-Karussells selbst, die den aktuell
+// ausgerüsteten Skin zeigen (aktuell: der eigene Avatar im Online-Modus-HUD).
+// Skins sind jetzt 3D-Modelle (.fbx), die kleine Avatar-Anzeige im Online-HUD kann
+// keine Live-3D-Vorschau leisten - bleibt daher ausgeblendet, das große Karussell
+// auf der Startseite ist die Stelle, an der Skins wirklich sichtbar sind.
+function updateEquippedSkinDisplays() {
+  const avatarEl = document.getElementById('online-me-avatar');
+  if (avatarEl) avatarEl.style.display = 'none';
+}
+
+// Karussell: "Standard" + alle Skins in einer Reihe, mit Pfeilen durchblätterbar.
+const SHOP_ITEMS = [{ key: DEFAULT_SKIN_KEY, name: 'Standard', file: 'standartskin.fbx', price: 0 }, ...SKINS];
+let shopCarouselIndex = 0;
+
+function shopStep(delta) {
+  shopCarouselIndex = (shopCarouselIndex + delta + SHOP_ITEMS.length) % SHOP_ITEMS.length;
+  renderShop();
+}
+
+// ---------- 3D-Skin-Viewer (Three.js) - rendert das .fbx-Modell des aktuell im
+// Karussell gezeigten Skins live, dreht sich automatisch, per Maus/Touch drehbar. ----------
+let skinViewer = null;
+let skinViewerLoader = null;
+let skinModelToken = 0;
+
+function initSkinViewer() {
+  if (skinViewer) return skinViewer;
+  const canvas = document.getElementById('shop-carousel-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
+  camera.position.set(0, 0, 10);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  keyLight.position.set(5, 8, 6);
+  scene.add(keyLight);
+  const rimLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+  rimLight.position.set(-6, 2, -4);
+  scene.add(rimLight);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.enableZoom = false;
+  controls.enablePan = false;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 2.2;
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  skinViewer = { renderer, scene, camera, controls, group };
+  skinViewerLoader = new THREE.FBXLoader();
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+
+  window.addEventListener('resize', resizeSkinViewer);
+  return skinViewer;
+}
+
+function resizeSkinViewer() {
+  if (!skinViewer) return;
+  const displayEl = document.getElementById('shop-carousel-display');
+  const size = displayEl.clientWidth || 300;
+  skinViewer.renderer.setSize(size, size, false);
+  skinViewer.camera.aspect = 1;
+  skinViewer.camera.updateProjectionMatrix();
+}
+
+function clearSkinModel() {
+  if (!skinViewer) return;
+  while (skinViewer.group.children.length) {
+    skinViewer.group.remove(skinViewer.group.children[0]);
+  }
+}
+
+// Lädt das FBX-Modell des gewählten Skins, zentriert und skaliert es einheitlich
+// (FBX-Dateien haben oft sehr unterschiedliche Ursprungsgrößen/-einheiten).
+function loadSkinModel(file) {
+  const viewer = initSkinViewer();
+  resizeSkinViewer();
+  clearSkinModel();
+  const myToken = ++skinModelToken;
+  const loadingEl = document.getElementById('shop-carousel-loading');
+  const canvasEl = document.getElementById('shop-carousel-canvas');
+  loadingEl.textContent = 'Lädt...';
+  loadingEl.style.display = 'block';
+  canvasEl.style.display = 'none';
+
+  skinViewerLoader.load(file, (fbx) => {
+    if (myToken !== skinModelToken) return;
+    try {
+      const box = new THREE.Box3().setFromObject(fbx);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const scale = 4.5 / maxDim;
+      fbx.scale.setScalar(scale);
+      fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+      viewer.group.add(fbx);
+      loadingEl.style.display = 'none';
+      canvasEl.style.display = 'block';
+    } catch (err) {
+      console.error('Skin-Modell Verarbeitungsfehler:', file, err);
+      loadingEl.textContent = 'Fehler beim Anzeigen: ' + err.message;
+    }
+  }, undefined, (err) => {
+    if (myToken !== skinModelToken) return;
+    console.error('Skin-Modell Ladefehler:', file, err);
+    loadingEl.textContent = 'Ladefehler: ' + (err && err.message ? err.message : String(err));
+  });
+}
+
+function renderShop() {
+  const item = SHOP_ITEMS[shopCarouselIndex];
+  const isDefault = item.key === DEFAULT_SKIN_KEY;
+  const owned = isDefault || inventory.owned.includes(item.key);
+  const equipped = inventory.equipped === item.key;
+
+  const canvasEl = document.getElementById('shop-carousel-canvas');
+  document.getElementById('shop-carousel-emoji').style.display = 'none';
+  canvasEl.className = 'shop-carousel-canvas' + (owned ? '' : ' locked');
+  loadSkinModel(item.file);
+
+  document.getElementById('shop-carousel-price').textContent = isDefault
+    ? (equipped ? 'Ausgerüstet' : 'Immer verfügbar')
+    : (owned ? (equipped ? 'Ausgerüstet' : 'Freigeschaltet') : item.price + ' 🪙');
+
+  const btn = document.getElementById('shop-carousel-btn');
+  btn.replaceWith(btn.cloneNode(true));
+  const freshBtn = document.getElementById('shop-carousel-btn');
+  if (equipped) {
+    freshBtn.className = 'shop-carousel-btn equipped-btn';
+    freshBtn.textContent = 'Ausgerüstet';
+    freshBtn.disabled = true;
+  } else if (owned) {
+    freshBtn.className = 'shop-carousel-btn equip-btn';
+    freshBtn.textContent = 'Ausrüsten';
+    freshBtn.disabled = false;
+    freshBtn.addEventListener('click', () => equipSkin(item.key));
+  } else {
+    freshBtn.className = 'shop-carousel-btn';
+    freshBtn.textContent = 'Kaufen';
+    freshBtn.disabled = rewards.coins < item.price;
+    freshBtn.addEventListener('click', () => buySkin(item.key));
+  }
+}
+
+// Kartenstile: 'ocean' ist der normale Kachel-Hintergrund, 'colorful' ist kein eigener
+// Kachel-Hintergrund sondern ein Landfärbe-Modus (jedes Land bekommt seine eigene Farbe).
+const MAP_STYLES = {
+  ocean: { url: 'https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', maxZoom: 10 },
+};
+
+const LAND_COLOR = '#9ca3af';
+const LAND_BORDER = '#3f4552';
+const CORRECT_COLOR = '#2ecc71';
+const CORRECT_BORDER = '#145a32';
+const WRONG_COLOR = '#e74c3c';
+const WRONG_BORDER = '#7b241c';
+
+const landStyle    = { color: LAND_BORDER, weight: 1.5, fillColor: LAND_COLOR, fillOpacity: 0.85 };
+const correctStyle = { color: CORRECT_BORDER, weight: 2, fillColor: CORRECT_COLOR, fillOpacity: 0.95 };
+const wrongStyle   = { color: WRONG_BORDER, weight: 2, fillColor: WRONG_COLOR, fillOpacity: 0.95 };
+const SELECT_COLOR = '#f1c40f';
+const SELECT_BORDER = '#7d6608';
+const selectStyle  = { color: SELECT_BORDER, weight: 2.5, fillColor: SELECT_COLOR, fillOpacity: 0.95 };
+
+const MAP_STYLE_NAMES = ['ocean', 'colorful'];
+
+function applyMapStyle(name) {
+  settings.mapStyle = MAP_STYLE_NAMES.includes(name) ? name : 'ocean';
+  saveSettings();
+  invalidateMaps();
+}
+
+// Bunte Landfarben: jedes Land bekommt eine eigene, kräftige Farbe (per Hash aus Land-ID).
+function colorForCountry(feature) {
+  const key = feature.id || (feature.properties && feature.properties.name) || '';
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = key.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 55%)`;
+}
+
+// Style-Funktion statt festem Objekt, damit Leaflet sie bei jedem resetStyle() erneut
+// aufruft - so bleibt der bunte Modus auch nach Hervorhebungen (Auswahl/Richtig/Falsch) korrekt.
+function landStyleFor(feature) {
+  if (settings.mapStyle === 'colorful') {
+    return { color: '#20242c', weight: 1.2, fillColor: colorForCountry(feature), fillOpacity: 0.9 };
+  }
+  return landStyle;
+}
+
+// Wirft bereits erstellte Karten weg, damit sie beim nächsten Betreten des jeweiligen
+// Modus mit den neuen Einstellungen (Farbe/Kartenstil) frisch neu aufgebaut werden.
+function invalidateMaps() {
+  if (map) { map.remove(); map = null; mapReady = false; }
+  if (borderMap) { borderMap.remove(); borderMap = null; borderMapReady = false; }
+  if (capitalMap) { capitalMap.remove(); capitalMap = null; capitalMapReady = false; }
+}
+
+function fetchLandmarkImage(title) {
+  if (imageCache[title]) return Promise.resolve(imageCache[title]);
+  const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=500&redirects=1&origin=*`;
+  return fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      const page = Object.values(data.query.pages)[0];
+      const src = page && page.thumbnail ? page.thumbnail.source : null;
+      imageCache[title] = src;
+      return src;
+    })
+    .catch(() => null);
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Kurzer "Pop"-Effekt auf einem Wert (Score/Falsch-Zähler), damit Änderungen auffallen.
+// Wandelt einen ISO-A2-Code (z.B. "DE") in das entsprechende Flaggen-Emoji um,
+// über die Unicode "Regional Indicator Symbol"-Buchstaben.
+function flagEmoji(iso2) {
+  if (!iso2 || iso2.length !== 2) return '';
+  const codePoints = [...iso2.toUpperCase()].map(c => 127397 + c.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
+function bumpValue(el) {
+  el.classList.remove('value-pop');
+  void el.offsetWidth;
+  el.classList.add('value-pop');
+}
+
+// Kleines Konfetti-Feuerwerk für gute Momente (Belohnung freigeschaltet, Online-Sieg,
+// starke Runde) - simple bunte Rechtecke, die fallend über den Bildschirm animieren.
+const CONFETTI_COLORS = ['#f1c40f', '#2ecc71', '#e74c3c', '#4fd1c5', '#a78bfa', '#fb7185', '#60a5fa'];
+function launchConfetti(count) {
+  count = count || 60;
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    piece.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+    piece.style.animationDelay = (Math.random() * 0.35) + 's';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4200);
+  }
+}
+
+// Wird bei Rundenende aufgerufen - bei einer starken Quote (>=70%) gibt's Konfetti als
+// kleine Belohnung fürs gute Abschneiden.
+function maybeCelebrate(correct, total) {
+  if (total > 0 && correct / total >= 0.7) launchConfetti(50);
+}
+
+// Serien-Flamme im HUD: erscheint erst ab einer Serie von 3, zeigt die aktuelle Zahl.
+function updateStreakBadge(elId, mode) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const streak = (rewards.streaks && rewards.streaks[mode]) || 0;
+  if (streak >= 3) {
+    el.textContent = `🔥 ${streak}`;
+    el.classList.add('show');
+  } else {
+    el.classList.remove('show');
+  }
+}
+
+function showStatus(text, kind) {
+  statusMsgEl.textContent = text;
+  statusMsgEl.className = `show-${kind}`;
+  clearTimeout(statusTimeout);
+  statusTimeout = setTimeout(() => { statusMsgEl.className = ''; }, 1400);
+  playFeedbackSound(kind);
+}
+
+function loadCountryData(onReady) {
+  if (countryDataReady) {
+    onReady(countryGeoJsonData);
+    return;
+  }
+  fetch(GEOJSON_URL)
+    .then(r => r.json())
+    .then(data => {
+      // Natural-Earth-Rohdaten normalisieren: id (ISO-A3) + properties.name auf das
+      // vom Rest der App erwartete Format bringen. ADM0_A3 statt ISO_A3, weil
+      // Natural Earth bei einigen Ländern (z.B. Frankreich) ISO_A3 = "-99" liefert.
+      data.features.forEach(f => {
+        f.id = f.properties.ADM0_A3;
+        f.properties.name = f.properties.NAME;
+      });
+
+      countryGeoJsonData = data;
+      const seen = new Set();
+      allCountries = [];
+      countryContinentById = {};
+      data.features.forEach(f => {
+        const name = f.properties && f.properties.name;
+        const id = f.id;
+        if (name && !seen.has(name)) {
+          seen.add(name);
+          const continent = f.properties.CONTINENT || null;
+          allCountries.push({ name, id, feature: f, continent });
+          countryContinentById[id] = continent;
+        }
+      });
+      countryDataReady = true;
+      onReady(data);
+    })
+    .catch(() => {
+      targetValueEl.textContent = 'Fehler beim Laden der Karte';
+    });
+}
+
+// Eigenständige, vom Länderketten-Modus unabhängige Ladefunktion - nutzt denselben
+// Rohdatensatz, extrahiert hier aber die Hauptstadt statt der Grenz-Nachbarn.
+function loadCapitalsData(onReady) {
+  if (capitalsDataReady) {
+    onReady();
+    return;
+  }
+  fetch(BORDERS_URL)
+    .then(r => r.json())
+    .then(data => {
+      countryCapitals = {};
+      countryFlags = {};
+      data.forEach(entry => {
+        const id = entry.cca3;
+        const capital = entry.capital && entry.capital[0];
+        if (id && capital) countryCapitals[id] = capital;
+        if (id && entry.cca2) countryFlags[id] = entry.cca2;
+      });
+      capitalsDataReady = true;
+      onReady();
+    })
+    .catch(() => {
+      showStatus('Fehler beim Laden der Hauptstadt-Daten', 'wrong');
+    });
+}
+
+// Setzt den minZoom so, dass beim maximalen Rausscrollen die Weltkarte den Bildschirm
+// immer noch komplett ausfüllt (kein grauer Rand) - abhängig vom Seitenverhältnis
+// des Containers, deshalb bei jedem Resize neu berechnet.
+const WORLD_BOUNDS = L.latLngBounds([-85.0511, -180], [85.0511, 180]);
+function enforceFillMinZoom(mapInstance) {
+  const fillZoom = mapInstance.getBoundsZoom(WORLD_BOUNDS, true);
+  const newMinZoom = Math.max(2, fillZoom);
+  mapInstance.setMinZoom(newMinZoom);
+  if (mapInstance.getZoom() < newMinZoom) {
+    mapInstance.setZoom(newMinZoom);
+  }
+}
+
+function addBaseTileLayer(mapInstance) {
+  const style = MAP_STYLES[settings.mapStyle] || MAP_STYLES.ocean;
+  L.tileLayer(style.url, {
+    attribution: 'Tiles &copy; Esri / CARTO',
+    maxZoom: style.maxZoom,
+    maxNativeZoom: style.maxZoom,
+    noWrap: true,
+    subdomains: style.subdomains || 'abc',
+  }).addTo(mapInstance);
+  return style.maxZoom;
+}
+
+function initMap(onReady) {
+  const styleMaxZoom = (MAP_STYLES[settings.mapStyle] || MAP_STYLES.ocean).maxZoom;
+  map = L.map('map', {
+    worldCopyJump: false,
+    preferCanvas: true,
+    minZoom: 2,
+    maxZoom: styleMaxZoom,
+    maxBounds: [[-90, -180], [90, 180]],
+    maxBoundsViscosity: 1,
+    zoomSnap: 0.25,
+    zoomDelta: 0.5,
+    wheelPxPerZoomLevel: 100,
+  }).setView([20, 10], 2);
+
+  addBaseTileLayer(map);
+
+  loadCountryData((data) => {
+    geoLayer = L.geoJSON(data, {
+      style: landStyleFor,
+      renderer: L.canvas({ padding: 1 }),
+      onEachFeature: (feature, layer) => {
+        layer.on('click', () => handleCountryClick(feature, layer));
+        layer.on('mouseover', () => {
+          if (layer !== selectedLayer && layer !== pendingCorrectLayer) layer.setStyle({ weight: 3, fillOpacity: 1 });
+        });
+        layer.on('mouseout', () => {
+          if (layer !== selectedLayer && layer !== pendingCorrectLayer) geoLayer.resetStyle(layer);
+        });
+      },
+    }).addTo(map);
+    mapReady = true;
+    onReady();
+  });
+}
+
+// --- Länderketten-Modus: eigenständiges System mit eigener Karte, eigenem Status,
+// eigenem Sieg-/Niederlage-Ablauf und dem Schrittbudget - komplett unabhängig von den
+// anderen Modi, teilt sich nur die einmal geladenen, reinen Länder-Geodaten.
+
+function showBorderStatus(text, kind) {
+  borderStatusMsgEl.textContent = text;
+  borderStatusMsgEl.className = `show-${kind}`;
+  clearTimeout(borderStatusTimeout);
+  borderStatusTimeout = setTimeout(() => { borderStatusMsgEl.className = ''; }, 1400);
+  playFeedbackSound(kind);
+}
+
+function initBorderMap(onReady) {
+  const styleMaxZoom = (MAP_STYLES[settings.mapStyle] || MAP_STYLES.ocean).maxZoom;
+  borderMap = L.map('border-map', {
+    worldCopyJump: false,
+    preferCanvas: true,
+    minZoom: 2,
+    maxZoom: styleMaxZoom,
+    maxBounds: [[-90, -180], [90, 180]],
+    maxBoundsViscosity: 1,
+    zoomSnap: 0.25,
+    zoomDelta: 0.5,
+    wheelPxPerZoomLevel: 100,
+  }).setView([20, 10], 2);
+
+  addBaseTileLayer(borderMap);
+
+  loadCountryData((data) => {
+    borderGeoLayer = L.geoJSON(data, {
+      style: landStyleFor,
+      renderer: L.canvas({ padding: 1 }),
+      onEachFeature: (feature, layer) => {
+        layer.on('click', () => handleBorderClick(feature, layer));
+        layer.on('mouseout', () => applyBorderStyleToLayer(layer));
+      },
+    }).addTo(borderMap);
+    borderMapReady = true;
+    onReady();
+  });
+}
+
+function loadBorderGraph(onReady) {
+  if (borderGraphReady) {
+    onReady();
+    return;
+  }
+  fetch(BORDERS_URL)
+    .then(r => r.json())
+    .then(data => {
+      const validIds = new Set(allCountries.map(c => c.id));
+      borderGraph = {};
+      data.forEach(entry => {
+        const id = entry.cca3;
+        if (!validIds.has(id)) return;
+        borderGraph[id] = (entry.borders || []).filter(b => validIds.has(b));
+      });
+      borderGraphReady = true;
+      onReady();
+    })
+    .catch(() => {
+      showBorderStatus('Fehler beim Laden der Grenzdaten', 'wrong');
+    });
+}
+
+function bfsDistances(graph, startId) {
+  const dist = { [startId]: 0 };
+  const queue = [startId];
+  while (queue.length) {
+    const cur = queue.shift();
+    (graph[cur] || []).forEach(n => {
+      if (!(n in dist)) {
+        dist[n] = dist[cur] + 1;
+        queue.push(n);
+      }
+    });
+  }
+  return dist;
+}
+
+function countryName(id) {
+  const c = allCountries.find(c => c.id === id);
+  return c ? c.name : id;
+}
+
+// Kürzester Weg vom gesamten aktuellen Gebiet (mehrere Startknoten) aus zum Ziel
+function bfsPathFromTerritory(graph, territorySet, targetId) {
+  if (territorySet.has(targetId)) return [...territorySet];
+  const prev = {};
+  const visited = new Set(territorySet);
+  const queue = [...territorySet];
+  while (queue.length) {
+    const cur = queue.shift();
+    for (const n of (graph[cur] || [])) {
+      if (visited.has(n)) continue;
+      visited.add(n);
+      prev[n] = cur;
+      if (n === targetId) {
+        const path = [n];
+        let p = cur;
+        while (p !== undefined) {
+          path.unshift(p);
+          if (territorySet.has(p)) break;
+          p = prev[p];
+        }
+        return path;
+      }
+      queue.push(n);
+    }
+  }
+  return null;
+}
+
+// Wählt Start/Ziel so, dass der kürzeste Weg garantiert innerhalb des Schrittbudgets schaffbar ist
+function pickBorderChallenge() {
+  const ids = Object.keys(borderGraph).filter(id => borderGraph[id].length > 0 && inSelectedContinent(countryContinent(id)) && matchesCategory(id));
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const startId = ids[Math.floor(Math.random() * ids.length)];
+    const dist = bfsDistances(borderGraph, startId);
+    const candidates = Object.keys(dist).filter(id => dist[id] >= 3 && dist[id] <= BORDER_STEP_BUDGET && id !== startId && inSelectedContinent(countryContinent(id)) && matchesCategory(id));
+    if (candidates.length > 0) {
+      const targetId = candidates[Math.floor(Math.random() * candidates.length)];
+      return {
+        startId, targetId,
+        startName: countryName(startId),
+        targetName: countryName(targetId),
+        optimalLen: dist[targetId],
+      };
+    }
+  }
+  const startId = ids[Math.floor(Math.random() * ids.length)];
+  const dist = bfsDistances(borderGraph, startId);
+  const candidates = Object.keys(dist).filter(id => dist[id] >= 2 && dist[id] <= BORDER_STEP_BUDGET && id !== startId && inSelectedContinent(countryContinent(id)) && matchesCategory(id));
+  const targetId = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : startId;
+  return {
+    startId, targetId,
+    startName: countryName(startId),
+    targetName: countryName(targetId),
+    optimalLen: dist[targetId] || 0,
+  };
+}
+
+function isBorderReachable(id) {
+  for (const ownedId of borderTerritory) {
+    if ((borderGraph[ownedId] || []).includes(id)) return true;
+  }
+  return false;
+}
+
+// Hilfestellung nur beim allerersten Schritt einer Runde (Nachbarn des Startlandes),
+// danach verschwindet sie komplett für den Rest der Runde.
+function isBorderHint(id) {
+  if (borderSteps > 0) return false;
+  return (borderGraph[borderLastAddedId] || []).includes(id);
+}
+
+function applyBorderStyleToLayer(layer) {
+  const id = layer.feature.id;
+  let style;
+  if (borderTerritory.has(id)) {
+    style = { color: CORRECT_BORDER, weight: 3, fillColor: CORRECT_COLOR, fillOpacity: 0.95 }; // dein Gebiet
+  } else if (id === borderTargetId) {
+    style = { color: WRONG_BORDER, weight: 3, fillColor: WRONG_COLOR, fillOpacity: 0.95 }; // Ziel
+  } else if (isBorderHint(id)) {
+    style = { color: SELECT_BORDER, weight: 2, fillColor: SELECT_COLOR, fillOpacity: 0.85 }; // Hinweis: nur 1. Schritt
+  } else {
+    style = landStyle;
+  }
+  layer.setStyle(style);
+}
+
+function updateBorderMapStyles() {
+  borderGeoLayer.eachLayer(l => applyBorderStyleToLayer(l));
+}
+
+function nextBorderRound() {
+  if (borderRoundIndex >= borderChallenges.length) {
+    endBorderGame();
+    return;
+  }
+  borderCurrentChallenge = borderChallenges[borderRoundIndex];
+  borderRoundIndex++;
+  borderTerritory = new Set([borderCurrentChallenge.startId]);
+  borderTargetId = borderCurrentChallenge.targetId;
+  borderLastAddedId = borderCurrentChallenge.startId;
+  borderSteps = 0;
+  borderRoundOver = false;
+  btnBorderNextEl.style.display = 'none';
+
+  borderTargetValueEl.textContent = borderCurrentChallenge.targetName;
+  borderStepsValueEl.textContent = BORDER_STEP_BUDGET;
+  borderRoundValueEl.textContent = borderRoundIndex;
+  borderTotalValueEl.textContent = borderChallenges.length;
+  updateBorderPathDisplay();
+
+  updateBorderMapStyles();
+
+  const startLayer = borderGeoLayer.getLayers().find(l => l.feature.id === borderCurrentChallenge.startId);
+  if (startLayer) {
+    borderMap.flyToBounds(startLayer.getBounds(), { padding: [150, 150], maxZoom: 5, duration: 1.4, easeLinearity: 0.25 });
+  }
+  showBorderStatus(`Von ${borderCurrentChallenge.startName} nach ${borderCurrentChallenge.targetName}`, 'reveal');
+}
+
+function updateBorderPathDisplay() {
+  borderPathValueEl.textContent = Array.from(borderTerritory).map(countryName).join(' → ');
+}
+
+function flyToBorderOverview(extraId) {
+  let bounds = null;
+  const ids = new Set(borderTerritory);
+  if (extraId) ids.add(extraId);
+  ids.forEach(id => {
+    const l = borderGeoLayer.getLayers().find(gl => gl.feature.id === id);
+    if (l) bounds = bounds ? bounds.extend(l.getBounds()) : L.latLngBounds(l.getBounds());
+  });
+  if (bounds) borderMap.flyToBounds(bounds, { padding: [100, 100], maxZoom: 5, duration: 1.6, easeLinearity: 0.2 });
+}
+
+function handleBorderClick(feature, layer) {
+  if (borderRoundOver) return;
+  const clickedId = feature.id;
+  if (borderTerritory.has(clickedId)) return;
+
+  if (!isBorderReachable(clickedId)) {
+    // Grenzt an kein Land in deinem Gebiet - einfach ignorieren, kein Schritt verbraucht
+    showBorderStatus('Das grenzt an kein Land in deinem Gebiet', 'reveal');
+    return;
+  }
+
+  borderTerritory.add(clickedId);
+  borderLastAddedId = clickedId;
+  borderSteps++;
+  const stepsLeft = BORDER_STEP_BUDGET - borderSteps;
+  borderStepsValueEl.textContent = Math.max(stepsLeft, 0);
+  updateBorderPathDisplay();
+
+  // Gewonnen, sobald das neu hinzugefügte Land das Zielland selbst ist ODER direkt daran angrenzt
+  const reachedTarget = clickedId === borderTargetId || (borderGraph[clickedId] || []).includes(borderTargetId);
+
+  if (reachedTarget) {
+    layer.setStyle(correctStyle);
+    const targetLayer = borderGeoLayer.getLayers().find(l => l.feature.id === borderTargetId);
+    if (targetLayer) targetLayer.setStyle(correctStyle);
+    borderWins++;
+    awardCorrect('border');
+    showBorderStatus(`Geschafft! Grenze zu ${borderCurrentChallenge.targetName} in ${borderSteps} Schritten erreicht.`, 'correct');
+    flyToBorderOverview(borderTargetId);
+    borderRoundOver = true;
+    btnBorderNextEl.style.display = 'block';
+  } else if (stepsLeft <= 0) {
+    updateBorderMapStyles();
+    layer.setStyle(wrongStyle);
+    borderLosses++;
+    resetStreak('border');
+    const path = bfsPathFromTerritory(borderGraph, borderTerritory, borderTargetId);
+    const hint = path ? ` Kürzester Weg: ${path.map(countryName).join(' → ')}` : '';
+    showBorderStatus(`Verloren! Ziel nicht erreicht.${hint}`, 'wrong');
+    flyToBorderOverview(borderTargetId);
+    borderRoundOver = true;
+    btnBorderNextEl.style.display = 'block';
+  } else {
+    updateBorderMapStyles();
+  }
+}
+
+function giveUpBorderRound() {
+  if (borderRoundOver) return;
+  borderLosses++;
+  resetStreak('border');
+  const path = bfsPathFromTerritory(borderGraph, borderTerritory, borderTargetId);
+  if (path) {
+    showBorderStatus(`Aufgegeben. Kürzester Weg: ${path.map(countryName).join(' → ')}`, 'wrong');
+  }
+  borderRoundOver = true;
+  btnBorderNextEl.style.display = 'block';
+}
+
+function startBorderGame() {
+  borderEndOverlayEl.classList.remove('show');
+  borderRoundIndex = 0;
+  borderWins = 0;
+  borderLosses = 0;
+  const build = () => {
+    borderChallenges = [];
+    const usedStarts = new Set();
+    const usedTargets = new Set();
+    for (let i = 0; i < BORDER_ROUNDS; i++) {
+      let challenge;
+      let attempts = 0;
+      do {
+        challenge = pickBorderChallenge();
+        attempts++;
+      } while (attempts < 30 && (usedStarts.has(challenge.startId) || usedTargets.has(challenge.targetId)));
+      usedStarts.add(challenge.startId);
+      usedTargets.add(challenge.targetId);
+      borderChallenges.push(challenge);
+    }
+    nextBorderRound();
+  };
+  if (!borderGraphReady) loadBorderGraph(build);
+  else build();
+}
+
+function endBorderGame() {
+  borderTerritory = new Set();
+  borderTargetId = null;
+  btnBorderNextEl.style.display = 'none';
+  borderEndTextEl.textContent = `${borderWins} von ${borderChallenges.length} Ketten geschafft, ${borderLosses} verloren.`;
+  borderEndOverlayEl.classList.add('show');
+  maybeCelebrate(borderWins, borderChallenges.length);
+}
+
+function enterBorderGame() {
+  borderGameEl.classList.add('show');
+  const afterReady = () => {
+    borderMap.invalidateSize();
+    enforceFillMinZoom(borderMap);
+    startBorderGame();
+  };
+  if (!borderMapReady) {
+    initBorderMap(afterReady);
+  } else {
+    afterReady();
+  }
+}
+
+window.addEventListener('resize', () => {
+  if (borderMapReady && borderGameEl.classList.contains('show')) {
+    borderMap.invalidateSize();
+    enforceFillMinZoom(borderMap);
+  }
+});
+
+// --- Hauptstädte-Modus: eigenständiges System mit eigener Karte. Zeigt 10 Marker
+// (die gesuchte Hauptstadt + die 9 geografisch nächstgelegenen anderen Hauptstädte),
+// du musst den richtigen Marker anklicken. Nutzt nur die reinen Länder-/Hauptstadt-
+// Rohdaten gemeinsam mit den anderen Modi, keine sonstige geteilte Logik oder Karte.
+
+function showCapitalStatus(text, kind) {
+  capitalStatusMsgEl.textContent = text;
+  capitalStatusMsgEl.className = `show-${kind}`;
+  clearTimeout(capitalStatusTimeout);
+  capitalStatusTimeout = setTimeout(() => { capitalStatusMsgEl.className = ''; }, 1400);
+  playFeedbackSound(kind);
+}
+
+function initCapitalMap(onReady) {
+  const styleMaxZoom = (MAP_STYLES[settings.mapStyle] || MAP_STYLES.ocean).maxZoom;
+  capitalMap = L.map('capital-map', {
+    worldCopyJump: false,
+    preferCanvas: true,
+    minZoom: 2,
+    maxZoom: styleMaxZoom,
+    maxBounds: [[-90, -180], [90, 180]],
+    maxBoundsViscosity: 1,
+    zoomSnap: 0.25,
+    zoomDelta: 0.5,
+    wheelPxPerZoomLevel: 100,
+  }).setView([20, 10], 2);
+
+  addBaseTileLayer(capitalMap);
+
+  loadCountryData((data) => {
+    L.geoJSON(data, { style: landStyleFor, interactive: false, renderer: L.canvas({ padding: 1 }) }).addTo(capitalMap);
+    capitalMarkersLayer = L.layerGroup().addTo(capitalMap);
+    capitalMapReady = true;
+    onReady();
+  });
+}
+
+// Holt für eine Liste von Hauptstadt-Namen die Koordinaten über die Wikipedia-API
+// (in Bündeln von 50, inkl. Auflösung von Umleitungen/Normalisierung)
+function fetchCapitalCoordinates(names) {
+  const chunks = [];
+  for (let i = 0; i < names.length; i += 50) chunks.push(names.slice(i, i + 50));
+
+  return Promise.all(chunks.map(chunk => {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(chunk.join('|'))}&prop=coordinates&colimit=max&format=json&redirects=1&origin=*`;
+    return fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        const titleMap = {};
+        chunk.forEach(t => { titleMap[t] = t; });
+        (data.query.normalized || []).forEach(n => { titleMap[n.from] = n.to; });
+        (data.query.redirects || []).forEach(rd => {
+          Object.keys(titleMap).forEach(orig => {
+            if (titleMap[orig] === rd.from) titleMap[orig] = rd.to;
+          });
+        });
+
+        const coordsByTitle = {};
+        Object.values(data.query.pages || {}).forEach(p => {
+          if (p.coordinates && p.coordinates[0]) {
+            coordsByTitle[p.title] = { lat: p.coordinates[0].lat, lon: p.coordinates[0].lon };
+          }
+        });
+
+        const result = {};
+        chunk.forEach(orig => {
+          const coord = coordsByTitle[titleMap[orig]];
+          if (coord) result[orig] = coord;
+        });
+        return result;
+      })
+      .catch(() => ({}));
+  })).then(results => Object.assign({}, ...results));
+}
+
+function loadCapitalPoints(onReady) {
+  if (capitalPointsReady) {
+    onReady();
+    return;
+  }
+  loadCountryData(() => {
+    loadCapitalsData(() => {
+      const names = [...new Set(Object.values(countryCapitals))];
+      fetchCapitalCoordinates(names).then(coordsMap => {
+        capitalPoints = allCountries
+          .map(c => {
+            const capName = countryCapitals[c.id];
+            const coord = capName && coordsMap[capName];
+            return coord
+              ? { id: c.id, countryName: c.name, capitalName: capName, lat: coord.lat, lon: coord.lon }
+              : null;
+          })
+          .filter(Boolean);
+        // Nur als fertig markieren, wenn wirklich Daten da sind - sonst bei nächstem
+        // Betreten des Modus erneut versuchen, statt dauerhaft mit leeren Punkten hängenzubleiben.
+        capitalPointsReady = capitalPoints.length > 0;
+        onReady();
+      });
+    });
+  });
+}
+
+// Grobe, aber für "in der Nähe" ausreichende Distanz (keine echte Erdkrümmung nötig)
+function approxDistance(a, b) {
+  const dLat = a.lat - b.lat;
+  const dLon = (a.lon - b.lon) * Math.cos((a.lat * Math.PI) / 180);
+  return Math.sqrt(dLat * dLat + dLon * dLon);
+}
+
+function pickCapitalChallenge() {
+  const base = capitalPoints.filter(p => inSelectedContinent(countryContinent(p.id)));
+  // Schwierigkeitsgrad ist nur ein weicher Filter: bei zu wenigen Treffern erst ihn,
+  // dann notfalls auch die Kategorie fallen lassen - der Kontinent bleibt immer bestehen.
+  let pool = base.filter(p => matchesCategory(p.id) && matchesDifficulty(p.id));
+  if (pool.length === 0) pool = base.filter(p => matchesCategory(p.id));
+  if (pool.length === 0) pool = base;
+  const target = pool[Math.floor(Math.random() * pool.length)];
+  let nearest = pool
+    .filter(p => p.id !== target.id)
+    .map(p => ({ p, d: approxDistance(target, p) }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, CAPITAL_MARKER_COUNT - 1)
+    .map(x => x.p);
+  // Kleine Kategorien haben manchmal weniger als 9 weitere Hauptstädte - dann mit
+  // den geografisch nächsten aus allen Hauptstädten auffüllen (Zielland bleibt korrekt).
+  if (nearest.length < CAPITAL_MARKER_COUNT - 1) {
+    const usedIds = new Set([target.id, ...nearest.map(p => p.id)]);
+    const extra = capitalPoints
+      .filter(p => !usedIds.has(p.id))
+      .map(p => ({ p, d: approxDistance(target, p) }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, (CAPITAL_MARKER_COUNT - 1) - nearest.length)
+      .map(x => x.p);
+    nearest = nearest.concat(extra);
+  }
+  return { target, markers: shuffle([target, ...nearest]) };
+}
+
+function nextCapitalRound() {
+  if (capitalIndex >= capitalChallenges.length) {
+    endCapitalGame();
+    return;
+  }
+  const challenge = capitalChallenges[capitalIndex];
+  capitalIndex++;
+  capitalCurrentTarget = challenge.target;
+  capitalSelectedPoint = null;
+  capitalSelectedMarker = null;
+  capitalCheckPhase = 'idle';
+  updateCapitalCheckButton();
+
+  capitalTargetValueEl.textContent = challenge.target.capitalName;
+  capitalRoundValueEl.textContent = capitalChallenges.length;
+
+  capitalMarkersLayer.clearLayers();
+  const bounds = [];
+  challenge.markers.forEach(point => {
+    const marker = L.circleMarker([point.lat, point.lon], {
+      radius: 11,
+      color: LAND_BORDER,
+      weight: 2,
+      fillColor: LAND_COLOR,
+      fillOpacity: 0.9,
+    }).addTo(capitalMarkersLayer);
+    marker.on('click', () => handleCapitalMarkerClick(point, marker));
+    bounds.push([point.lat, point.lon]);
+  });
+  capitalMap.flyToBounds(bounds, { padding: [70, 70], maxZoom: 7, duration: 1.4, easeLinearity: 0.25 });
+}
+
+// Klick wählt nur aus (gelb) - erst der Prüfen-Button löst die Runde auf.
+function handleCapitalMarkerClick(point, marker) {
+  if (capitalCheckPhase === 'checked') return;
+  if (capitalSelectedMarker && capitalSelectedMarker !== marker) {
+    capitalSelectedMarker.setStyle({ fillColor: LAND_COLOR, color: LAND_BORDER });
+  }
+  capitalSelectedMarker = marker;
+  capitalSelectedPoint = point;
+  marker.setStyle({ fillColor: SELECT_COLOR, color: SELECT_BORDER });
+  capitalCheckPhase = 'selected';
+  updateCapitalCheckButton();
+}
+
+function updateCapitalCheckButton() {
+  if (capitalCheckPhase === 'selected') {
+    btnCapitalCheckEl.textContent = 'Prüfen';
+    btnCapitalCheckEl.disabled = false;
+  } else if (capitalCheckPhase === 'checked') {
+    btnCapitalCheckEl.textContent = 'Weiter';
+    btnCapitalCheckEl.disabled = false;
+  } else {
+    btnCapitalCheckEl.textContent = 'Prüfen';
+    btnCapitalCheckEl.disabled = true;
+  }
+}
+
+function onCapitalCheckButtonClick() {
+  if (capitalCheckPhase === 'selected') {
+    resolveCapitalSelection();
+  } else if (capitalCheckPhase === 'checked') {
+    nextCapitalRound();
+  }
+}
+
+function resolveCapitalSelection() {
+  if (capitalSelectedPoint.id === capitalCurrentTarget.id) {
+    capitalSelectedMarker.setStyle({ fillColor: CORRECT_COLOR, color: CORRECT_BORDER });
+    capitalScore++;
+    capitalScoreValueEl.textContent = capitalScore;
+    bumpValue(capitalScoreValueEl);
+    awardCorrect('capital');
+    updateStreakBadge('streak-badge-capital', 'capital');
+    showCapitalStatus('Richtig!', 'correct');
+  } else {
+    capitalSelectedMarker.setStyle({ fillColor: WRONG_COLOR, color: WRONG_BORDER });
+    capitalWrong++;
+    capitalWrongValueEl.textContent = capitalWrong;
+    bumpValue(capitalWrongValueEl);
+    resetStreak('capital');
+    updateStreakBadge('streak-badge-capital', 'capital');
+    showCapitalStatus(`Falsch! Das war: ${capitalCurrentTarget.capitalName}`, 'wrong');
+
+    capitalMarkersLayer.eachLayer(l => {
+      const latlng = l.getLatLng();
+      if (Math.abs(latlng.lat - capitalCurrentTarget.lat) < 0.001 && Math.abs(latlng.lng - capitalCurrentTarget.lon) < 0.001) {
+        l.setStyle({ fillColor: CORRECT_COLOR, color: CORRECT_BORDER });
+      }
+    });
+  }
+  capitalCheckPhase = 'checked';
+  updateCapitalCheckButton();
+}
+
+function giveUpCapitalRound() {
+  if (capitalCheckPhase === 'checked') return;
+  capitalWrong++;
+  capitalWrongValueEl.textContent = capitalWrong;
+  bumpValue(capitalWrongValueEl);
+  resetStreak('capital');
+  updateStreakBadge('streak-badge-capital', 'capital');
+  if (capitalSelectedMarker) capitalSelectedMarker.setStyle({ fillColor: LAND_COLOR, color: LAND_BORDER });
+  capitalMarkersLayer.eachLayer(marker => {
+    const latlng = marker.getLatLng();
+    if (Math.abs(latlng.lat - capitalCurrentTarget.lat) < 0.001 && Math.abs(latlng.lng - capitalCurrentTarget.lon) < 0.001) {
+      marker.setStyle({ fillColor: CORRECT_COLOR, color: CORRECT_BORDER });
+      capitalMap.flyTo(latlng, 6, { duration: 1 });
+    }
+  });
+  showCapitalStatus(`Das war: ${capitalCurrentTarget.capitalName} (${capitalCurrentTarget.countryName})`, 'reveal');
+  capitalCheckPhase = 'checked';
+  updateCapitalCheckButton();
+}
+
+function startCapitalGame() {
+  capitalEndOverlayEl.classList.remove('show');
+  capitalScore = 0;
+  capitalWrong = 0;
+  capitalIndex = 0;
+  capitalScoreValueEl.textContent = '0';
+  capitalWrongValueEl.textContent = '0';
+  updateStreakBadge('streak-badge-capital', 'capital');
+  capitalChallenges = [];
+  const usedTargets = new Set();
+  for (let i = 0; i < CAPITAL_ROUNDS; i++) {
+    let challenge;
+    let attempts = 0;
+    do {
+      challenge = pickCapitalChallenge();
+      attempts++;
+    } while (attempts < 30 && usedTargets.has(challenge.target.id));
+    usedTargets.add(challenge.target.id);
+    capitalChallenges.push(challenge);
+  }
+  nextCapitalRound();
+}
+
+function endCapitalGame() {
+  capitalCurrentTarget = null;
+  capitalCheckPhase = 'idle';
+  updateCapitalCheckButton();
+  capitalEndTextEl.textContent = `Du hattest ${capitalScore} richtig und ${capitalWrong} falsch (von ${capitalChallenges.length}).`;
+  capitalEndOverlayEl.classList.add('show');
+  maybeCelebrate(capitalScore, capitalChallenges.length);
+}
+
+function enterCapitalGame() {
+  capitalGameEl.classList.add('show');
+  const afterReady = () => {
+    capitalMap.invalidateSize();
+    enforceFillMinZoom(capitalMap);
+    if (!capitalPointsReady) loadCapitalPoints(startCapitalGame);
+    else startCapitalGame();
+  };
+  if (!capitalMapReady) {
+    initCapitalMap(afterReady);
+  } else {
+    afterReady();
+  }
+}
+
+window.addEventListener('resize', () => {
+  if (capitalMapReady && capitalGameEl.classList.contains('show')) {
+    capitalMap.invalidateSize();
+    enforceFillMinZoom(capitalMap);
+  }
+});
+
+// Die Silhouette-Karte zeigt anfangs nur das Zielland (volle Deckkraft, Kacheln unsichtbar) -
+// exakt dieselbe Leaflet/Mercator-Projektion wie die Hauptkarte, also ohne jede Verzerrung.
+// Beim Auflösen wird nichts ausgetauscht: Kacheln und Nachbarländer blenden einfach um dasselbe
+// Layer-Objekt herum ein, während die Kamera rauszoomt.
+function silHiddenStyle() {
+  return { fillOpacity: 0, opacity: 0, weight: 1 };
+}
+
+function initSilMap() {
+  silMap = L.map('sil-map', {
+    zoomControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    touchZoom: false,
+    attributionControl: false,
+  });
+
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 8,
+    maxNativeZoom: 8,
+  }).addTo(silMap);
+
+  silCountriesLayer = L.geoJSON(countryGeoJsonData, {
+    style: silHiddenStyle,
+  }).addTo(silMap);
+
+  silMapReady = true;
+}
+
+function showOnlyTarget(targetId) {
+  let targetLayer = null;
+  silCountriesLayer.eachLayer(l => {
+    if (l.feature.id === targetId) {
+      targetLayer = l;
+      l.setStyle({ fillColor: colorForFeature(l.feature), fillOpacity: 1, color: '#ffffff', weight: 1, opacity: 1 });
+      l.bringToFront();
+    } else {
+      l.setStyle(silHiddenStyle());
+    }
+  });
+  return targetLayer;
+}
+
+function revealOnMap(item) {
+  // Zoom-Level VOR dem Umschalten auf Vollbild merken, damit der Rauszoom-Schritt
+  // relativ dazu berechnet wird - garantiert immer raus, nie rein, egal wie groß/klein
+  // das jeweilige Land ist (flyToBounds allein berechnete den Zielzoom unabhängig vom
+  // Ausgangszoom und zoomte je nach Landesgröße manchmal wieder rein).
+  const tightZoom = silMap.getZoom();
+
+  silMapEl.classList.add('sil-animating');
+  silMapEl.classList.add('sil-revealed');
+  silhouetteShapeEl.classList.add('sil-fullscreen');
+  silMap.invalidateSize();
+
+  let targetLayer = null;
+  silCountriesLayer.eachLayer(l => {
+    if (l.feature.id === item.id) {
+      targetLayer = l;
+      l.setStyle({ color: '#ffffff', weight: 3, fillOpacity: 0.95 });
+      l.bringToFront();
+    } else {
+      l.setStyle(baseStyle(l.feature));
+    }
+  });
+
+  const bounds = targetLayer ? targetLayer.getBounds() : L.geoJSON(item.feature).getBounds();
+  const revealZoom = Math.max(2, tightZoom - 3);
+  silMap.flyTo(bounds.getCenter(), revealZoom, { duration: 1.6, easeLinearity: 0.2 });
+}
+
+// Klick wählt nur aus (gelb) - erst der Prüfen-Button löst die Runde auf.
+function handleCountryClick(feature, layer) {
+  if (!currentTarget || checkPhase === 'checked') return;
+  if (selectedLayer && selectedLayer !== layer) geoLayer.resetStyle(selectedLayer);
+  selectedLayer = layer;
+  selectedFeature = feature;
+  layer.setStyle(selectStyle);
+  checkPhase = 'selected';
+  updateCheckButton();
+}
+
+function updateCheckButton() {
+  if (checkPhase === 'selected') {
+    btnCheckEl.textContent = 'Prüfen';
+    btnCheckEl.disabled = false;
+  } else if (checkPhase === 'checked') {
+    btnCheckEl.textContent = 'Weiter';
+    btnCheckEl.disabled = false;
+  } else {
+    btnCheckEl.textContent = 'Prüfen';
+    btnCheckEl.disabled = true;
+  }
+}
+
+function onCheckButtonClick() {
+  if (checkPhase === 'selected') {
+    resolveSelection();
+  } else if (checkPhase === 'checked') {
+    advanceAfterCheck();
+  }
+}
+
+function resolveSelection() {
+  const target = currentTarget;
+  currentTarget = null;
+
+  if (selectedFeature.properties.name === target) {
+    selectedLayer.setStyle(correctStyle);
+    score++;
+    scoreValueEl.textContent = score;
+    bumpValue(scoreValueEl);
+    awardCorrect(gameMode);
+    updateStreakBadge('streak-badge-main', gameMode);
+    showStatus('Richtig!', 'correct');
+  } else {
+    selectedLayer.setStyle(wrongStyle);
+    wrongCount++;
+    wrongValueEl.textContent = wrongCount;
+    bumpValue(wrongValueEl);
+    resetStreak(gameMode);
+    updateStreakBadge('streak-badge-main', gameMode);
+    showStatus('Falsch!', 'wrong');
+
+    const correctLayer = geoLayer.getLayers().find(l => l.feature.properties.name === target);
+    if (correctLayer && correctLayer !== selectedLayer) {
+      correctLayer.setStyle(correctStyle);
+      pendingCorrectLayer = correctLayer;
+    }
+  }
+  checkPhase = 'checked';
+  updateCheckButton();
+}
+
+function advanceAfterCheck() {
+  if (selectedLayer) geoLayer.resetStyle(selectedLayer);
+  if (pendingCorrectLayer) geoLayer.resetStyle(pendingCorrectLayer);
+  selectedLayer = null;
+  selectedFeature = null;
+  pendingCorrectLayer = null;
+  checkPhase = 'idle';
+  updateCheckButton();
+  nextRound();
+}
+
+function revealAnswer() {
+  if (!currentTarget) return;
+  const target = currentTarget;
+  currentTarget = null;
+  wrongCount++;
+  wrongValueEl.textContent = wrongCount;
+  bumpValue(wrongValueEl);
+  resetStreak(gameMode);
+  updateStreakBadge('streak-badge-main', gameMode);
+
+  if (selectedLayer) geoLayer.resetStyle(selectedLayer);
+  selectedLayer = null;
+  selectedFeature = null;
+
+  const layer = geoLayer.getLayers().find(l => l.feature.properties.name === target);
+  if (layer) {
+    layer.setStyle(correctStyle);
+    map.flyToBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6, duration: 1.4, easeLinearity: 0.25 });
+    pendingCorrectLayer = layer;
+  }
+  showStatus(`Das war: ${target}`, 'reveal');
+  checkPhase = 'checked';
+  updateCheckButton();
+}
+
+function nextRound() {
+  if (currentIndex >= totalRounds) {
+    endRound();
+    return;
+  }
+  selectedLayer = null;
+  selectedFeature = null;
+  pendingCorrectLayer = null;
+  checkPhase = 'idle';
+  updateCheckButton();
+
+  const item = shuffledRounds[currentIndex];
+  currentIndex++;
+  currentTarget = item.target;
+  roundValueEl.textContent = totalRounds;
+
+  landmarkPanelEl.style.display = 'none';
+  targetBlockEl.style.display = 'none';
+
+  if (item.display === 'image') {
+    landmarkPanelEl.style.display = 'block';
+    landmarkImgEl.classList.remove('loaded');
+    landmarkImgEl.src = '';
+    landmarkCaptionEl.textContent = 'Lädt...';
+    fetchLandmarkImage(item.imageTitle).then(src => {
+      if (src) landmarkImgEl.src = src;
+      landmarkCaptionEl.textContent = 'In welchem Land steht das?';
+    });
+  } else {
+    targetBlockEl.style.display = '';
+    targetLabelEl.textContent = 'Gesucht';
+    targetValueEl.textContent = currentTarget;
+  }
+}
+
+function buildCountryRounds() {
+  return filteredPool().map(c => ({ target: c.name, display: 'text' }));
+}
+
+function buildLandmarkRounds() {
+  // Pro Land nur eine Sehenswürdigkeit, damit dasselbe Zielland nicht mehrfach
+  // in einem Durchgang vorkommt (bei zufälliger Auswahl unter Landmarks je Land).
+  // Die kuratierte Landmark-Liste deckt nicht jedes Land ab - bei kleinen/exotischen
+  // Kategorien/Schwierigkeitsgraden kann die exakte Schnittmenge klein sein, aber
+  // Kontinent/Kategorie werden NIE komplett verworfen (sonst tauchen Länder außerhalb
+  // der gewählten Kategorie als Lösung auf) - nur der Schwierigkeitsgrad darf notfalls
+  // fallen gelassen werden, danach schrittweise breiter (Kontinent, dann alles).
+  const seenCountries = new Set();
+  const strict = [];
+  const noDifficulty = [];
+  const continentOnly = [];
+  const anyRounds = [];
+  shuffle(LANDMARKS).forEach(l => {
+    if (seenCountries.has(l.id)) return;
+    const country = allCountries.find(c => c.id === l.id);
+    if (!country) return;
+    seenCountries.add(l.id);
+    const entry = { target: country.name, display: 'image', imageTitle: l.title };
+    anyRounds.push(entry);
+    const inContinent = inSelectedContinent(country.continent);
+    if (inContinent) continentOnly.push(entry);
+    if (inContinent && matchesCategory(country.id)) {
+      noDifficulty.push(entry);
+      if (matchesDifficulty(country.id)) strict.push(entry);
+    }
+  });
+  if (strict.length > 0) return strict;
+  if (noDifficulty.length > 0) return noDifficulty;
+  if (continentOnly.length > 0) return continentOnly;
+  return anyRounds;
+}
+
+function startRound() {
+  endOverlayEl.classList.remove('show');
+  score = 0;
+  wrongCount = 0;
+  currentIndex = 0;
+  scoreValueEl.textContent = '0';
+  wrongValueEl.textContent = '0';
+  updateStreakBadge('streak-badge-main', gameMode);
+  const rounds = gameMode === 'landmark' ? buildLandmarkRounds() : buildCountryRounds();
+  shuffledRounds = shuffle(rounds);
+  totalRounds = Math.min(TOTAL_ROUNDS, shuffledRounds.length);
+  nextRound();
+}
+
+function endRound() {
+  currentTarget = null;
+  checkPhase = 'idle';
+  updateCheckButton();
+  landmarkPanelEl.style.display = 'none';
+  targetBlockEl.style.display = '';
+  targetLabelEl.textContent = 'Gesucht';
+  targetValueEl.textContent = '-';
+  endTextEl.textContent = `Du hattest ${score} richtig und ${wrongCount} falsch (von ${totalRounds}).`;
+  endOverlayEl.classList.add('show');
+  maybeCelebrate(score, totalRounds);
+}
+
+// --- Silhouette-Modus: Bild + 4 Antwortmöglichkeiten, keine Karte ---
+
+function pickDistractors(correctName, count) {
+  let others = filteredPool().filter(c => c.name !== correctName);
+  // Kleine Kategorien (z.B. "Baltische Staaten") haben manchmal weniger als 3
+  // andere Länder - dann mit der ungefilterten Länderliste auffüllen, damit immer
+  // 4 Antwortmöglichkeiten angezeigt werden.
+  if (others.length < count) {
+    others = allCountries.filter(c => c.name !== correctName);
+  }
+  return shuffle(others).slice(0, count).map(c => c.name);
+}
+
+function nextSilhouetteRound() {
+  if (silIndex >= silTotalRounds) {
+    endSilhouetteRound();
+    return;
+  }
+  silAnswering = false;
+  const item = silRounds[silIndex];
+  silIndex++;
+  silCurrentTarget = item.target;
+  silRoundValueEl.textContent = silTotalRounds;
+
+  silMapEl.classList.remove('sil-animating', 'sil-revealed');
+  silhouetteShapeEl.classList.remove('sil-fullscreen');
+  silMap.invalidateSize();
+  const targetLayer = showOnlyTarget(item.id);
+  if (targetLayer) {
+    silMap.fitBounds(targetLayer.getBounds(), { padding: [24, 24], animate: false });
+  }
+
+  const options = shuffle([item.target, ...pickDistractors(item.target, 3)]);
+  silOptionEls.forEach((btn, i) => {
+    btn.textContent = options[i];
+    btn.className = 'sil-option';
+    btn.disabled = false;
+  });
+}
+
+function handleSilhouetteGuess(btn) {
+  if (silAnswering) return;
+  silAnswering = true;
+
+  const guess = btn.textContent;
+  const item = silRounds[silIndex - 1];
+  silOptionEls.forEach(b => { b.disabled = true; });
+
+  if (guess === silCurrentTarget) {
+    btn.classList.add('correct');
+    silScore++;
+    silScoreValueEl.textContent = silScore;
+    bumpValue(silScoreValueEl);
+    awardCorrect('silhouette');
+    updateStreakBadge('streak-badge-silhouette', 'silhouette');
+    playFeedbackSound('correct');
+  } else {
+    btn.classList.add('wrong');
+    silWrong++;
+    silWrongValueEl.textContent = silWrong;
+    bumpValue(silWrongValueEl);
+    resetStreak('silhouette');
+    updateStreakBadge('streak-badge-silhouette', 'silhouette');
+    const correctBtn = silOptionEls.find(b => b.textContent === silCurrentTarget);
+    if (correctBtn) correctBtn.classList.add('correct');
+    playFeedbackSound('wrong');
+  }
+
+  setTimeout(() => revealOnMap(item), 400);
+  setTimeout(nextSilhouetteRound, 2900);
+}
+
+function startSilhouetteRound() {
+  silEndOverlayEl.classList.remove('show');
+  silScore = 0;
+  silWrong = 0;
+  silIndex = 0;
+  silScoreValueEl.textContent = '0';
+  silWrongValueEl.textContent = '0';
+  updateStreakBadge('streak-badge-silhouette', 'silhouette');
+  const rounds = filteredPool().map(c => ({ target: c.name, id: c.id, feature: c.feature }));
+  silRounds = shuffle(rounds);
+  silTotalRounds = Math.min(TOTAL_ROUNDS, silRounds.length);
+  nextSilhouetteRound();
+}
+
+function endSilhouetteRound() {
+  silCurrentTarget = null;
+  silEndTextEl.textContent = `Du hattest ${silScore} richtig und ${silWrong} falsch (von ${silTotalRounds}).`;
+  silEndOverlayEl.classList.add('show');
+  maybeCelebrate(silScore, silTotalRounds);
+}
+
+function enterSilhouetteGame() {
+  silhouetteGameEl.classList.add('show');
+  if (!countryDataReady) {
+    loadCountryData(() => {
+      if (!silMapReady) initSilMap();
+      startSilhouetteRound();
+    });
+  } else {
+    if (!silMapReady) initSilMap();
+    startSilhouetteRound();
+  }
+}
+
+function enterGame() {
+  gameEl.style.display = 'block';
+  const afterMapReady = () => {
+    map.invalidateSize();
+    enforceFillMinZoom(map);
+    startRound();
+  };
+  if (!mapReady) {
+    initMap(afterMapReady);
+  } else {
+    afterMapReady();
+  }
+}
+
+window.addEventListener('resize', () => {
+  if (mapReady && gameEl.style.display !== 'none') {
+    map.invalidateSize();
+    enforceFillMinZoom(map);
+  }
+});
+
+function enterModeAfterContinent(mode) {
+  if (mode === 'border') {
+    gameMode = 'border';
+    enterBorderGame();
+    return;
+  }
+  // Länder, Sehenswürdigkeiten, Silhouetten und Städte laufen alle über dieselbe
+  // Schwierigkeitsauswahl - nur Länderkette hat keinen Schwierigkeitsgrad.
+  gameMode = mode;
+  difficultyMenuEl.classList.add('show');
+}
+
+let categoryBannerTimeout = null;
+function showCategoryBanner(text) {
+  categoryBannerEl.textContent = text;
+  categoryBannerEl.classList.add('show');
+  clearTimeout(categoryBannerTimeout);
+  categoryBannerTimeout = setTimeout(() => categoryBannerEl.classList.remove('show'), 3000);
+}
+
+// Kategorien-Modus: erst wird aus 3 zufälligen Vorschlägen eine inhaltliche Kategorie
+// gewählt (Sprache/Alter/...), danach das Format (Länder/Städte/...). Der Kontinent-Filter
+// wird dabei bewusst ignoriert (überschrieben mit null), um Kollisionen zu vermeiden.
+let pendingCategory = null;
+
+function renderCategorySuggestions() {
+  const shuffled = shuffle(CATEGORIES.slice());
+  const picks = shuffled.slice(0, 3);
+  categoryPickButtonsEl.innerHTML = '';
+  picks.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'diff-btn';
+    btn.dataset.categoryKey = cat.key;
+    const title = document.createElement('span');
+    title.className = 'diff-title';
+    title.textContent = cat.label;
+    btn.appendChild(title);
+    btn.addEventListener('click', () => {
+      pendingCategory = cat;
+      categoryPickMenuEl.classList.remove('show');
+      categoryTypeMenuEl.classList.add('show');
+    });
+    categoryPickButtonsEl.appendChild(btn);
+  });
+}
+
+function startCategoryMode(subtype) {
+  categoryFilterIds = pendingCategory.ids;
+  selectedContinent = null;
+  // Kategorien-Modus hat keine eigene Schwierigkeitsauswahl - immer neutral starten,
+  // sonst würde ein Schwierigkeitsgrad aus einer vorherigen normalen Runde nachwirken.
+  currentDifficulty = 'medium';
+  showCategoryBanner(`Kategorie: ${pendingCategory.label}`);
+
+  if (subtype === 'landmark') {
+    gameMode = 'landmark';
+    enterGame();
+  } else if (subtype === 'silhouette') {
+    gameMode = 'silhouette';
+    enterSilhouetteGame();
+  } else if (subtype === 'capital') {
+    gameMode = 'capital';
+    enterCapitalGame();
+  } else {
+    gameMode = 'country';
+    enterGame();
+  }
+}
+
+document.querySelectorAll('#menu .diff-btn[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    pendingMode = btn.dataset.mode;
+    menuEl.style.display = 'none';
+    if (pendingMode === 'category') {
+      renderCategorySuggestions();
+      categoryPickMenuEl.classList.add('show');
+    } else {
+      continentMenuEl.classList.add('show');
+    }
+  });
+});
+
+document.getElementById('btn-category-reroll').addEventListener('click', renderCategorySuggestions);
+
+document.getElementById('btn-category-pick-back').addEventListener('click', () => {
+  categoryPickMenuEl.classList.remove('show');
+  menuEl.style.display = 'grid';
+});
+
+document.getElementById('btn-continent-back').addEventListener('click', () => {
+  continentMenuEl.classList.remove('show');
+  menuEl.style.display = 'grid';
+});
+
+document.querySelectorAll('#continent-menu .diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedContinent = btn.dataset.continent || null;
+    continentMenuEl.classList.remove('show');
+    enterModeAfterContinent(pendingMode);
+  });
+});
+
+document.getElementById('btn-diff-back').addEventListener('click', () => {
+  difficultyMenuEl.classList.remove('show');
+  continentMenuEl.classList.add('show');
+});
+
+document.getElementById('btn-category-back').addEventListener('click', () => {
+  categoryTypeMenuEl.classList.remove('show');
+  categoryPickMenuEl.classList.add('show');
+});
+
+document.querySelectorAll('#category-type-menu .diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    categoryTypeMenuEl.classList.remove('show');
+    startCategoryMode(btn.dataset.subtype);
+  });
+});
+
+document.querySelectorAll('#difficulty-menu .diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentDifficulty = btn.dataset.difficulty;
+    difficultyMenuEl.classList.remove('show');
+    if (gameMode === 'silhouette') {
+      enterSilhouetteGame();
+    } else if (gameMode === 'capital') {
+      enterCapitalGame();
+    } else {
+      enterGame();
+    }
+  });
+});
+
+landmarkImgEl.addEventListener('load', () => {
+  if (landmarkImgEl.src) landmarkImgEl.classList.add('loaded');
+});
+landmarkImgEl.addEventListener('click', () => {
+  if (!landmarkImgEl.src) return;
+  lightboxImgEl.src = landmarkImgEl.src;
+  imageLightboxEl.classList.add('show');
+});
+imageLightboxEl.addEventListener('click', () => {
+  imageLightboxEl.classList.remove('show');
+});
+
+document.getElementById('btn-giveup').addEventListener('click', revealAnswer);
+btnCheckEl.addEventListener('click', onCheckButtonClick);
+document.getElementById('btn-menu').addEventListener('click', backToMenu);
+document.getElementById('btn-back-menu').addEventListener('click', backToMenu);
+document.getElementById('btn-replay').addEventListener('click', startRound);
+
+silOptionEls.forEach(btn => {
+  btn.addEventListener('click', () => handleSilhouetteGuess(btn));
+});
+document.getElementById('btn-sil-menu').addEventListener('click', backToMenu);
+document.getElementById('btn-sil-back-menu').addEventListener('click', backToMenu);
+document.getElementById('btn-sil-replay').addEventListener('click', startSilhouetteRound);
+
+document.getElementById('btn-border-giveup').addEventListener('click', giveUpBorderRound);
+btnBorderNextEl.addEventListener('click', nextBorderRound);
+document.getElementById('btn-border-menu').addEventListener('click', backToMenu);
+document.getElementById('btn-border-back-menu').addEventListener('click', backToMenu);
+document.getElementById('btn-border-replay').addEventListener('click', startBorderGame);
+
+document.getElementById('btn-capital-giveup').addEventListener('click', giveUpCapitalRound);
+btnCapitalCheckEl.addEventListener('click', onCapitalCheckButtonClick);
+document.getElementById('btn-capital-menu').addEventListener('click', backToMenu);
+document.getElementById('btn-capital-back-menu').addEventListener('click', backToMenu);
+document.getElementById('btn-capital-replay').addEventListener('click', startCapitalGame);
+
+function backToMenu() {
+  categoryFilterIds = null;
+  currentTarget = null;
+  selectedLayer = null;
+  selectedFeature = null;
+  pendingCorrectLayer = null;
+  checkPhase = 'idle';
+  silCurrentTarget = null;
+  capitalCurrentTarget = null;
+  capitalSelectedPoint = null;
+  capitalSelectedMarker = null;
+  capitalCheckPhase = 'idle';
+  updateCapitalCheckButton();
+  borderRoundOver = false;
+  btnBorderNextEl.style.display = 'none';
+  endOverlayEl.classList.remove('show');
+  silEndOverlayEl.classList.remove('show');
+  borderEndOverlayEl.classList.remove('show');
+  capitalEndOverlayEl.classList.remove('show');
+  gameEl.style.display = 'none';
+  silhouetteGameEl.classList.remove('show');
+  borderGameEl.classList.remove('show');
+  capitalGameEl.classList.remove('show');
+  menuEl.style.display = 'grid';
+}
+
+// ---------- Soundeffekte (Web Audio API, keine externen Dateien nötig) ----------
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playTone(freq, duration, type, delay) {
+  if (!settings.volume) return;
+  const ctx = getAudioCtx();
+  const t0 = ctx.currentTime + (delay || 0);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.setValueAtTime(freq, t0);
+  const peak = (settings.volume / 100) * 0.22;
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(peak, t0 + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.03);
+}
+
+function playCorrectSound() {
+  playTone(523.25, 0.14, 'sine', 0);
+  playTone(783.99, 0.18, 'sine', 0.09);
+}
+function playWrongSound() {
+  playTone(180, 0.3, 'sawtooth', 0);
+}
+function playClickSound() {
+  playTone(440, 0.05, 'sine', 0);
+}
+function playFeedbackSound(kind) {
+  if (kind === 'correct') playCorrectSound();
+  else if (kind === 'wrong') playWrongSound();
+}
+
+// ---------- Übersetzungen (Sprachauswahl in den Einstellungen) ----------
+const I18N = {
+  de: {
+    'settings.title': 'Einstellungen',
+    'settings.mapStyle': 'Kartenstil',
+    'settings.mapStyle.ocean': 'Normal',
+    'settings.mapStyle.colorful': 'Bunt',
+    'settings.language': 'Sprache',
+    'settings.volume': 'Lautstärke',
+    'settings.close': 'Schließen',
+    'menu.country.title': 'Länder-Quiz',
+    'menu.country.desc': 'Land wird als Name genannt',
+    'menu.landmark.title': 'Sehenswürdigkeiten',
+    'menu.landmark.desc': 'Bild einer Sehenswürdigkeit – du klickst das Land',
+    'menu.silhouette.title': 'Silhouette',
+    'menu.silhouette.desc': 'Nur der Umriss – welches Land ist das?',
+    'menu.border.title': 'Länderkette',
+    'menu.border.desc': 'Von Land A nach B – über die wenigsten Grenzen',
+    'menu.capital.title': 'Hauptstädte',
+    'menu.capital.desc': '10 Marker in der Umgebung – du klickst die richtige Hauptstadt',
+    'menu.category.title': 'Kategorien',
+    'menu.category.desc': 'Format wählen – die Kategorie wird zufällig bestimmt',
+  },
+  en: {
+    'settings.title': 'Settings',
+    'settings.mapStyle': 'Map Style',
+    'settings.mapStyle.ocean': 'Normal',
+    'settings.mapStyle.colorful': 'Colorful',
+    'settings.language': 'Language',
+    'settings.volume': 'Volume',
+    'settings.close': 'Close',
+    'menu.country.title': 'Country Quiz',
+    'menu.country.desc': 'Country is given by name',
+    'menu.landmark.title': 'Landmarks',
+    'menu.landmark.desc': 'Image of a landmark – click the country',
+    'menu.silhouette.title': 'Silhouette',
+    'menu.silhouette.desc': 'Just the outline – which country is this?',
+    'menu.border.title': 'Border Chain',
+    'menu.border.desc': 'From country A to B – across the fewest borders',
+    'menu.capital.title': 'Capitals',
+    'menu.capital.desc': '10 markers nearby – click the right capital',
+    'menu.category.title': 'Categories',
+    'menu.category.desc': 'Pick a format – the category is chosen at random',
+  },
+  fr: {
+    'settings.title': 'Paramètres',
+    'settings.mapStyle': 'Style de carte',
+    'settings.mapStyle.ocean': 'Normal',
+    'settings.mapStyle.colorful': 'Coloré',
+    'settings.language': 'Langue',
+    'settings.volume': 'Volume',
+    'settings.close': 'Fermer',
+    'menu.country.title': 'Quiz des pays',
+    'menu.country.desc': 'Le pays est donné par son nom',
+    'menu.landmark.title': 'Monuments',
+    'menu.landmark.desc': "Image d'un monument – clique sur le pays",
+    'menu.silhouette.title': 'Silhouette',
+    'menu.silhouette.desc': 'Seulement le contour – quel est ce pays ?',
+    'menu.border.title': 'Chaîne de frontières',
+    'menu.border.desc': 'Du pays A au pays B – avec le moins de frontières',
+    'menu.capital.title': 'Capitales',
+    'menu.capital.desc': 'Clique sur la bonne capitale parmi 10 marqueurs',
+    'menu.category.title': 'Catégories',
+    'menu.category.desc': 'Choisis un format – la catégorie est tirée au hasard',
+  },
+  es: {
+    'settings.title': 'Configuración',
+    'settings.mapStyle': 'Estilo de mapa',
+    'settings.mapStyle.ocean': 'Normal',
+    'settings.mapStyle.colorful': 'Colorido',
+    'settings.language': 'Idioma',
+    'settings.volume': 'Volumen',
+    'settings.close': 'Cerrar',
+    'menu.country.title': 'Quiz de países',
+    'menu.country.desc': 'El país se indica por su nombre',
+    'menu.landmark.title': 'Monumentos',
+    'menu.landmark.desc': 'Imagen de un monumento – haz clic en el país',
+    'menu.silhouette.title': 'Silueta',
+    'menu.silhouette.desc': '¿Qué país es este, según su contorno?',
+    'menu.border.title': 'Cadena de fronteras',
+    'menu.border.desc': 'Del país A al B – cruzando el mínimo de fronteras',
+    'menu.capital.title': 'Capitales',
+    'menu.capital.desc': 'Haz clic en la capital correcta entre 10 marcadores',
+    'menu.category.title': 'Categorías',
+    'menu.category.desc': 'Elige un formato – la categoría se elige al azar',
+  },
+  zh: {
+    'settings.title': '设置',
+    'settings.mapStyle': '地图样式',
+    'settings.mapStyle.ocean': '普通',
+    'settings.mapStyle.colorful': '彩色',
+    'settings.language': '语言',
+    'settings.volume': '音量',
+    'settings.close': '关闭',
+    'menu.country.title': '国家问答',
+    'menu.country.desc': '以名称给出国家',
+    'menu.landmark.title': '地标',
+    'menu.landmark.desc': '显示地标图片——点击对应国家',
+    'menu.silhouette.title': '轮廓',
+    'menu.silhouette.desc': '仅显示轮廓——这是哪个国家?',
+    'menu.border.title': '边境链',
+    'menu.border.desc': '从A国到B国——经过最少的边境',
+    'menu.capital.title': '首都',
+    'menu.capital.desc': '附近10个标记——点击正确的首都',
+    'menu.category.title': '分类模式',
+    'menu.category.desc': '选择形式——类别将随机决定',
+  },
+  ar: {
+    'settings.title': 'الإعدادات',
+    'settings.mapStyle': 'نمط الخريطة',
+    'settings.mapStyle.ocean': 'عادي',
+    'settings.mapStyle.colorful': 'ملون',
+    'settings.language': 'اللغة',
+    'settings.volume': 'مستوى الصوت',
+    'settings.close': 'إغلاق',
+    'menu.country.title': 'مسابقة الدول',
+    'menu.country.desc': 'يُذكر اسم الدولة',
+    'menu.landmark.title': 'معالم',
+    'menu.landmark.desc': 'صورة لمعلم – انقر على الدولة',
+    'menu.silhouette.title': 'الظل',
+    'menu.silhouette.desc': 'الخط الخارجي فقط – ما هذه الدولة؟',
+    'menu.border.title': 'سلسلة الحدود',
+    'menu.border.desc': 'من الدولة أ إلى ب – عبر أقل عدد من الحدود',
+    'menu.capital.title': 'العواصم',
+    'menu.capital.desc': '10 علامات قريبة – انقر على العاصمة الصحيحة',
+    'menu.category.title': 'الفئات',
+    'menu.category.desc': 'اختر شكل اللعبة – سيتم اختيار الفئة عشوائياً',
+  },
+};
+
+function applyLanguage(lang) {
+  settings.language = I18N[lang] ? lang : 'de';
+  saveSettings();
+  const dict = I18N[settings.language];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (dict[key]) el.textContent = dict[key];
+  });
+  document.documentElement.lang = settings.language;
+  document.documentElement.dir = settings.language === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('#settings-languages .opt-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === settings.language);
+  });
+}
+
+// ---------- Einstellungen-Menü (Farbschema, Kartenstil, Sprache, Lautstärke) ----------
+const btnSettingsEl = document.getElementById('btn-settings');
+const settingsOverlayEl = document.getElementById('settings-overlay');
+const btnSettingsCloseEl = document.getElementById('btn-settings-close');
+const settingsVolumeEl = document.getElementById('settings-volume');
+const settingsVolumeValueEl = document.getElementById('settings-volume-value');
+const settingsVolumeIconEl = document.getElementById('settings-volume-icon');
+
+function volumeIcon(v) {
+  if (v <= 0) return '\u{1F507}';
+  if (v < 50) return '\u{1F509}';
+  return '\u{1F50A}';
+}
+
+function updateSettingsUI() {
+  document.querySelectorAll('#settings-maps .opt-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.map === settings.mapStyle);
+  });
+  document.querySelectorAll('#settings-languages .opt-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === settings.language);
+  });
+  settingsVolumeEl.value = settings.volume;
+  settingsVolumeValueEl.textContent = `${settings.volume}%`;
+  settingsVolumeIconEl.textContent = volumeIcon(settings.volume);
+}
+
+btnSettingsEl.addEventListener('click', () => {
+  updateSettingsUI();
+  settingsOverlayEl.classList.add('show');
+});
+btnSettingsCloseEl.addEventListener('click', () => {
+  settingsOverlayEl.classList.remove('show');
+});
+settingsOverlayEl.addEventListener('click', (e) => {
+  if (e.target === settingsOverlayEl) settingsOverlayEl.classList.remove('show');
+});
+
+document.querySelectorAll('#settings-maps .opt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    applyMapStyle(btn.dataset.map);
+    updateSettingsUI();
+    playClickSound();
+  });
+});
+document.querySelectorAll('#settings-languages .opt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    applyLanguage(btn.dataset.lang);
+    playClickSound();
+  });
+});
+settingsVolumeEl.addEventListener('input', () => {
+  settings.volume = parseInt(settingsVolumeEl.value, 10);
+  settingsVolumeValueEl.textContent = `${settings.volume}%`;
+  settingsVolumeIconEl.textContent = volumeIcon(settings.volume);
+  saveSettings();
+});
+settingsVolumeEl.addEventListener('change', () => {
+  playClickSound();
+});
+
+// Belohnungen sind jetzt ein festes Panel auf der linken Seite statt eines
+// Klick-Overlays - wird beim Start und nach jeder richtigen Antwort aktualisiert.
+renderRewardsScreen();
+
+// Shop-Karussell ist jetzt fest auf der Startseite eingebaut (kein Öffnen/Schließen
+// nötig) - startet direkt beim aktuell ausgerüsteten Skin und bleibt immer sichtbar.
+const equippedIdx = SHOP_ITEMS.findIndex(s => s.key === inventory.equipped);
+shopCarouselIndex = equippedIdx >= 0 ? equippedIdx : 0;
+renderShop();
+document.getElementById('btn-shop-prev').addEventListener('click', () => shopStep(-1));
+document.getElementById('btn-shop-next').addEventListener('click', () => shopStep(1));
+updateEquippedSkinDisplays();
+
+// ================= ONLINE 1v1 (Firebase Realtime Database) =================
+// Beitreten per Code (Peer-zu-Peer über eine gemeinsame Datenbank) oder Matchmaking
+// gegen zufällige Spieler. Modus + Schwierigkeit werden vor Spielstart festgelegt.
+// Vereinheitlichtes Format über alle 4 Modi: Prompt/Bild/Silhouette + 4 Antwort-Buttons,
+// wer zuerst richtig klickt bekommt den Punkt (fair für Echtzeit-Duelle).
+const firebaseConfig = {
+  apiKey: "AIzaSyB4sjWtekGEyd0pvVmQhlwq8MQLHozr2Gk",
+  authDomain: "geographie-spiel.firebaseapp.com",
+  databaseURL: "https://geographie-spiel-default-rtdb.firebaseio.com",
+  projectId: "geographie-spiel",
+  storageBucket: "geographie-spiel.firebasestorage.app",
+  messagingSenderId: "381314213437",
+  appId: "1:381314213437:web:415b80ccce062ff6282c54",
+};
+firebase.initializeApp(firebaseConfig);
+const onlineDb = firebase.database();
+
+const ONLINE_ROUNDS_COUNT = 10;
+const ONLINE_MODE_LABELS = { country: 'Länder', landmark: 'Sehenswürdigkeiten', silhouette: 'Silhouette', capital: 'Hauptstädte' };
+const ONLINE_DIFFICULTY_LABELS = { easy: 'Leicht', medium: 'Mittel', hard: 'Schwer' };
+
+function getOnlinePlayerId() {
+  let id = localStorage.getItem('geoquiz-online-id');
+  if (!id) {
+    id = 'p' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    localStorage.setItem('geoquiz-online-id', id);
+  }
+  return id;
+}
+const onlinePlayerId = getOnlinePlayerId();
+
+function getOnlineNickname() {
+  return (localStorage.getItem('geoquiz-online-nickname') || '').trim();
+}
+function setOnlineNickname(name) {
+  localStorage.setItem('geoquiz-online-nickname', name.trim());
+}
+
+function getOnlineCountry() {
+  return localStorage.getItem('geoquiz-online-country') || '';
+}
+function setOnlineCountry(id) {
+  localStorage.setItem('geoquiz-online-country', id);
+}
+
+function populateOnlineCountrySelect() {
+  const select = document.getElementById('online-country-select');
+  if (select.dataset.filled === '1' || !allCountries.length) return;
+  const sorted = [...allCountries].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  select.innerHTML = sorted.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  select.dataset.filled = '1';
+  const saved = getOnlineCountry();
+  if (saved && sorted.some(c => c.id === saved)) select.value = saved;
+  if (!getOnlineCountry()) setOnlineCountry(select.value);
+}
+
+let onlineFlow = null;
+let onlineSelectedMode = null;
+let onlineSelectedDifficulty = null;
+let onlineIsHost = false;
+let onlineRoomCode = null;
+let onlineRoomRef = null;
+let onlineMatchmakingRef = null;
+let onlineMatchmakingNotifyRef = null;
+let onlineRounds = [];
+let onlineCurrentRound = 0;
+let onlineTotalRounds = ONLINE_ROUNDS_COUNT;
+let onlineMyScore = 0;
+let onlineOpponentScore = 0;
+let onlineOpponentId = null;
+let onlineOpponentName = 'Gegner';
+let onlineOpponentCountry = null;
+let onlineOpponentSkin = null;
+let onlineRoomMode = null;
+let onlineRoomDifficulty = null;
+let onlineAnswered = false;
+let onlineGameStarted = false;
+let onlineRoundsBeingGenerated = false;
+let onlineRoundResolving = false;
+let onlineSilMap = null;
+let onlineSilLayer = null;
+let onlineSilMapReady = false;
+
+function makeRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function buildOnlinePlayerProfile(name, isHost) {
+  return { name, host: isHost, country: getOnlineCountry() || null, skin: inventory.equipped || null };
+}
+
+function buildOnlinePool(difficulty) {
+  if (difficulty === 'easy') return allCountries.filter(c => EASY_IDS.has(c.id));
+  if (difficulty === 'hard') return allCountries.filter(c => !EASY_IDS.has(c.id));
+  return allCountries;
+}
+
+function buildOnlineLandmarkPool(difficulty) {
+  const seen = new Set();
+  const strict = [];
+  const any = [];
+  shuffle(LANDMARKS).forEach(l => {
+    if (seen.has(l.id)) return;
+    const country = allCountries.find(c => c.id === l.id);
+    if (!country) return;
+    seen.add(l.id);
+    const entry = { name: country.name, id: country.id, imageTitle: l.title };
+    any.push(entry);
+    const isEasy = EASY_IDS.has(l.id);
+    if (difficulty === 'easy' && isEasy) strict.push(entry);
+    else if (difficulty === 'hard' && !isEasy) strict.push(entry);
+    else if (difficulty !== 'easy' && difficulty !== 'hard') strict.push(entry);
+  });
+  return strict.length >= 4 ? strict : any;
+}
+
+function pickOnlineOptions(pool, correctName, count) {
+  const others = shuffle(pool.filter(c => c.name !== correctName)).slice(0, count - 1).map(c => c.name);
+  return shuffle([correctName, ...others]);
+}
+
+function generateOnlineRounds(mode, difficulty, count) {
+  const rounds = [];
+  if (mode === 'landmark') {
+    const pool = buildOnlineLandmarkPool(difficulty);
+    shuffle(pool).slice(0, count).forEach(item => {
+      rounds.push({ type: 'landmark', target: item.name, imageTitle: item.imageTitle, options: pickOnlineOptions(pool, item.name, 4) });
+    });
+  } else if (mode === 'capital') {
+    const pool = buildOnlinePool(difficulty).filter(c => countryCapitals[c.id]);
+    const capPool = pool.map(c => ({ name: countryCapitals[c.id] }));
+    shuffle(pool).slice(0, count).forEach(item => {
+      const capName = countryCapitals[item.id];
+      rounds.push({ type: 'capital', target: capName, countryName: item.name, options: pickOnlineOptions(capPool, capName, 4) });
+    });
+  } else if (mode === 'silhouette') {
+    const pool = buildOnlinePool(difficulty);
+    shuffle(pool).slice(0, count).forEach(item => {
+      rounds.push({ type: 'silhouette', target: item.name, countryId: item.id, options: pickOnlineOptions(pool, item.name, 4) });
+    });
+  } else {
+    const pool = buildOnlinePool(difficulty);
+    shuffle(pool).slice(0, count).forEach(item => {
+      rounds.push({ type: 'country', target: item.name, options: pickOnlineOptions(pool, item.name, 4) });
+    });
+  }
+  return rounds;
+}
+
+const onlineMenuEl = document.getElementById('online-menu');
+const onlineFormatMenuEl = document.getElementById('online-format-menu');
+const onlineWaitingEl = document.getElementById('online-waiting');
+const onlineGameEl = document.getElementById('online-game');
+const onlineEndOverlayEl = document.getElementById('online-end-overlay');
+
+function hideAllOnlineMenus() {
+  [onlineMenuEl, onlineFormatMenuEl, onlineWaitingEl].forEach(el => el.classList.remove('show'));
+}
+function showOnlineScreen(el) {
+  hideAllOnlineMenus();
+  el.classList.add('show');
+}
+function showOnlineMenuError(text) {
+  document.getElementById('online-menu-error').textContent = text;
+}
+function showOnlineFormatError(text) {
+  document.getElementById('online-format-error').textContent = text;
+}
+
+let onlineStatusTimeout = null;
+function showOnlineStatus(text) {
+  const el = document.getElementById('online-status-msg');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(onlineStatusTimeout);
+  onlineStatusTimeout = setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+function showOnlineWaitingScreen({ isHost, code, matchmaking }) {
+  showOnlineScreen(onlineWaitingEl);
+  const codeDisplay = document.getElementById('online-code-display');
+  const titleEl = document.getElementById('online-waiting-title');
+  const statusEl = document.getElementById('online-waiting-status');
+  if (matchmaking && isHost === null) {
+    codeDisplay.style.display = 'none';
+    titleEl.textContent = 'SUCHE GEGNER';
+    statusEl.textContent = `Suche einen Gegner für ${ONLINE_MODE_LABELS[onlineSelectedMode]} (${ONLINE_DIFFICULTY_LABELS[onlineSelectedDifficulty]})...`;
+  } else if (isHost) {
+    codeDisplay.style.display = 'block';
+    document.getElementById('online-code-value').textContent = code;
+    titleEl.textContent = 'RAUM ERSTELLT';
+    statusEl.textContent = 'Warte auf deinen Freund...';
+  } else {
+    codeDisplay.style.display = 'none';
+    titleEl.textContent = 'BEIGETRETEN';
+    statusEl.textContent = 'Warte auf den Spielstart...';
+  }
+}
+
+function createOnlineRoom() {
+  const code = makeRoomCode();
+  const myName = getOnlineNickname() || 'Spieler';
+  onlineIsHost = true;
+  onlineRoomCode = code;
+  onlineRoomRef = onlineDb.ref('rooms/' + code);
+  onlineRoomRef.set({
+    mode: onlineSelectedMode,
+    difficulty: onlineSelectedDifficulty,
+    status: 'waiting',
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    players: { [onlinePlayerId]: buildOnlinePlayerProfile(myName, true) },
+  }).then(() => {
+    showOnlineWaitingScreen({ isHost: true, code });
+    listenToOnlineRoom();
+  }).catch(err => {
+    showOnlineFormatError('Fehler beim Erstellen: ' + err.message);
+  });
+}
+
+function joinOnlineRoomByCode(rawCode) {
+  const code = (rawCode || '').trim().toUpperCase();
+  if (!code) return;
+  showOnlineMenuError('');
+  const ref = onlineDb.ref('rooms/' + code);
+  ref.get().then(snap => {
+    if (!snap.exists()) {
+      showOnlineMenuError('Diesen Code gibt es nicht.');
+      return;
+    }
+    const room = snap.val();
+    const playerCount = room.players ? Object.keys(room.players).length : 0;
+    if (room.status !== 'waiting' || playerCount >= 2) {
+      showOnlineMenuError('Dieser Raum ist voll oder das Spiel läuft schon.');
+      return;
+    }
+    onlineIsHost = false;
+    onlineRoomCode = code;
+    onlineRoomRef = ref;
+    const myName = getOnlineNickname() || 'Spieler';
+    ref.child('players/' + onlinePlayerId).set(buildOnlinePlayerProfile(myName, false)).then(() => {
+      showOnlineWaitingScreen({ isHost: false, code });
+      listenToOnlineRoom();
+    });
+  }).catch(err => {
+    showOnlineMenuError('Fehler beim Beitreten: ' + err.message);
+  });
+}
+
+function startOnlineMatchmaking() {
+  const modeKey = onlineSelectedMode + '_' + onlineSelectedDifficulty;
+  const myName = getOnlineNickname() || 'Spieler';
+  showOnlineWaitingScreen({ isHost: null, code: null, matchmaking: true });
+
+  const slotRef = onlineDb.ref('matchmaking/' + modeKey + '/waitingPlayer');
+  onlineMatchmakingRef = slotRef;
+  let matchedWith = null;
+
+  slotRef.transaction(current => {
+    if (current === null || current.playerId === onlinePlayerId) {
+      matchedWith = null;
+      return { playerId: onlinePlayerId, name: myName, ts: Date.now() };
+    }
+    matchedWith = current;
+    return null;
+  }).then(result => {
+    if (!result.committed) return;
+    if (matchedWith) {
+      onlineIsHost = true;
+      const code = makeRoomCode();
+      onlineRoomCode = code;
+      const roomRef = onlineDb.ref('rooms/' + code);
+      roomRef.set({
+        mode: onlineSelectedMode,
+        difficulty: onlineSelectedDifficulty,
+        status: 'waiting',
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        players: { [onlinePlayerId]: buildOnlinePlayerProfile(myName, true) },
+      }).then(() => onlineDb.ref('matchmaking/' + modeKey + '/notify/' + matchedWith.playerId).set(code))
+        .then(() => {
+          onlineRoomRef = roomRef;
+          onlineMatchmakingRef = null;
+          listenToOnlineRoom();
+          showOnlineWaitingScreen({ isHost: true, code });
+        });
+    } else {
+      const notifyRef = onlineDb.ref('matchmaking/' + modeKey + '/notify/' + onlinePlayerId);
+      onlineMatchmakingNotifyRef = notifyRef;
+      notifyRef.on('value', snap => {
+        const code = snap.val();
+        if (!code) return;
+        notifyRef.off();
+        notifyRef.remove();
+        onlineMatchmakingNotifyRef = null;
+        onlineMatchmakingRef = null;
+        onlineIsHost = false;
+        onlineRoomCode = code;
+        onlineRoomRef = onlineDb.ref('rooms/' + code);
+        onlineRoomRef.child('players/' + onlinePlayerId).set(buildOnlinePlayerProfile(myName, false)).then(() => {
+          listenToOnlineRoom();
+          showOnlineWaitingScreen({ isHost: false, code });
+        });
+      });
+    }
+  });
+}
+
+function cancelOnlineMatchmaking() {
+  if (onlineMatchmakingRef) {
+    onlineMatchmakingRef.transaction(current => {
+      if (current && current.playerId === onlinePlayerId) return null;
+      return current;
+    });
+    onlineMatchmakingRef = null;
+  }
+  if (onlineMatchmakingNotifyRef) {
+    onlineMatchmakingNotifyRef.off();
+    onlineMatchmakingNotifyRef.remove();
+    onlineMatchmakingNotifyRef = null;
+  }
+}
+
+function listenToOnlineRoom() {
+  if (!onlineRoomRef) return;
+  onlineRoomRef.on('value', snap => {
+    const room = snap.val();
+    if (!room) return;
+    handleOnlineRoomUpdate(room);
+  });
+}
+
+function handleOnlineRoomUpdate(room) {
+  const players = room.players || {};
+  const ids = Object.keys(players);
+  const opponentId = ids.find(id => id !== onlinePlayerId);
+
+  if (room.status === 'waiting') {
+    if (opponentId) {
+      const statusEl = document.getElementById('online-waiting-status');
+      if (statusEl) statusEl.textContent = `${players[opponentId].name} ist beigetreten! Spiel startet...`;
+      if (onlineIsHost && !onlineRoundsBeingGenerated) {
+        onlineRoundsBeingGenerated = true;
+        loadCountryData(() => {
+          loadCapitalsData(() => {
+            const rounds = generateOnlineRounds(room.mode, room.difficulty, ONLINE_ROUNDS_COUNT);
+            onlineRoomRef.update({ status: 'playing', rounds, totalRounds: rounds.length });
+          });
+        });
+      }
+    }
+    return;
+  }
+
+  if (room.status === 'playing') {
+    if (!onlineGameStarted) {
+      loadCountryData(() => {
+        loadCapitalsData(() => {
+          startOnlineGameScreen(room, opponentId);
+        });
+      });
+      return;
+    }
+    updateOnlineScoresFromRoom(room);
+    handleOnlineRoundWinners(room);
+  }
+}
+
+function startOnlineGameScreen(room, opponentId) {
+  onlineGameStarted = true;
+  onlineRounds = room.rounds || [];
+  onlineTotalRounds = room.totalRounds || onlineRounds.length;
+  onlineOpponentId = opponentId;
+  onlineOpponentName = (room.players[opponentId] && room.players[opponentId].name) || 'Gegner';
+  onlineOpponentCountry = (room.players[opponentId] && room.players[opponentId].country) || null;
+  onlineOpponentSkin = (room.players[opponentId] && room.players[opponentId].skin) || null;
+  onlineRoomMode = room.mode;
+  onlineRoomDifficulty = room.difficulty;
+  // Münzbelohnung beim Sieg einer Runde soll den Schwierigkeitsgrad DES RAUMS nutzen,
+  // nicht einen evtl. veralteten Wert aus einer vorherigen lokalen Solo-Runde.
+  currentDifficulty = room.difficulty;
+  onlineCurrentRound = 0;
+  onlineMyScore = 0;
+  onlineOpponentScore = 0;
+  onlineRoundResolving = false;
+
+  hideAllOnlineMenus();
+  document.getElementById('online-me-name').textContent = getOnlineNickname() || 'Du';
+  document.getElementById('online-opponent-name').textContent = onlineOpponentName;
+  document.getElementById('online-me-score').textContent = '0';
+  document.getElementById('online-opponent-score').textContent = '0';
+  document.getElementById('online-total-rounds').textContent = onlineTotalRounds;
+  onlineGameEl.classList.add('show');
+
+  renderOnlineRound();
+}
+
+function updateOnlineScoresFromRoom(room) {
+  const winners = room.roundWinners || {};
+  let my = 0, opp = 0;
+  Object.values(winners).forEach(pid => {
+    if (pid === onlinePlayerId) my++;
+    else if (pid === onlineOpponentId) opp++;
+  });
+  if (my !== onlineMyScore) {
+    onlineMyScore = my;
+    const el = document.getElementById('online-me-score');
+    el.textContent = my;
+    bumpValue(el);
+  }
+  if (opp !== onlineOpponentScore) {
+    onlineOpponentScore = opp;
+    const el = document.getElementById('online-opponent-score');
+    el.textContent = opp;
+    bumpValue(el);
+  }
+}
+
+// Zeigt vor jeder Runde kurz beide Spieler (Skin, Name, Herkunftsland) wie bei
+// GeoGuessr, danach folgt die eigentliche Frage.
+// Skins sind 3D-Modelle (.fbx) - für die kleine Rundenintro-Anzeige gibt es keine
+// Live-3D-Vorschau, daher immer das neutrale Emoji zeigen (das große Karussell auf
+// der Startseite bleibt die Stelle, an der Skins tatsächlich in 3D zu sehen sind).
+function setOnlineIntroAvatar(who) {
+  document.getElementById(`online-intro-${who}-avatar`).style.display = 'none';
+  document.getElementById(`online-intro-${who}-emoji`).style.display = 'flex';
+}
+
+function countryLabel(countryId) {
+  if (!countryId) return '';
+  const country = allCountries.find(c => c.id === countryId);
+  if (!country) return '';
+  const flag = flagEmoji(countryFlags[countryId]);
+  return flag ? `${flag} ${country.name}` : country.name;
+}
+
+function showOnlineRoundIntro() {
+  document.getElementById('online-intro-me-name').textContent = getOnlineNickname() || 'Du';
+  document.getElementById('online-intro-me-country').textContent = countryLabel(getOnlineCountry());
+  setOnlineIntroAvatar('me', inventory.equipped);
+
+  document.getElementById('online-intro-opp-name').textContent = onlineOpponentName;
+  document.getElementById('online-intro-opp-country').textContent = countryLabel(onlineOpponentCountry);
+  setOnlineIntroAvatar('opp', onlineOpponentSkin);
+
+  document.getElementById('online-round-intro').classList.add('show');
+  document.getElementById('online-prompt-area').style.visibility = 'hidden';
+  document.getElementById('online-options').style.visibility = 'hidden';
+}
+
+function hideOnlineRoundIntro() {
+  document.getElementById('online-round-intro').classList.remove('show');
+  document.getElementById('online-prompt-area').style.visibility = 'visible';
+  document.getElementById('online-options').style.visibility = 'visible';
+}
+
+function renderOnlineRound() {
+  onlineAnswered = false;
+  const round = onlineRounds[onlineCurrentRound];
+  if (!round) return;
+  document.getElementById('online-round-value').textContent = onlineCurrentRound + 1;
+
+  showOnlineRoundIntro();
+  setTimeout(() => {
+    hideOnlineRoundIntro();
+    renderOnlineRoundQuestion(round);
+  }, 1700);
+}
+
+function renderOnlineRoundQuestion(round) {
+  const promptTextEl = document.getElementById('online-prompt-text');
+  const imgEl = document.getElementById('online-landmark-img');
+  const silShapeEl = document.getElementById('online-sil-shape');
+  promptTextEl.style.display = 'none';
+  imgEl.style.display = 'none';
+  silShapeEl.style.display = 'none';
+
+  if (round.type === 'country') {
+    promptTextEl.textContent = `Welches Land ist: ${round.target}?`;
+    promptTextEl.style.display = 'block';
+  } else if (round.type === 'capital') {
+    promptTextEl.textContent = `Hauptstadt von ${round.countryName}?`;
+    promptTextEl.style.display = 'block';
+  } else if (round.type === 'landmark') {
+    imgEl.style.display = 'block';
+    imgEl.src = '';
+    fetchLandmarkImage(round.imageTitle).then(src => { if (src) imgEl.src = src; });
+  } else if (round.type === 'silhouette') {
+    silShapeEl.style.display = 'block';
+    showOnlineSilhouette(round.countryId);
+  }
+
+  const optionsEl = document.getElementById('online-options');
+  optionsEl.innerHTML = '';
+  round.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'online-option-btn';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => handleOnlineAnswer(opt, round, btn));
+    optionsEl.appendChild(btn);
+  });
+}
+
+function initOnlineSilMap() {
+  onlineSilMap = L.map('online-sil-map', {
+    zoomControl: false, dragging: false, scrollWheelZoom: false,
+    doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false,
+    attributionControl: false,
+  });
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 8, maxNativeZoom: 8 }).addTo(onlineSilMap);
+  onlineSilLayer = L.geoJSON(countryGeoJsonData, { style: silHiddenStyle }).addTo(onlineSilMap);
+  onlineSilMapReady = true;
+}
+
+function showOnlineSilhouette(targetId) {
+  if (!onlineSilMapReady) initOnlineSilMap();
+  onlineSilMap.invalidateSize();
+  let targetLayer = null;
+  onlineSilLayer.eachLayer(l => {
+    if (l.feature.id === targetId) {
+      targetLayer = l;
+      l.setStyle({ fillColor: colorForFeature(l.feature), fillOpacity: 1, color: '#ffffff', weight: 1, opacity: 1 });
+      l.bringToFront();
+    } else {
+      l.setStyle(silHiddenStyle());
+    }
+  });
+  if (targetLayer) {
+    onlineSilMap.fitBounds(targetLayer.getBounds(), { padding: [16, 16], animate: false });
+  }
+}
+
+function handleOnlineAnswer(selected, round, btn) {
+  if (onlineAnswered) return;
+  onlineAnswered = true;
+  document.querySelectorAll('#online-options .online-option-btn').forEach(b => { b.disabled = true; });
+
+  const correct = selected === round.target;
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) {
+    document.querySelectorAll('#online-options .online-option-btn').forEach(b => {
+      if (b.textContent === round.target) b.classList.add('correct');
+    });
+  }
+
+  if (correct) {
+    onlineDb.ref(`rooms/${onlineRoomCode}/roundWinners/${onlineCurrentRound}`).transaction(current => {
+      if (current === null || current === undefined) return onlinePlayerId;
+      return;
+    });
+  }
+}
+
+function handleOnlineRoundWinners(room) {
+  const winners = room.roundWinners || {};
+  const winnerForCurrent = winners[onlineCurrentRound];
+  if (winnerForCurrent !== undefined && !onlineRoundResolving) {
+    onlineRoundResolving = true;
+    const iWon = winnerForCurrent === onlinePlayerId;
+    showOnlineStatus(iWon ? 'Punkt für dich!' : `Punkt für ${onlineOpponentName}!`);
+    if (iWon) awardCorrect(onlineRoomMode);
+
+    if (!onlineAnswered) {
+      onlineAnswered = true;
+      document.querySelectorAll('#online-options .online-option-btn').forEach(b => {
+        b.disabled = true;
+        if (b.textContent === onlineRounds[onlineCurrentRound].target) b.classList.add('correct');
+      });
+    }
+
+    setTimeout(() => {
+      onlineRoundResolving = false;
+      onlineCurrentRound++;
+      if (onlineCurrentRound >= onlineTotalRounds) {
+        endOnlineGame();
+      } else {
+        renderOnlineRound();
+      }
+    }, 1800);
+  }
+}
+
+function cleanupOnlineRoom() {
+  if (onlineRoomRef) onlineRoomRef.off();
+  onlineRoomRef = null;
+  onlineRoomCode = null;
+  onlineGameStarted = false;
+  onlineRoundsBeingGenerated = false;
+}
+
+function endOnlineGame() {
+  onlineGameEl.classList.remove('show');
+  const title = onlineMyScore > onlineOpponentScore ? 'Du hast gewonnen! 🎉' : onlineMyScore < onlineOpponentScore ? 'Verloren!' : 'Unentschieden!';
+  document.getElementById('online-end-title').textContent = title;
+  document.getElementById('online-end-text').textContent = `${onlineMyScore} : ${onlineOpponentScore} gegen ${onlineOpponentName}`;
+  onlineEndOverlayEl.classList.add('show');
+  if (onlineMyScore > onlineOpponentScore) launchConfetti(70);
+  cleanupOnlineRoom();
+}
+
+function leaveOnlineGame() {
+  cleanupOnlineRoom();
+  onlineGameEl.classList.remove('show');
+  menuEl.style.display = 'grid';
+}
+
+document.getElementById('btn-open-online').addEventListener('click', () => {
+  menuEl.style.display = 'none';
+  loadCountryData(() => { populateOnlineCountrySelect(); });
+  loadCapitalsData(() => {});
+  document.getElementById('online-nickname-input').value = getOnlineNickname();
+  showOnlineMenuError('');
+  document.getElementById('online-join-row').style.display = 'none';
+  showOnlineScreen(onlineMenuEl);
+});
+document.getElementById('online-country-select').addEventListener('change', (e) => {
+  setOnlineCountry(e.target.value);
+});
+
+document.getElementById('btn-online-back').addEventListener('click', () => {
+  hideAllOnlineMenus();
+  menuEl.style.display = 'grid';
+});
+
+document.getElementById('online-nickname-input').addEventListener('input', (e) => {
+  setOnlineNickname(e.target.value);
+});
+
+document.getElementById('btn-online-show-join').addEventListener('click', () => {
+  const row = document.getElementById('online-join-row');
+  row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+});
+
+document.getElementById('btn-online-join').addEventListener('click', () => {
+  joinOnlineRoomByCode(document.getElementById('online-join-code-input').value);
+});
+document.getElementById('online-join-code-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('btn-online-join').click();
+});
+
+document.getElementById('btn-online-create').addEventListener('click', () => {
+  onlineFlow = 'create';
+  showOnlineFormatError('');
+  showOnlineScreen(onlineFormatMenuEl);
+});
+document.getElementById('btn-online-matchmaking').addEventListener('click', () => {
+  onlineFlow = 'matchmaking';
+  showOnlineFormatError('');
+  showOnlineScreen(onlineFormatMenuEl);
+});
+
+document.querySelectorAll('#online-format-options .opt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    onlineSelectedMode = btn.dataset.onlineMode;
+    document.querySelectorAll('#online-format-options .opt-btn').forEach(b => b.classList.toggle('active', b === btn));
+  });
+});
+document.querySelectorAll('#online-difficulty-options .opt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    onlineSelectedDifficulty = btn.dataset.onlineDifficulty;
+    document.querySelectorAll('#online-difficulty-options .opt-btn').forEach(b => b.classList.toggle('active', b === btn));
+  });
+});
+
+document.getElementById('btn-online-format-back').addEventListener('click', () => {
+  showOnlineScreen(onlineMenuEl);
+});
+document.getElementById('btn-online-format-continue').addEventListener('click', () => {
+  if (!onlineSelectedMode || !onlineSelectedDifficulty) {
+    showOnlineFormatError('Bitte Format und Schwierigkeit auswählen.');
+    return;
+  }
+  if (onlineFlow === 'create') {
+    createOnlineRoom();
+  } else {
+    startOnlineMatchmaking();
+  }
+});
+
+document.getElementById('btn-online-copy-code').addEventListener('click', () => {
+  if (onlineRoomCode && navigator.clipboard) navigator.clipboard.writeText(onlineRoomCode).catch(() => {});
+});
+
+document.getElementById('btn-online-cancel').addEventListener('click', () => {
+  cancelOnlineMatchmaking();
+  if (onlineRoomRef) {
+    if (onlineIsHost) {
+      onlineRoomRef.remove().catch(() => {});
+    } else {
+      onlineRoomRef.child('players/' + onlinePlayerId).remove().catch(() => {});
+    }
+    onlineRoomRef.off();
+    onlineRoomRef = null;
+  }
+  showOnlineScreen(onlineMenuEl);
+});
+
+document.getElementById('btn-online-leave').addEventListener('click', leaveOnlineGame);
+
+document.getElementById('btn-online-again').addEventListener('click', () => {
+  onlineEndOverlayEl.classList.remove('show');
+  showOnlineScreen(onlineMenuEl);
+});
+document.getElementById('btn-online-end-menu').addEventListener('click', () => {
+  onlineEndOverlayEl.classList.remove('show');
+  menuEl.style.display = 'grid';
+});
+
+applyLanguage(settings.language);
+updateSettingsUI();
+updateCoinDisplays();
+</script>
+</body>
+</html>
