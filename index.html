@@ -2560,15 +2560,10 @@ function initMenuGlobeViewer() {
 
   const globeRadius = 3.4;
   const globeMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(globeRadius, 40, 28),
-    new THREE.MeshStandardMaterial({ color: 0x1c2842, roughness: 0.75, metalness: 0.1 })
+    new THREE.SphereGeometry(globeRadius, 48, 32),
+    new THREE.MeshStandardMaterial({ color: 0x0f1a2e, roughness: 0.8, metalness: 0.05 })
   );
   group.add(globeMesh);
-  const wireMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(globeRadius * 1.004, 20, 14),
-    new THREE.MeshBasicMaterial({ color: 0x4fd1c5, wireframe: true, transparent: true, opacity: 0.35 })
-  );
-  group.add(wireMesh);
 
   const charGroup = new THREE.Group();
   charGroup.position.set(0, globeRadius, 0);
@@ -2579,7 +2574,7 @@ function initMenuGlobeViewer() {
   const camTargetDist = camera.position.distanceTo(controls.target);
   const visibleHeightAtTarget = 2 * camTargetDist * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
 
-  menuGlobeViewer = { renderer, scene, camera, controls, group, charGroup, globeRadius, visibleHeightAtTarget };
+  menuGlobeViewer = { renderer, scene, camera, controls, group, charGroup, globeMesh, globeRadius, visibleHeightAtTarget };
   menuGlobeLoader = new THREE.FBXLoader();
 
   (function animate() {
@@ -2589,7 +2584,86 @@ function initMenuGlobeViewer() {
   })();
 
   window.addEventListener('resize', resizeMenuGlobeViewer);
+  applyMenuGlobeContinents();
   return menuGlobeViewer;
+}
+
+// Zeichnet die echten Kontinente (aus denselben Natural-Earth-Ländergrenzen, die auch
+// der Silhouette-Modus nutzt) als Weltkarten-Textur auf die Kugel, statt eines reinen
+// Wireframes - so ist wirklich zu erkennen, welcher Kontinent wo liegt. Braucht dafür
+// kein externes Erdbild, nur die im Spiel ohnehin schon geladenen Ländergrenz-Daten.
+function applyMenuGlobeContinents() {
+  loadCountryData(() => {
+    if (!menuGlobeViewer || !countryGeoJsonData) return;
+    const texture = buildMenuGlobeTexture(countryGeoJsonData);
+    if (!texture) return;
+    menuGlobeViewer.globeMesh.material.map = texture;
+    menuGlobeViewer.globeMesh.material.color.set(0xffffff);
+    menuGlobeViewer.globeMesh.material.needsUpdate = true;
+  });
+}
+
+function buildMenuGlobeTexture(geoData) {
+  const width = 1600, height = 800;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  ctx.fillStyle = '#0f1a2e';
+  ctx.fillRect(0, 0, width, height);
+
+  const project = (lng, lat) => [(lng + 180) / 360 * width, (90 - lat) / 180 * height];
+
+  function drawRing(ring) {
+    let prevX = null;
+    ring.forEach(([lng, lat], i) => {
+      const [x, y] = project(lng, lat);
+      if (i === 0 || prevX === null || Math.abs(x - prevX) > width / 2) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      prevX = x;
+    });
+  }
+
+  ctx.fillStyle = '#2b466e';
+  ctx.strokeStyle = 'rgba(79, 209, 197, 0.5)';
+  ctx.lineWidth = 1;
+  (geoData.features || []).forEach(feature => {
+    const geom = feature.geometry;
+    if (!geom) return;
+    const polygons = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : null;
+    if (!polygons) return;
+    polygons.forEach(rings => {
+      ctx.beginPath();
+      rings.forEach(drawRing);
+      ctx.closePath();
+      ctx.fill('evenodd');
+      ctx.stroke();
+    });
+  });
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.lineWidth = 1;
+  for (let lng = -180; lng <= 180; lng += 30) {
+    const [x] = project(lng, 0);
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let lat = -60; lat <= 60; lat += 30) {
+    const [, y] = project(0, lat);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  return new THREE.CanvasTexture(canvas);
 }
 
 function resizeMenuGlobeViewer() {
