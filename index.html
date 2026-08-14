@@ -492,35 +492,6 @@
   #geo-pano-canvas.dragging {
     cursor: grabbing;
   }
-  .geo-street-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1100;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(15, 18, 26, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: #fff;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    transition: background 0.15s ease, opacity 0.15s ease;
-  }
-  .geo-street-nav:hover {
-    background: rgba(79, 209, 197, 0.5);
-  }
-  .geo-street-nav:disabled {
-    opacity: 0.25;
-    cursor: not-allowed;
-    background: rgba(15, 18, 26, 0.55);
-  }
-  .geo-street-nav-back { left: 20px; }
-  .geo-street-nav-forward { right: 20px; }
   .geo-guess-panel {
     position: absolute;
     right: 24px;
@@ -1427,8 +1398,6 @@
       <div class="geo-photo-loading" id="geo-photo-loading">Suche Straßenfoto...</div>
       <img id="geo-street-photo" alt="Straßenansicht" style="display:none;" />
       <canvas id="geo-pano-canvas" style="display:none;"></canvas>
-      <button id="btn-geo-street-back" class="geo-street-nav geo-street-nav-back" disabled>&#10094;</button>
-      <button id="btn-geo-street-forward" class="geo-street-nav geo-street-nav-forward" disabled>&#10095;</button>
     </div>
     <div class="geo-guess-panel" id="geo-guess-panel">
       <div id="geo-guess-map"></div>
@@ -4515,9 +4484,8 @@ async function fetchMapillaryTileImages(lat, lng, z) {
       const realId = featureProperty(layer, f, 'id');
       if (pt && realId != null) {
         const coord = tileLocalToLngLat(pt.x, pt.y, layer.extent, z, x, y);
-        const sequenceId = featureProperty(layer, f, 'sequence_id');
         const isPano = featureProperty(layer, f, 'is_pano') === true;
-        results.push({ id: realId, lat: coord.lat, lng: coord.lng, sequenceId, isPano });
+        results.push({ id: realId, lat: coord.lat, lng: coord.lng, isPano });
       }
     });
     return results;
@@ -4555,30 +4523,12 @@ async function pickGeoGuessrRound(usedNames) {
         const coords = detail.computed_geometry ? detail.computed_geometry.coordinates : [pick.lng, pick.lat];
         return {
           imageUrl: detail.thumb_2048_url, lat: coords[1], lng: coords[0],
-          imageId: String(pick.id), sequenceId: pick.sequenceId || null,
           isPano: !!detail.is_pano,
         };
       } catch (e) { continue; }
     }
   }
   return null;
-}
-
-// Holt die geordnete Liste aller Foto-IDs einer Mapillary-Sequenz (= ein zusammen-
-// hängender Weg/eine Straße), damit man sich per Vor/Zurück am Ziel-Standort entlang
-// bewegen kann. Der eigentliche Rundenzielpunkt (round.lat/round.lng) bleibt dabei immer
-// fest auf dem Startfoto - Bewegen dient nur der Erkundung, nicht der Zielverschiebung.
-async function fetchSequenceImageIds(sequenceId) {
-  if (!sequenceId) return [];
-  try {
-    const url = `https://graph.mapillary.com/image_ids?sequence_id=${encodeURIComponent(sequenceId)}&access_token=${MAPILLARY_TOKEN}`;
-    const resp = await fetchWithTimeout(url, 8000);
-    if (!resp.ok) return [];
-    const data = await resp.json();
-    return (data.data || []).map(d => String(d.id));
-  } catch (e) {
-    return [];
-  }
 }
 
 async function generateGeoGuessrRounds(count) {
@@ -4663,8 +4613,6 @@ let geoMyGuess = null;
 let geoPhotoZoom = 1;
 let geoPhotoPanX = 0;
 let geoPhotoPanY = 0;
-let geoSequenceIds = [];
-let geoSequenceIndex = -1;
 let geoPanoActive = false;
 let geoPanoRenderer = null;
 let geoPanoScene = null;
@@ -4672,11 +4620,6 @@ let geoPanoCamera = null;
 let geoPanoMesh = null;
 let geoPanoLon = 0;
 let geoPanoLat = 0;
-let geoPanoArrowForward = null;
-let geoPanoArrowBackward = null;
-let geoPanoRaycaster = null;
-let geoCurrentLat = null;
-let geoCurrentLng = null;
 
 function makeRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -5174,85 +5117,12 @@ function hideGeoPano() {
   document.getElementById('geo-pano-canvas').style.display = 'none';
 }
 
-// Boden-Pfeile wie bei GeoGuessr/Street View: kreisförmige Pfeil-Sprites, in 3D am
-// Kompasskurs zum nächsten/vorherigen Foto der Sequenz platziert (siehe geoBearing/
-// loadGeoStreetNeighbors), leicht nach unten geneigt, damit sie wie auf der Straße wirken.
-function makeGeoArrowSprite(pointsBack) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128; canvas.height = 128;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'rgba(20, 24, 34, 0.55)';
-  ctx.beginPath();
-  ctx.arc(64, 64, 58, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-  ctx.fillStyle = '#ffffff';
-  ctx.save();
-  ctx.translate(64, 64);
-  if (pointsBack) ctx.rotate(Math.PI);
-  ctx.beginPath();
-  ctx.moveTo(0, -32);
-  ctx.lineTo(30, 18);
-  ctx.lineTo(10, 18);
-  ctx.lineTo(10, 34);
-  ctx.lineTo(-10, 34);
-  ctx.lineTo(-10, 18);
-  ctx.lineTo(-30, 18);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-  const texture = new THREE.CanvasTexture(canvas);
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(90, 90, 1);
-  sprite.renderOrder = 999;
-  return sprite;
-}
-function clearGeoPanoArrows() {
-  if (geoPanoArrowForward) { geoPanoScene.remove(geoPanoArrowForward); geoPanoArrowForward = null; }
-  if (geoPanoArrowBackward) { geoPanoScene.remove(geoPanoArrowBackward); geoPanoArrowBackward = null; }
-}
-function placeGeoPanoArrows(bearingFwd, bearingBack) {
-  clearGeoPanoArrows();
-  if (!geoPanoScene) return;
-  if (bearingFwd != null) {
-    geoPanoArrowForward = makeGeoArrowSprite(false);
-    geoPanoArrowForward.position.copy(panoDirectionToVector3(bearingFwd, -40, 280));
-    geoPanoArrowForward.userData.moveDirection = 1;
-    geoPanoScene.add(geoPanoArrowForward);
-  }
-  if (bearingBack != null) {
-    geoPanoArrowBackward = makeGeoArrowSprite(true);
-    geoPanoArrowBackward.position.copy(panoDirectionToVector3(bearingBack, -40, 280));
-    geoPanoArrowBackward.userData.moveDirection = -1;
-    geoPanoScene.add(geoPanoArrowBackward);
-  }
-  if (geoPanoActive) renderGeoPanoFrame();
-}
-function handleGeoPanoTap(clientX, clientY) {
-  if (!geoPanoArrowForward && !geoPanoArrowBackward) return;
-  const canvas = document.getElementById('geo-pano-canvas');
-  const rect = canvas.getBoundingClientRect();
-  const ndc = new THREE.Vector2(
-    ((clientX - rect.left) / rect.width) * 2 - 1,
-    -((clientY - rect.top) / rect.height) * 2 + 1
-  );
-  if (!geoPanoRaycaster) geoPanoRaycaster = new THREE.Raycaster();
-  geoPanoRaycaster.setFromCamera(ndc, geoPanoCamera);
-  const targets = [geoPanoArrowForward, geoPanoArrowBackward].filter(Boolean);
-  const hits = geoPanoRaycaster.intersectObjects(targets);
-  if (hits.length) moveGeoStreet(hits[0].object.userData.moveDirection);
-}
-
 (function setupGeoPanoControls() {
   const areaEl = document.getElementById('geo-photo-area');
   const canvas = document.getElementById('geo-pano-canvas');
   let dragging = false;
   let dragStart = { x: 0, y: 0 };
   let startLon = 0, startLat = 0;
-  let moved = 0;
 
   areaEl.addEventListener('wheel', (e) => {
     if (!geoPanoActive) return;
@@ -5265,7 +5135,6 @@ function handleGeoPanoTap(clientX, clientY) {
   areaEl.addEventListener('pointerdown', (e) => {
     if (!geoPanoActive) return;
     dragging = true;
-    moved = 0;
     canvas.classList.add('dragging');
     dragStart = { x: e.clientX, y: e.clientY };
     startLon = geoPanoLon;
@@ -5273,82 +5142,17 @@ function handleGeoPanoTap(clientX, clientY) {
   });
   areaEl.addEventListener('pointermove', (e) => {
     if (!geoPanoActive || !dragging) return;
-    const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
-    moved = Math.max(moved, Math.hypot(dx, dy));
-    geoPanoLon = startLon - dx * 0.2;
-    geoPanoLat = Math.min(85, Math.max(-85, startLat + dy * 0.2));
+    geoPanoLon = startLon - (e.clientX - dragStart.x) * 0.2;
+    geoPanoLat = Math.min(85, Math.max(-85, startLat + (e.clientY - dragStart.y) * 0.2));
     renderGeoPanoFrame();
   });
-  function endPointer(e) {
-    if (geoPanoActive && dragging && moved < 6 && e && e.clientX !== undefined) {
-      handleGeoPanoTap(e.clientX, e.clientY);
-    }
+  function endPointer() {
     dragging = false;
     canvas.classList.remove('dragging');
   }
   areaEl.addEventListener('pointerup', endPointer);
   areaEl.addEventListener('pointercancel', endPointer);
 })();
-
-function updateGeoStreetNavButtons() {
-  const ready = geoSequenceIndex !== -1;
-  document.getElementById('btn-geo-street-back').disabled = !ready || geoSequenceIndex <= 0;
-  document.getElementById('btn-geo-street-forward').disabled = !ready || geoSequenceIndex >= geoSequenceIds.length - 1;
-}
-
-// Kompasskurs (0-360, 0=Nord) von Punkt 1 zu Punkt 2 - Standard-Großkreis-Peilung.
-function geoBearing(lat1, lng1, lat2, lng2) {
-  const toRad = d => d * Math.PI / 180;
-  const phi1 = toRad(lat1), phi2 = toRad(lat2);
-  const dLng = toRad(lng2 - lng1);
-  const y = Math.sin(dLng) * Math.cos(phi2);
-  const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLng);
-  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-}
-async function fetchNeighborGeometry(id) {
-  try {
-    const url = `https://graph.mapillary.com/${id}?access_token=${MAPILLARY_TOKEN}&fields=computed_geometry`;
-    const resp = await fetchWithTimeout(url, 8000);
-    if (!resp.ok) return null;
-    const detail = await resp.json();
-    if (!detail.computed_geometry) return null;
-    const [lng, lat] = detail.computed_geometry.coordinates;
-    return { lat, lng };
-  } catch (e) { return null; }
-}
-// Holt die Position des nächsten/vorherigen Fotos in der Sequenz und platziert die
-// Boden-Pfeile in genau der Richtung, in der diese Nachbarfotos tatsächlich liegen.
-async function loadGeoStreetNeighbors(fromLat, fromLng) {
-  placeGeoPanoArrows(null, null);
-  if (geoSequenceIndex === -1) return;
-  const wantForward = geoSequenceIndex < geoSequenceIds.length - 1;
-  const wantBackward = geoSequenceIndex > 0;
-  const [fwd, back] = await Promise.all([
-    wantForward ? fetchNeighborGeometry(geoSequenceIds[geoSequenceIndex + 1]) : null,
-    wantBackward ? fetchNeighborGeometry(geoSequenceIds[geoSequenceIndex - 1]) : null,
-  ]);
-  if (geoCurrentLat !== fromLat || geoCurrentLng !== fromLng) return; // Position inzwischen gewechselt
-  const bearingFwd = fwd ? geoBearing(fromLat, fromLng, fwd.lat, fwd.lng) : null;
-  const bearingBack = back ? geoBearing(fromLat, fromLng, back.lat, back.lng) : null;
-  placeGeoPanoArrows(bearingFwd, bearingBack);
-}
-
-// Lädt beim Anzeigen des Fotos im Hintergrund die geordnete Sequenz (= zusammenhängender
-// Weg) nach, damit die Boden-Pfeile/Vor-Zurück-Buttons aktiviert werden, sobald sie bereitsteht.
-function loadGeoStreetSequence(round) {
-  geoSequenceIds = [];
-  geoSequenceIndex = -1;
-  updateGeoStreetNavButtons();
-  placeGeoPanoArrows(null, null);
-  if (!round.sequenceId) return;
-  fetchSequenceImageIds(round.sequenceId).then(ids => {
-    if (onlineRounds[onlineCurrentRound] !== round) return; // Runde inzwischen gewechselt
-    geoSequenceIds = ids;
-    geoSequenceIndex = ids.indexOf(round.imageId);
-    updateGeoStreetNavButtons();
-    loadGeoStreetNeighbors(geoCurrentLat, geoCurrentLng);
-  });
-}
 
 function swapGeoStreetPhoto(url, isPano) {
   resetGeoPhotoZoom();
@@ -5368,36 +5172,6 @@ function swapGeoStreetPhoto(url, isPano) {
   }
 }
 
-// Bewegt sich entlang der aktuellen Straßen-Sequenz vor/zurück. Der Rundenzielpunkt
-// (round.lat/round.lng vom Startfoto) ändert sich dabei NICHT - nur die Ansicht.
-async function moveGeoStreet(direction) {
-  if (geoSequenceIndex === -1) return;
-  const newIndex = geoSequenceIndex + direction;
-  if (newIndex < 0 || newIndex >= geoSequenceIds.length) return;
-  const targetId = geoSequenceIds[newIndex];
-  const btnBack = document.getElementById('btn-geo-street-back');
-  const btnFwd = document.getElementById('btn-geo-street-forward');
-  btnBack.disabled = true;
-  btnFwd.disabled = true;
-  try {
-    const detailUrl = `https://graph.mapillary.com/${targetId}?access_token=${MAPILLARY_TOKEN}&fields=id,thumb_2048_url,is_pano,computed_geometry`;
-    const resp = await fetchWithTimeout(detailUrl, 8000);
-    if (resp.ok) {
-      const detail = await resp.json();
-      if (detail.thumb_2048_url) {
-        geoSequenceIndex = newIndex;
-        if (detail.computed_geometry) {
-          geoCurrentLat = detail.computed_geometry.coordinates[1];
-          geoCurrentLng = detail.computed_geometry.coordinates[0];
-        }
-        swapGeoStreetPhoto(detail.thumb_2048_url, !!detail.is_pano);
-        loadGeoStreetNeighbors(geoCurrentLat, geoCurrentLng);
-      }
-    }
-  } catch (e) { /* Foto bleibt wie es ist */ }
-  updateGeoStreetNavButtons();
-}
-
 function renderGeoGuessrRoundQuestion(round) {
   geoMyGuess = null;
   document.getElementById('btn-geo-guess-confirm').disabled = true;
@@ -5405,10 +5179,7 @@ function renderGeoGuessrRoundQuestion(round) {
   resultEl.classList.remove('show');
   resultEl.innerHTML = '';
 
-  geoCurrentLat = round.lat;
-  geoCurrentLng = round.lng;
   swapGeoStreetPhoto(round.imageUrl, round.isPano);
-  loadGeoStreetSequence(round);
 
   if (!geoGuessMapReady) initGeoGuessMap();
   geoGuessMap.invalidateSize();
@@ -5562,8 +5333,6 @@ document.getElementById('btn-online-matchmaking').addEventListener('click', () =
 });
 
 document.getElementById('btn-geo-guess-confirm').addEventListener('click', submitGeoGuess);
-document.getElementById('btn-geo-street-back').addEventListener('click', () => moveGeoStreet(-1));
-document.getElementById('btn-geo-street-forward').addEventListener('click', () => moveGeoStreet(1));
 
 document.getElementById('btn-online-copy-code').addEventListener('click', () => {
   if (onlineRoomCode && navigator.clipboard) navigator.clipboard.writeText(onlineRoomCode).catch(() => {});
