@@ -157,6 +157,79 @@
     pointer-events: none;
     transform: translate(-50%, 24px);
   }
+  /* ---------- Tägliche Quests: eigenes Panel links im Startbildschirm, nur in der
+     Home-Ansicht sichtbar (nicht während Modus-Auswahl oder Skins-Galerie). ---------- */
+  .menu-quests-panel {
+    position: absolute;
+    top: 50%;
+    left: 5%;
+    transform: translate(0, -50%);
+    width: 300px;
+    box-sizing: border-box;
+    padding: 26px 24px;
+    border-radius: 24px;
+    background: rgba(22, 26, 42, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    animation: popIn 0.4s ease;
+    opacity: 1;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    z-index: 5;
+  }
+  #menu.mode-select .menu-quests-panel,
+  #menu.skins-select .menu-quests-panel {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-24px, -50%);
+  }
+  .menu-quests-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+  .quest-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .quest-item {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(15, 18, 26, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .quest-item.done {
+    border-color: #2ecc71;
+    background: rgba(46, 204, 113, 0.12);
+  }
+  .quest-desc {
+    font-size: 13px;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .quest-progress-bar {
+    width: 100%;
+    height: 7px;
+    border-radius: 4px;
+    background: #2b3245;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .quest-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4fd1c5, #2b9e93);
+    transition: width 0.4s ease;
+  }
+  .quest-item.done .quest-progress-fill {
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+  }
+  .quest-progress-text {
+    font-size: 11px;
+    opacity: 0.7;
+  }
   .menu-mode-panel {
     position: absolute;
     top: 50%;
@@ -1420,6 +1493,11 @@
       <button id="btn-settings" aria-label="Einstellungen">&#9881;</button>
     </div>
 
+    <div class="menu-quests-panel" id="menu-quests-panel">
+      <div class="menu-quests-title">Tägliche Quests</div>
+      <div class="quest-list" id="daily-quests-list"></div>
+    </div>
+
     <div class="menu-globe-stage" id="menu-globe-stage">
       <div class="menu-player-name" id="menu-player-name">Spieler</div>
       <canvas id="menu-globe-canvas" style="display:none;"></canvas>
@@ -2371,6 +2449,137 @@ function showRewardToast(milestone, mode) {
   setTimeout(() => toast.remove(), 3000);
 }
 
+// ================= Tägliche Quests =================
+// Jeden Tag werden 3 Quests aus einem festen Pool ausgewählt (deterministisch aus dem
+// Datum, damit sie beim Neuladen gleich bleiben, aber am nächsten Tag wechseln). Der
+// Fortschritt hängt sich an awardCorrect() - dieselbe Stelle, die für JEDE richtige
+// Antwort in JEDEM Modus (auch online) bereits aufgerufen wird - dadurch braucht keine
+// einzelne Spielmodus-Datei angefasst zu werden.
+const QUEST_POOL = [
+  { id: 'any5', desc: '5 richtige Antworten (egal welcher Modus)', target: 5, track: 'any' },
+  { id: 'any10', desc: '10 richtige Antworten (egal welcher Modus)', target: 10, track: 'any' },
+  { id: 'country3', desc: '3 richtige im Länder-Quiz', target: 3, track: 'mode', mode: 'country' },
+  { id: 'landmark3', desc: '3 richtige bei Sehenswürdigkeiten', target: 3, track: 'mode', mode: 'landmark' },
+  { id: 'silhouette3', desc: '3 richtige Silhouetten', target: 3, track: 'mode', mode: 'silhouette' },
+  { id: 'capital3', desc: '3 richtige Hauptstädte', target: 3, track: 'mode', mode: 'capital' },
+  { id: 'border3', desc: '3 richtige Länderketten-Runden', target: 3, track: 'mode', mode: 'border' },
+  { id: 'category3', desc: '3 richtige in Kategorien', target: 3, track: 'mode', mode: 'category' },
+  { id: 'online1', desc: 'Gewinne 1 Runde im Online-Duell', target: 1, track: 'mode', mode: 'online' },
+  { id: 'streak5', desc: 'Erreiche eine Serie von 5 in einem Modus', target: 5, track: 'streak' },
+];
+const DAILY_QUEST_COUNT = 3;
+const DAILY_QUEST_REWARD = 100;
+
+function todayDateString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function dateSeed(dateStr) {
+  let h = 0;
+  for (let i = 0; i < dateStr.length; i++) h = (h * 31 + dateStr.charCodeAt(i)) | 0;
+  return h;
+}
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+function pickDailyQuestIds(dateStr) {
+  const seed = dateSeed(dateStr);
+  return QUEST_POOL
+    .map((q, i) => ({ id: q.id, r: seededRandom(seed + i * 97) }))
+    .sort((a, b) => a.r - b.r)
+    .slice(0, DAILY_QUEST_COUNT)
+    .map(p => p.id);
+}
+function getQuestDef(id) {
+  return QUEST_POOL.find(q => q.id === id) || null;
+}
+
+function loadDailyQuests() {
+  const today = todayDateString();
+  try {
+    const raw = localStorage.getItem('geoquiz-daily-quests');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.date === today && Array.isArray(parsed.selected)) return parsed;
+    }
+  } catch (e) { /* ignore */ }
+  const selected = pickDailyQuestIds(today);
+  const fresh = { date: today, selected, progress: {}, claimed: {} };
+  selected.forEach(id => { fresh.progress[id] = 0; fresh.claimed[id] = false; });
+  saveDailyQuests(fresh);
+  return fresh;
+}
+function saveDailyQuests(state) {
+  try { localStorage.setItem('geoquiz-daily-quests', JSON.stringify(state)); } catch (e) { /* ignore */ }
+}
+
+let dailyQuests = loadDailyQuests();
+
+function trackDailyQuestProgress(mode) {
+  let changed = false;
+  dailyQuests.selected.forEach(id => {
+    if (dailyQuests.claimed[id]) return;
+    const def = getQuestDef(id);
+    if (!def) return;
+    let newProgress = dailyQuests.progress[id] || 0;
+    if (def.track === 'any') {
+      newProgress += 1;
+    } else if (def.track === 'mode' && def.mode === mode) {
+      newProgress += 1;
+    } else if (def.track === 'streak') {
+      newProgress = Math.max(newProgress, rewards.streaks[mode] || 0);
+    } else {
+      return;
+    }
+    if (newProgress === dailyQuests.progress[id]) return;
+    dailyQuests.progress[id] = newProgress;
+    changed = true;
+    if (newProgress >= def.target && !dailyQuests.claimed[id]) {
+      dailyQuests.claimed[id] = true;
+      rewards.coins += DAILY_QUEST_REWARD;
+      saveRewards();
+      updateCoinDisplays();
+      showCoinPopup(DAILY_QUEST_REWARD);
+      launchConfetti(30);
+    }
+  });
+  if (changed) {
+    saveDailyQuests(dailyQuests);
+    renderDailyQuests();
+  }
+}
+
+function renderDailyQuests() {
+  const listEl = document.getElementById('daily-quests-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  dailyQuests.selected.forEach(id => {
+    const def = getQuestDef(id);
+    if (!def) return;
+    const progress = Math.min(dailyQuests.progress[id] || 0, def.target);
+    const done = dailyQuests.claimed[id];
+    const item = document.createElement('div');
+    item.className = 'quest-item' + (done ? ' done' : '');
+    const bar = document.createElement('div');
+    bar.className = 'quest-progress-bar';
+    const fill = document.createElement('div');
+    fill.className = 'quest-progress-fill';
+    fill.style.width = (progress / def.target * 100) + '%';
+    bar.appendChild(fill);
+    const descEl = document.createElement('div');
+    descEl.className = 'quest-desc';
+    descEl.textContent = (done ? '✅ ' : '🎯 ') + def.desc;
+    const textEl = document.createElement('div');
+    textEl.className = 'quest-progress-text';
+    textEl.textContent = `${progress}/${def.target} · +${DAILY_QUEST_REWARD} 🪙`;
+    item.appendChild(descEl);
+    item.appendChild(bar);
+    item.appendChild(textEl);
+    listEl.appendChild(item);
+  });
+}
+
 // Wird bei jeder richtigen Antwort aufgerufen - mode ist 'country'/'landmark'/
 // 'silhouette'/'capital'/'border', jeder hat seinen eigenen Fortschritt/Abzeichen.
 // Die Münzbelohnung skaliert mit dem Schwierigkeitsgrad (mehr Münzen bei "Schwer").
@@ -2394,6 +2603,7 @@ function awardCorrect(mode) {
   showCoinPopup(coinsEarned);
   renderRewardsScreen();
   if (newlyUnlocked) showRewardToast(newlyUnlocked, mode);
+  trackDailyQuestProgress(mode);
 }
 
 // Wird bei falscher Antwort oder Aufgeben aufgerufen - beendet nur die Serie des
@@ -4593,6 +4803,7 @@ settingsVolumeEl.addEventListener('change', () => {
 // Belohnungen sind jetzt ein festes Panel auf der linken Seite statt eines
 // Klick-Overlays - wird beim Start und nach jeder richtigen Antwort aktualisiert.
 renderRewardsScreen();
+renderDailyQuests();
 
 updateEquippedSkinDisplays();
 
