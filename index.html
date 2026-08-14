@@ -1652,6 +1652,21 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// Zeigt unabgefangene Skriptfehler als kleines rotes Banner am unteren Bildschirmrand an,
+// damit Fehler auch ohne geöffnete Browser-Konsole sichtbar/screenshotbar sind.
+window.addEventListener('error', function (e) {
+  try {
+    var banner = document.getElementById('debug-error-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'debug-error-banner';
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;padding:8px 12px;font-size:12px;font-family:monospace;z-index:999999;max-height:35vh;overflow:auto;white-space:pre-wrap;';
+      document.body.appendChild(banner);
+    }
+    banner.textContent += (banner.textContent ? '\n' : '') + e.message + ' @ line ' + e.lineno + ':' + e.colno;
+  } catch (err) { /* ignorieren */ }
+});
+
 // Natural Earth 1:50m Admin-0 - deutlich präzisere Küsten-/Grenzlinien als die
 // stark vereinfachte Standardquelle (die 10m-Variante wäre noch genauer, ist mit
 // ~13 MB aber für den Erstladevorgang zu groß).
