@@ -29,22 +29,6 @@
     color: #fff;
     overflow: hidden;
   }
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  /* Feste "Design-Leinwand": das ganze Spiel wird für 1920x1080 gebaut und dann per
-     JS gleichmäßig (transform: scale) auf jede Bildschirmgröße/-ausrichtung skaliert -
-     dadurch immer korrekt proportional, nichts wird abgeschnitten oder verzerrt. */
-  #app-root {
-    width: 1920px;
-    height: 1080px;
-    flex-shrink: 0;
-    position: relative;
-    overflow: hidden;
-    transform-origin: center center;
-  }
   @keyframes bgShift {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -374,8 +358,8 @@
   #online-game {
     display: none;
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     animation: fadeIn 0.4s ease;
     flex-direction: column;
     align-items: center;
@@ -518,8 +502,8 @@
   #game {
     display: none;
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     animation: fadeIn 0.4s ease;
   }
   #map {
@@ -639,8 +623,8 @@
   #border-game {
     display: none;
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
   }
   #border-game.show {
     display: block;
@@ -655,8 +639,8 @@
   #capital-game {
     display: none;
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
   }
   #capital-game.show {
     display: block;
@@ -736,8 +720,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     border-radius: 0;
     z-index: 2500;
   }
@@ -799,8 +783,8 @@
     display: flex;
   }
   #lightbox-img {
-    max-width: 1728px;
-    max-height: 972px;
+    max-width: 90vw;
+    max-height: 90vh;
     border-radius: 8px;
     box-shadow: 0 0 60px rgba(0,0,0,0.6);
     animation: lightbox-in 0.2s ease;
@@ -963,8 +947,8 @@
   }
   .shop-carousel-display {
     position: relative;
-    width: 520px;
-    height: 520px;
+    width: min(60vh, 46vw, 520px);
+    height: min(60vh, 46vw, 520px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -988,7 +972,7 @@
     opacity: 0.7;
   }
   .shop-carousel-emoji {
-    font-size: 260px;
+    font-size: min(30vh, 23vw, 260px);
     filter: drop-shadow(0 20px 34px rgba(0, 0, 0, 0.5));
   }
   .shop-carousel-price {
@@ -1074,7 +1058,7 @@
     animation: confettiFall linear forwards;
   }
   @keyframes confettiFall {
-    to { transform: translateY(1188px) rotate(720deg); opacity: 0.4; }
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0.4; }
   }
   .streak-badge {
     display: none;
@@ -1098,8 +1082,8 @@
     padding: 36px 44px;
     border-radius: 20px;
     width: 520px;
-    max-width: 1728px;
-    max-height: 918px;
+    max-width: 90vw;
+    max-height: 85vh;
     overflow-y: auto;
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
     animation: popIn 0.3s ease;
@@ -1156,21 +1140,6 @@
 </style>
 </head>
 <body>
-<div id="app-root">
-<script>
-  // Wendet die Skalierung sofort an (vor dem Rendern des restlichen Inhalts), damit
-  // kein unskalierter Zustand kurz aufblitzt.
-  (function () {
-    function updateAppScale() {
-      var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-      document.getElementById('app-root').style.transform = 'scale(' + scale + ')';
-    }
-    window.addEventListener('resize', updateAppScale);
-    window.addEventListener('orientationchange', updateAppScale);
-    updateAppScale();
-    window.updateAppScale = updateAppScale;
-  })();
-</script>
 
   <div id="menu">
     <div class="menu-top-icons">
@@ -2122,7 +2091,7 @@ function showRewardToast(milestone, mode) {
   const toast = document.createElement('div');
   toast.className = 'reward-toast';
   toast.innerHTML = `<span class="reward-icon">${milestone.icon}</span><span>${MODE_LABELS[mode]}: ${milestone.label} freigeschaltet!</span>`;
-  document.getElementById('app-root').appendChild(toast);
+  document.body.appendChild(toast);
   launchConfetti(45);
   setTimeout(() => toast.remove(), 3000);
 }
@@ -2254,7 +2223,7 @@ function buySkin(key) {
   const toast = document.createElement('div');
   toast.className = 'reward-toast';
   toast.innerHTML = `<span class="reward-icon">🛍️</span><span>${skin.name}-Skin gekauft!</span>`;
-  document.getElementById('app-root').appendChild(toast);
+  document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
 
@@ -2522,16 +2491,15 @@ function bumpValue(el) {
 const CONFETTI_COLORS = ['#f1c40f', '#2ecc71', '#e74c3c', '#4fd1c5', '#a78bfa', '#fb7185', '#60a5fa'];
 function launchConfetti(count) {
   count = count || 60;
-  const appRootEl = document.getElementById('app-root');
   for (let i = 0; i < count; i++) {
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';
-    piece.style.left = Math.random() * 100 + '%';
+    piece.style.left = Math.random() * 100 + 'vw';
     piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
     piece.style.animationDuration = (2 + Math.random() * 1.5) + 's';
     piece.style.animationDelay = (Math.random() * 0.35) + 's';
     piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-    appRootEl.appendChild(piece);
+    document.body.appendChild(piece);
     setTimeout(() => piece.remove(), 4200);
   }
 }
@@ -4928,8 +4896,6 @@ if (!document.documentElement.requestFullscreen && !document.documentElement.web
 applyLanguage(settings.language);
 updateSettingsUI();
 updateCoinDisplays();
-if (window.updateAppScale) window.updateAppScale();
 </script>
-</div>
 </body>
 </html>
