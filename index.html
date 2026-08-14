@@ -218,68 +218,100 @@
     background: linear-gradient(135deg, #f1c40f, #b8860b);
     color: #2b1f00;
   }
-  /* ---------- Skins-Modus: kein eigenes Menü mehr - die Kamera "zoomt" (per CSS-
-     Transform) auf denselben Charakter/Globus vom Startbildschirm, Pfeile links/rechts
-     und Kaufen/Ausrüsten-Leiste darunter erscheinen als Overlay. ---------- */
-  #menu.skins-select .menu-globe-stage {
-    transform: translate(-50%, -50%) scale(1.25);
+  /* ---------- Skins-Galerie: eigenes Menü, alle Skins nebeneinander mit
+     Vorschau-Bild statt Durchblättern mit Pfeilen. ---------- */
+  .skins-gallery-box {
+    position: relative;
+    text-align: center;
+    animation: popIn 0.35s ease;
+    background: rgba(22, 26, 42, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 26px;
+    padding: 36px 44px 44px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    max-width: 90vw;
   }
-  #menu.skins-select .menu-home-actions {
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(-50%, 24px);
-  }
-  #menu-globe-canvas.locked {
-    filter: grayscale(1) brightness(0.55) drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5));
-  }
-  .menu-skins-arrow {
+  .skins-gallery-box .menu-back-btn {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 8;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease 0.2s;
+    top: 24px;
+    left: 24px;
   }
-  #menu.skins-select .menu-skins-arrow {
-    opacity: 1;
-    pointer-events: auto;
+  .skins-gallery-title {
+    font-size: 30px;
+    margin: 0 0 26px 0;
+    letter-spacing: 2px;
   }
-  .menu-skins-arrow-left { left: 8%; }
-  .menu-skins-arrow-right { right: 8%; }
-  .menu-skins-controls {
-    position: absolute;
-    top: 88%;
-    left: 50%;
-    transform: translate(-50%, 0);
-    z-index: 8;
+  .skins-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 22px;
+    max-width: 980px;
+  }
+  .skin-card {
+    width: 190px;
+    box-sizing: border-box;
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(15, 18, 26, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    width: 280px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
+    animation: tileIn 0.3s ease backwards;
   }
-  #menu.skins-select .menu-skins-controls {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%, -10px);
+  .skin-card.equipped {
+    border-color: #4fd1c5;
+    box-shadow: 0 0 0 1px #4fd1c5, 0 12px 28px rgba(79, 209, 197, 0.25);
   }
-  .menu-skins-controls .menu-back-btn {
-    align-self: center;
-    margin-bottom: 6px;
+  .skin-card-thumb {
+    width: 140px;
+    height: 140px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    overflow: hidden;
+    font-size: 60px;
   }
-  .menu-skins-controls .shop-carousel-price {
+  .skin-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .skin-card.locked .skin-card-thumb img {
+    filter: grayscale(1) brightness(0.55);
+  }
+  .skin-card-name {
+    font-weight: bold;
     font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .skin-card-status {
+    font-size: 13px;
     color: #f1c40f;
     opacity: 0.9;
+    margin-bottom: 12px;
   }
-  .menu-skins-controls .shop-carousel-btn {
+  .skin-card-btn {
     width: 100%;
-    font-size: 15px;
-    padding: 12px 10px;
+    font-size: 14px;
+    padding: 10px 8px;
+  }
+  .skin-card-btn.equip-btn {
+    background: linear-gradient(135deg, #2ecc71, #1e9e57);
+  }
+  .skin-card-btn.equip-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #3ee081, #26b566);
+  }
+  .skin-card-btn.equipped-btn {
+    background: #1e2536;
+    opacity: 0.7;
+    cursor: default;
   }
   .menu-box {
     text-align: center;
@@ -370,14 +402,14 @@
   }
 
   #difficulty-menu, #continent-menu, #category-type-menu, #category-pick-menu,
-  #online-menu, #online-waiting {
+  #online-menu, #online-waiting, #skins-menu {
     display: none;
     height: 100%;
     align-items: center;
     justify-content: center;
   }
   #difficulty-menu.show, #continent-menu.show, #category-type-menu.show, #category-pick-menu.show,
-  #online-menu.show, #online-waiting.show {
+  #online-menu.show, #online-waiting.show, #skins-menu.show {
     display: flex;
   }
   #category-pick-menu .buttons {
@@ -1224,37 +1256,6 @@
   .shop-box {
     text-align: center;
   }
-  .shop-arrow {
-    width: 62px;
-    height: 62px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    padding: 0;
-    font-size: 22px;
-  }
-  .shop-carousel-price {
-    font-size: 14px;
-    color: #f1c40f;
-    opacity: 0.9;
-    margin-bottom: 16px;
-  }
-  .shop-carousel-btn {
-    width: 100%;
-    font-size: 15px;
-    padding: 12px 10px;
-    margin-bottom: 10px;
-  }
-  .shop-carousel-btn.equip-btn {
-    background: linear-gradient(135deg, #2ecc71, #1e9e57);
-  }
-  .shop-carousel-btn.equip-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #3ee081, #26b566);
-  }
-  .shop-carousel-btn.equipped-btn {
-    background: #1e2536;
-    opacity: 0.7;
-    cursor: default;
-  }
   .coin-block .value {
     color: #f1c40f;
   }
@@ -1419,14 +1420,6 @@
       <button id="btn-menu-skins" class="menu-home-btn">&#128100; Skins</button>
     </div>
 
-    <button id="btn-shop-prev" class="shop-arrow menu-skins-arrow menu-skins-arrow-left" aria-label="Vorheriger Skin">&#10094;</button>
-    <button id="btn-shop-next" class="shop-arrow menu-skins-arrow menu-skins-arrow-right" aria-label="Nächster Skin">&#10095;</button>
-    <div class="menu-skins-controls" id="menu-skins-controls">
-      <button id="btn-skins-back" class="menu-back-btn">&#8592; Zurück</button>
-      <div class="shop-carousel-price" id="shop-carousel-price"></div>
-      <button class="shop-carousel-btn" id="shop-carousel-btn"></button>
-    </div>
-
     <div class="menu-mode-panel" id="menu-mode-panel">
       <div class="menu-rewards-panel" id="menu-rewards-panel">
         <div class="rewards-modes" id="rewards-modes"></div>
@@ -1467,6 +1460,13 @@
     </div>
   </div>
 
+  <div id="skins-menu">
+    <div class="skins-gallery-box">
+      <button id="btn-skins-back" class="menu-back-btn">&#8592; Zurück</button>
+      <h1 class="skins-gallery-title">Skins</h1>
+      <div class="skins-gallery" id="skins-gallery"></div>
+    </div>
+  </div>
 
   <div id="category-pick-menu">
     <div class="menu-box">
@@ -2482,7 +2482,7 @@ function buySkin(key) {
   saveRewards();
   saveInventory();
   updateCoinDisplays();
-  renderShop();
+  renderSkinsGallery();
   launchConfetti(40);
   const toast = document.createElement('div');
   toast.className = 'reward-toast';
@@ -2495,7 +2495,7 @@ function equipSkin(key) {
   if (key !== DEFAULT_SKIN_KEY && !inventory.owned.includes(key)) return;
   inventory.equipped = key;
   saveInventory();
-  renderShop();
+  renderSkinsGallery();
   updateEquippedSkinDisplays();
 }
 
@@ -2720,51 +2720,133 @@ function refreshMenuGlobeCharacter() {
   loadMenuGlobeCharacter(equippedSkinFile() || 'standartskin.fbx');
 }
 
-// Karussell: "Standard" + alle Skins in einer Reihe, mit Pfeilen durchblätterbar.
+// "Standard" + alle Skins zusammen - jetzt als Galerie nebeneinander gezeigt statt
+// als Karussell zum Durchblättern.
 const SHOP_ITEMS = [{ key: DEFAULT_SKIN_KEY, name: 'Standard', file: 'standartskin.fbx', price: 0 }, ...SKINS];
-let shopCarouselIndex = 0;
 
-function shopStep(delta) {
-  shopCarouselIndex = (shopCarouselIndex + delta + SHOP_ITEMS.length) % SHOP_ITEMS.length;
-  renderShop();
+// Vorschaubilder: statt für jede Karte einen eigenen Live-3D-Viewer laufen zu lassen,
+// wird jedes Modell einmalig in einen unsichtbaren Offscreen-Canvas gerendert und als
+// Bild eingefroren (toDataURL) - danach reicht ein normales <img>, spart Ressourcen und
+// vermeidet mehrere gleichzeitige WebGL-Kontexte.
+let skinThumbCache = {};
+let skinThumbsGenerating = null;
+
+function generateSkinThumbnails() {
+  if (skinThumbsGenerating) return skinThumbsGenerating;
+  const canvas = document.createElement('canvas');
+  canvas.width = 280;
+  canvas.height = 280;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.setSize(280, 280, false);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
+  camera.position.set(0, 0, 10);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  keyLight.position.set(5, 8, 6);
+  scene.add(keyLight);
+  const rimLight = new THREE.DirectionalLight(0x4fd1c5, 0.4);
+  rimLight.position.set(-6, 2, -4);
+  scene.add(rimLight);
+  const loader = new THREE.FBXLoader();
+
+  function renderOne(item) {
+    return new Promise((resolve) => {
+      if (skinThumbCache[item.key]) { resolve(); return; }
+      loader.load(item.file, (fbx) => {
+        try {
+          const box = new THREE.Box3().setFromObject(fbx);
+          const size = new THREE.Vector3();
+          box.getSize(size);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          const maxDim = Math.max(size.x, size.y, size.z) || 1;
+          const scale = 4.4 / maxDim;
+          fbx.scale.setScalar(scale);
+          fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+          scene.add(fbx);
+          renderer.render(scene, camera);
+          skinThumbCache[item.key] = canvas.toDataURL('image/png');
+          scene.remove(fbx);
+        } catch (err) {
+          console.error('Skin-Vorschau Fehler:', item.file, err);
+        }
+        resolve();
+      }, undefined, () => resolve());
+    });
+  }
+
+  let chain = Promise.resolve();
+  SHOP_ITEMS.forEach(item => { chain = chain.then(() => renderOne(item)); });
+  skinThumbsGenerating = chain.then(() => { renderer.dispose(); });
+  return skinThumbsGenerating;
 }
 
-// Skin-Browsing zeigt jetzt keinen eigenen Viewer mehr, sondern denselben Charakter/
-// Globus vom Startbildschirm (siehe loadMenuGlobeCharacter weiter oben) - beim Duchblättern
-// wird einfach das jeweilige Modell dort geladen, nicht besessene Skins werden per
-// Graustufen-Filter auf dem Globus-Canvas als "gesperrt" markiert.
-function renderShop() {
-  const item = SHOP_ITEMS[shopCarouselIndex];
-  const isDefault = item.key === DEFAULT_SKIN_KEY;
-  const owned = isDefault || inventory.owned.includes(item.key);
-  const equipped = inventory.equipped === item.key;
+// Baut die Skins-Galerie neu auf (z.B. nach Kauf/Ausrüsten oder beim ersten Öffnen).
+function renderSkinsGallery() {
+  const galleryEl = document.getElementById('skins-gallery');
+  if (!galleryEl) return;
+  galleryEl.innerHTML = '';
+  SHOP_ITEMS.forEach(item => {
+    const isDefault = item.key === DEFAULT_SKIN_KEY;
+    const owned = isDefault || inventory.owned.includes(item.key);
+    const equipped = inventory.equipped === item.key;
 
-  loadMenuGlobeCharacter(item.file);
-  const globeCanvasEl = document.getElementById('menu-globe-canvas');
-  globeCanvasEl.classList.toggle('locked', !owned);
+    const card = document.createElement('div');
+    card.className = 'skin-card' + (equipped ? ' equipped' : '') + (!owned ? ' locked' : '');
 
-  document.getElementById('shop-carousel-price').textContent = isDefault
-    ? (equipped ? 'Ausgerüstet' : 'Immer verfügbar')
-    : (owned ? (equipped ? 'Ausgerüstet' : 'Freigeschaltet') : item.price + ' 🪙');
+    const thumb = document.createElement('div');
+    thumb.className = 'skin-card-thumb';
+    if (skinThumbCache[item.key]) {
+      const img = document.createElement('img');
+      img.src = skinThumbCache[item.key];
+      img.alt = item.name;
+      thumb.appendChild(img);
+    } else {
+      thumb.textContent = '🙂';
+    }
+    card.appendChild(thumb);
 
-  const btn = document.getElementById('shop-carousel-btn');
-  btn.replaceWith(btn.cloneNode(true));
-  const freshBtn = document.getElementById('shop-carousel-btn');
-  if (equipped) {
-    freshBtn.className = 'shop-carousel-btn equipped-btn';
-    freshBtn.textContent = 'Ausgerüstet';
-    freshBtn.disabled = true;
-  } else if (owned) {
-    freshBtn.className = 'shop-carousel-btn equip-btn';
-    freshBtn.textContent = 'Ausrüsten';
-    freshBtn.disabled = false;
-    freshBtn.addEventListener('click', () => equipSkin(item.key));
-  } else {
-    freshBtn.className = 'shop-carousel-btn';
-    freshBtn.textContent = 'Kaufen';
-    freshBtn.disabled = rewards.coins < item.price;
-    freshBtn.addEventListener('click', () => buySkin(item.key));
-  }
+    const nameEl = document.createElement('div');
+    nameEl.className = 'skin-card-name';
+    nameEl.textContent = item.name;
+    card.appendChild(nameEl);
+
+    const statusEl = document.createElement('div');
+    statusEl.className = 'skin-card-status';
+    statusEl.textContent = isDefault
+      ? (equipped ? 'Ausgerüstet' : 'Immer verfügbar')
+      : (owned ? (equipped ? 'Ausgerüstet' : 'Freigeschaltet') : item.price + ' 🪙');
+    card.appendChild(statusEl);
+
+    const btn = document.createElement('button');
+    if (equipped) {
+      btn.className = 'skin-card-btn equipped-btn';
+      btn.textContent = 'Ausgerüstet';
+      btn.disabled = true;
+    } else if (owned) {
+      btn.className = 'skin-card-btn equip-btn';
+      btn.textContent = 'Ausrüsten';
+      btn.addEventListener('click', () => equipSkin(item.key));
+    } else {
+      btn.className = 'skin-card-btn';
+      btn.textContent = 'Kaufen';
+      btn.disabled = rewards.coins < item.price;
+      btn.addEventListener('click', () => buySkin(item.key));
+    }
+    card.appendChild(btn);
+
+    galleryEl.appendChild(card);
+  });
+}
+
+// Öffnet die Galerie: Vorschaubilder werden nur beim allerersten Mal generiert
+// (danach aus dem Cache wiederverwendet), damit spätere Öffnungen sofort da sind.
+function openSkinsGallery() {
+  menuEl.style.display = 'none';
+  document.getElementById('skins-menu').classList.add('show');
+  renderSkinsGallery();
+  generateSkinThumbnails().then(renderSkinsGallery);
 }
 
 // Kartenstile: 'ocean' ist der normale Kachel-Hintergrund, 'colorful' ist kein eigener
@@ -4518,13 +4600,6 @@ settingsVolumeEl.addEventListener('change', () => {
 // Klick-Overlays - wird beim Start und nach jeder richtigen Antwort aktualisiert.
 renderRewardsScreen();
 
-// Shop-Karussell ist jetzt fest auf der Startseite eingebaut (kein Öffnen/Schließen
-// nötig) - startet direkt beim aktuell ausgerüsteten Skin und bleibt immer sichtbar.
-const equippedIdx = SHOP_ITEMS.findIndex(s => s.key === inventory.equipped);
-shopCarouselIndex = equippedIdx >= 0 ? equippedIdx : 0;
-renderShop();
-document.getElementById('btn-shop-prev').addEventListener('click', () => shopStep(-1));
-document.getElementById('btn-shop-next').addEventListener('click', () => shopStep(1));
 updateEquippedSkinDisplays();
 
 // ================= ONLINE 1v1: GeoGuessr-Duell (Firebase Realtime Database) =================
@@ -5892,16 +5967,10 @@ document.getElementById('btn-menu-play').addEventListener('click', () => {
 document.getElementById('btn-menu-back').addEventListener('click', () => {
   menuEl.classList.remove('mode-select');
 });
-document.getElementById('btn-menu-skins').addEventListener('click', () => {
-  const idx = SHOP_ITEMS.findIndex(s => s.key === inventory.equipped);
-  shopCarouselIndex = idx >= 0 ? idx : 0;
-  menuEl.classList.add('skins-select');
-  renderShop();
-});
+document.getElementById('btn-menu-skins').addEventListener('click', openSkinsGallery);
 document.getElementById('btn-skins-back').addEventListener('click', () => {
-  menuEl.classList.remove('skins-select');
-  document.getElementById('menu-globe-canvas').classList.remove('locked');
-  refreshMenuGlobeCharacter();
+  document.getElementById('skins-menu').classList.remove('show');
+  menuEl.style.display = 'grid';
 });
 // Zusätzlich: in der Modus-Auswahl auch per Klick auf die Kugel/den Skin selbst
 // zurückgehen - großer, leicht zu findender Klickbereich statt nur der kleine Button.
