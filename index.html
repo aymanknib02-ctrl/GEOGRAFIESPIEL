@@ -222,6 +222,12 @@
      Vorschau-Bild statt Durchblättern mit Pfeilen. ---------- */
   .skins-gallery-box {
     position: relative;
+    box-sizing: border-box;
+    width: 75vw;
+    height: 75vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
     animation: popIn 0.35s ease;
     background: rgba(22, 26, 42, 0.55);
@@ -231,7 +237,6 @@
     border-radius: 26px;
     padding: 36px 44px 44px;
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
-    max-width: 90vw;
   }
   .skins-gallery-box .menu-back-btn {
     position: absolute;
@@ -239,21 +244,25 @@
     left: 24px;
   }
   .skins-gallery-title {
-    font-size: 30px;
-    margin: 0 0 26px 0;
+    font-size: 32px;
+    margin: 0 0 30px 0;
     letter-spacing: 2px;
+    flex-shrink: 0;
   }
   .skins-gallery {
     display: flex;
     flex-wrap: wrap;
+    align-content: center;
     justify-content: center;
-    gap: 22px;
-    max-width: 980px;
+    gap: 32px;
+    width: 100%;
+    flex: 1;
+    overflow-y: auto;
   }
   .skin-card {
-    width: 190px;
+    width: 240px;
     box-sizing: border-box;
-    padding: 16px;
+    padding: 20px;
     border-radius: 18px;
     background: rgba(15, 18, 26, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -267,16 +276,15 @@
     box-shadow: 0 0 0 1px #4fd1c5, 0 12px 28px rgba(79, 209, 197, 0.25);
   }
   .skin-card-thumb {
-    width: 140px;
-    height: 140px;
+    width: 190px;
+    height: 190px;
     border-radius: 14px;
-    background: rgba(0, 0, 0, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     overflow: hidden;
-    font-size: 60px;
+    font-size: 80px;
   }
   .skin-card-thumb img {
     width: 100%;
@@ -2765,14 +2773,24 @@ function generateSkinThumbnails() {
           fbx.scale.setScalar(scale);
           fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
           scene.add(fbx);
+          // Einmal sofort rendern (damit Materialien/Texturen anlaufen) und erst einen
+          // Frame später erneut rendern+erfassen - direkt nach onLoad war das erste Bild
+          // bei manchen Modellen noch nicht vollständig fertig (z.B. der Standard-Skin).
           renderer.render(scene, camera);
-          skinThumbCache[item.key] = canvas.toDataURL('image/png');
-          scene.remove(fbx);
+          requestAnimationFrame(() => {
+            renderer.render(scene, camera);
+            skinThumbCache[item.key] = canvas.toDataURL('image/png');
+            scene.remove(fbx);
+            resolve();
+          });
         } catch (err) {
           console.error('Skin-Vorschau Fehler:', item.file, err);
+          resolve();
         }
+      }, undefined, (err) => {
+        console.error('Skin-Vorschau Ladefehler:', item.file, err);
         resolve();
-      }, undefined, () => resolve());
+      });
     });
   }
 
