@@ -2,6 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Geo Quiz">
 <title>Geo Quiz</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4880,6 +4885,13 @@ btnFullscreenEl.addEventListener('click', () => {
 });
 document.addEventListener('fullscreenchange', updateFullscreenIcon);
 document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+// iPhone Safari unterstützt die Fullscreen-API grundsätzlich nicht (Apple-Einschränkung) -
+// Button dort ausblenden statt einen wirkungslosen Klick anzubieten. Der echte Weg zu
+// echtem Vollbild dort ist "Zum Home-Bildschirm hinzufügen" (siehe apple-mobile-web-app
+// Meta-Tags im <head>), was den Browser-Rahmen komplett entfernt.
+if (!document.documentElement.requestFullscreen && !document.documentElement.webkitRequestFullscreen) {
+  btnFullscreenEl.style.display = 'none';
+}
 
 applyLanguage(settings.language);
 updateSettingsUI();
