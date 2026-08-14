@@ -78,14 +78,19 @@
   }
   .menu-player-name {
     position: absolute;
-    top: 4%;
+    top: -34px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 14px;
-    opacity: 0.75;
+    z-index: 6;
+    background: rgba(15, 18, 26, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
     font-weight: bold;
     letter-spacing: 0.5px;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
     white-space: nowrap;
   }
   .menu-online-count {
@@ -2569,7 +2574,12 @@ function initMenuGlobeViewer() {
   charGroup.position.set(0, globeRadius, 0);
   group.add(charGroup);
 
-  menuGlobeViewer = { renderer, scene, camera, controls, group, charGroup, globeRadius };
+  // Sichtbare Höhe am Ziel-Abstand bei diesem festen Kamera-Aufbau (Distanz Kamera<->Ziel
+  // und FOV), zur späteren Einpassung von Kugel+Charakter - siehe loadMenuGlobeCharacter.
+  const camTargetDist = camera.position.distanceTo(controls.target);
+  const visibleHeightAtTarget = 2 * camTargetDist * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+
+  menuGlobeViewer = { renderer, scene, camera, controls, group, charGroup, globeRadius, visibleHeightAtTarget };
   menuGlobeLoader = new THREE.FBXLoader();
 
   (function animate() {
@@ -2616,19 +2626,18 @@ function loadMenuGlobeCharacter(file) {
       fbx.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
       viewer.charGroup.add(fbx);
 
-      // Kamera dynamisch so einpassen, dass Kugel UND Charakter (unabhängig von der
-      // genauen Modell-Höhe) komplett im Bild sind - vorher war die Kamera fest
-      // positioniert, wodurch Kopf/Kugelrand je nach Modellgröße abgeschnitten wurden.
+      // Kugel+Charakter (die ganze "group") so skalieren/verschieben, dass sie
+      // unabhängig von der tatsächlichen Modell-Höhe komplett ins feste Kamera-
+      // Sichtfeld passt. WICHTIG: die Kamera/OrbitControls selbst bleiben dabei
+      // unangetastet - camera.position direkt zu verändern hatte vorher NICHT
+      // funktioniert, weil controls.update() es beim nächsten Frame wieder auf den
+      // ursprünglichen, von OrbitControls intern gemerkten Abstand zurückgesetzt hat.
       const charHeight = size.y * scale;
-      const top = viewer.globeRadius + charHeight;
-      const bottom = -viewer.globeRadius;
-      const sceneHeight = top - bottom;
-      const centerY = (top + bottom) / 2;
-      const fovRad = THREE.MathUtils.degToRad(viewer.camera.fov);
-      const dist = (sceneHeight * 1.18) / (2 * Math.tan(fovRad / 2));
-      viewer.camera.position.set(0, centerY, dist);
-      viewer.controls.target.set(0, centerY, 0);
-      viewer.controls.update();
+      const sceneHeightRaw = viewer.globeRadius * 2 + charHeight;
+      const fitScale = Math.min(1, (viewer.visibleHeightAtTarget * 0.92) / sceneHeightRaw);
+      viewer.group.scale.setScalar(fitScale);
+      const midpointRaw = charHeight / 2; // Mitte von [-globeRadius, globeRadius+charHeight]
+      viewer.group.position.y = viewer.controls.target.y - midpointRaw * fitScale;
 
       loadingEl.style.display = 'none';
       canvasEl.style.display = 'block';
