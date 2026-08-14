@@ -4279,13 +4279,46 @@ function readProtoString(bytes, pos, len) {
   pos.i += len;
   return s;
 }
+// Ein Feature-"tags"-Eintrag ist eine Liste aus (keyIndex, valueIndex)-Paaren, die auf
+// die keys/values-Tabellen des umschließenden Layers verweisen (MVT-Spec). Die echte
+// Mapillary-Bild-ID steckt NICHT im Top-Level-Feature.id (das ist nur eine lokale,
+// pro-Kachel-fortlaufende Nummer), sondern als "id"-Property in genau diesen Tags.
+function parseVectorTileValue(bytes, pos, end) {
+  let stringValue, intValue, uintValue, sintValue;
+  while (pos.i < end) {
+    const tag = readVarint(bytes, pos);
+    const field = tag >>> 3, wireType = tag & 0x7;
+    if (field === 1 && wireType === 2) {
+      const l = readVarint(bytes, pos);
+      stringValue = readProtoString(bytes, pos, l);
+    } else if (field === 4 && wireType === 0) {
+      intValue = readVarint(bytes, pos);
+    } else if (field === 5 && wireType === 0) {
+      uintValue = readVarint(bytes, pos);
+    } else if (field === 6 && wireType === 0) {
+      sintValue = zigzagDecode(readVarint(bytes, pos));
+    } else {
+      skipProtoField(bytes, pos, wireType);
+    }
+  }
+  if (stringValue !== undefined) return stringValue;
+  if (uintValue !== undefined) return uintValue;
+  if (intValue !== undefined) return intValue;
+  if (sintValue !== undefined) return sintValue;
+  return null;
+}
 function parseVectorTileFeature(bytes, pos, end) {
-  const feature = { id: null, geometry: [] };
+  const feature = { id: null, tags: [], geometry: [] };
   while (pos.i < end) {
     const tag = readVarint(bytes, pos);
     const field = tag >>> 3, wireType = tag & 0x7;
     if (field === 1 && wireType === 0) {
       feature.id = readVarint(bytes, pos);
+    } else if (field === 2 && wireType === 2) {
+      const l = readVarint(bytes, pos);
+      const tagsEnd = pos.i + l;
+      while (pos.i < tagsEnd) feature.tags.push(readVarint(bytes, pos));
+      pos.i = tagsEnd;
     } else if (field === 4 && wireType === 2) {
       const l = readVarint(bytes, pos);
       const geomEnd = pos.i + l;
@@ -4298,7 +4331,7 @@ function parseVectorTileFeature(bytes, pos, end) {
   return feature;
 }
 function parseVectorTileLayer(bytes, pos, end) {
-  const layer = { name: '', features: [], extent: 4096 };
+  const layer = { name: '', features: [], extent: 4096, keys: [], values: [] };
   while (pos.i < end) {
     const tag = readVarint(bytes, pos);
     const field = tag >>> 3, wireType = tag & 0x7;
@@ -4310,6 +4343,14 @@ function parseVectorTileLayer(bytes, pos, end) {
       const featEnd = pos.i + l;
       layer.features.push(parseVectorTileFeature(bytes, pos, featEnd));
       pos.i = featEnd;
+    } else if (field === 3 && wireType === 2) {
+      const l = readVarint(bytes, pos);
+      layer.keys.push(readProtoString(bytes, pos, l));
+    } else if (field === 4 && wireType === 2) {
+      const l = readVarint(bytes, pos);
+      const valEnd = pos.i + l;
+      layer.values.push(parseVectorTileValue(bytes, pos, valEnd));
+      pos.i = valEnd;
     } else if (field === 5 && wireType === 0) {
       layer.extent = readVarint(bytes, pos);
     } else {
@@ -4317,6 +4358,14 @@ function parseVectorTileLayer(bytes, pos, end) {
     }
   }
   return layer;
+}
+function featureProperty(layer, feature, keyName) {
+  const keyIdx = layer.keys.indexOf(keyName);
+  if (keyIdx === -1) return null;
+  for (let t = 0; t < feature.tags.length; t += 2) {
+    if (feature.tags[t] === keyIdx) return layer.values[feature.tags[t + 1]];
+  }
+  return null;
 }
 function findVectorTileLayer(buffer, targetName) {
   const bytes = new Uint8Array(buffer);
@@ -4396,9 +4445,10 @@ async function fetchMapillaryTileImages(lat, lng, z) {
     const results = [];
     layer.features.forEach(f => {
       const pt = decodeFirstPointGeometry(f.geometry);
-      if (pt && f.id != null) {
+      const realId = featureProperty(layer, f, 'id');
+      if (pt && realId != null) {
         const coord = tileLocalToLngLat(pt.x, pt.y, layer.extent, z, x, y);
-        results.push({ id: f.id, lat: coord.lat, lng: coord.lng });
+        results.push({ id: realId, lat: coord.lat, lng: coord.lng });
       }
     });
     return results;
