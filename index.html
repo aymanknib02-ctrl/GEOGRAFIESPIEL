@@ -218,32 +218,68 @@
     background: linear-gradient(135deg, #f1c40f, #b8860b);
     color: #2b1f00;
   }
-  #skins-menu .menu-skin-showcase {
+  /* ---------- Skins-Modus: kein eigenes Menü mehr - die Kamera "zoomt" (per CSS-
+     Transform) auf denselben Charakter/Globus vom Startbildschirm, Pfeile links/rechts
+     und Kaufen/Ausrüsten-Leiste darunter erscheinen als Overlay. ---------- */
+  #menu.skins-select .menu-globe-stage {
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+  #menu.skins-select .menu-home-actions {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 24px);
+  }
+  #menu-globe-canvas.locked {
+    filter: grayscale(1) brightness(0.55) drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5));
+  }
+  .menu-skins-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 8;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease 0.2s;
+  }
+  #menu.skins-select .menu-skins-arrow {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .menu-skins-arrow-left { left: 8%; }
+  .menu-skins-arrow-right { right: 8%; }
+  .menu-skins-controls {
+    position: absolute;
+    top: 88%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    z-index: 8;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    text-align: center;
-    animation: popIn 0.4s ease;
-    padding: 30px 36px;
-    border-radius: 24px;
-    background: rgba(22, 26, 42, 0.55);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
-    position: relative;
-  }
-  .menu-skin-showcase .shop-carousel-btn {
+    gap: 8px;
     width: 280px;
-    font-size: 18px;
-    padding: 16px 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
   }
-  .menu-skin-showcase .shop-carousel-price {
-    font-size: 18px;
+  #menu.skins-select .menu-skins-controls {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -10px);
   }
-  .menu-skin-showcase .menu-back-btn {
-    align-self: flex-start;
+  .menu-skins-controls .menu-back-btn {
+    align-self: center;
+    margin-bottom: 6px;
+  }
+  .menu-skins-controls .shop-carousel-price {
+    font-size: 16px;
+    color: #f1c40f;
+    opacity: 0.9;
+  }
+  .menu-skins-controls .shop-carousel-btn {
+    width: 100%;
+    font-size: 15px;
+    padding: 12px 10px;
   }
   .menu-box {
     text-align: center;
@@ -334,14 +370,14 @@
   }
 
   #difficulty-menu, #continent-menu, #category-type-menu, #category-pick-menu,
-  #online-menu, #online-waiting, #skins-menu {
+  #online-menu, #online-waiting {
     display: none;
     height: 100%;
     align-items: center;
     justify-content: center;
   }
   #difficulty-menu.show, #continent-menu.show, #category-type-menu.show, #category-pick-menu.show,
-  #online-menu.show, #online-waiting.show, #skins-menu.show {
+  #online-menu.show, #online-waiting.show {
     display: flex;
   }
   #category-pick-menu .buttons {
@@ -1188,13 +1224,6 @@
   .shop-box {
     text-align: center;
   }
-  .shop-carousel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    margin-bottom: 16px;
-  }
   .shop-arrow {
     width: 62px;
     height: 62px;
@@ -1202,36 +1231,6 @@
     border-radius: 50%;
     padding: 0;
     font-size: 22px;
-  }
-  .shop-carousel-display {
-    position: relative;
-    width: min(60vh, 46vw, 520px);
-    height: min(60vh, 46vw, 520px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: popIn 0.25s ease;
-  }
-  .shop-carousel-canvas {
-    width: 100%;
-    height: 100%;
-    cursor: grab;
-    filter: drop-shadow(0 20px 34px rgba(0, 0, 0, 0.5));
-  }
-  .shop-carousel-canvas:active {
-    cursor: grabbing;
-  }
-  .shop-carousel-canvas.locked {
-    filter: grayscale(1) brightness(0.55) drop-shadow(0 20px 34px rgba(0, 0, 0, 0.5));
-    pointer-events: none;
-  }
-  .shop-carousel-loading {
-    font-size: 16px;
-    opacity: 0.7;
-  }
-  .shop-carousel-emoji {
-    font-size: min(30vh, 23vw, 260px);
-    filter: drop-shadow(0 20px 34px rgba(0, 0, 0, 0.5));
   }
   .shop-carousel-price {
     font-size: 14px;
@@ -1420,6 +1419,14 @@
       <button id="btn-menu-skins" class="menu-home-btn">&#128100; Skins</button>
     </div>
 
+    <button id="btn-shop-prev" class="shop-arrow menu-skins-arrow menu-skins-arrow-left" aria-label="Vorheriger Skin">&#10094;</button>
+    <button id="btn-shop-next" class="shop-arrow menu-skins-arrow menu-skins-arrow-right" aria-label="Nächster Skin">&#10095;</button>
+    <div class="menu-skins-controls" id="menu-skins-controls">
+      <button id="btn-skins-back" class="menu-back-btn">&#8592; Zurück</button>
+      <div class="shop-carousel-price" id="shop-carousel-price"></div>
+      <button class="shop-carousel-btn" id="shop-carousel-btn"></button>
+    </div>
+
     <div class="menu-mode-panel" id="menu-mode-panel">
       <div class="menu-rewards-panel" id="menu-rewards-panel">
         <div class="rewards-modes" id="rewards-modes"></div>
@@ -1460,22 +1467,6 @@
     </div>
   </div>
 
-  <div id="skins-menu">
-    <div class="menu-skin-showcase" id="menu-skin-showcase">
-      <button id="btn-skins-back" class="menu-back-btn">&#8592; Zurück</button>
-      <div class="shop-carousel">
-        <button id="btn-shop-prev" class="shop-arrow" aria-label="Vorheriger Skin">&#10094;</button>
-        <div class="shop-carousel-display" id="shop-carousel-display">
-          <canvas class="shop-carousel-canvas" id="shop-carousel-canvas" style="display:none;"></canvas>
-          <div class="shop-carousel-loading" id="shop-carousel-loading" style="display:none;">Lädt...</div>
-          <div class="shop-carousel-emoji" id="shop-carousel-emoji" style="display:none;">&#128578;</div>
-        </div>
-        <button id="btn-shop-next" class="shop-arrow" aria-label="Nächster Skin">&#10095;</button>
-      </div>
-      <div class="shop-carousel-price" id="shop-carousel-price"></div>
-      <button class="shop-carousel-btn" id="shop-carousel-btn"></button>
-    </div>
-  </div>
 
   <div id="category-pick-menu">
     <div class="menu-box">
@@ -2738,119 +2729,19 @@ function shopStep(delta) {
   renderShop();
 }
 
-// ---------- 3D-Skin-Viewer (Three.js) - rendert das .fbx-Modell des aktuell im
-// Karussell gezeigten Skins live, dreht sich automatisch, per Maus/Touch drehbar. ----------
-let skinViewer = null;
-let skinViewerLoader = null;
-let skinModelToken = 0;
-
-function initSkinViewer() {
-  if (skinViewer) return skinViewer;
-  const canvas = document.getElementById('shop-carousel-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
-  camera.position.set(0, 0, 10);
-
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
-  keyLight.position.set(5, 8, 6);
-  scene.add(keyLight);
-  const rimLight = new THREE.DirectionalLight(0x88aaff, 0.4);
-  rimLight.position.set(-6, 2, -4);
-  scene.add(rimLight);
-
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.enableZoom = false;
-  controls.enablePan = false;
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 2.2;
-
-  const group = new THREE.Group();
-  scene.add(group);
-
-  skinViewer = { renderer, scene, camera, controls, group };
-  skinViewerLoader = new THREE.FBXLoader();
-
-  (function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  })();
-
-  window.addEventListener('resize', resizeSkinViewer);
-  return skinViewer;
-}
-
-function resizeSkinViewer() {
-  if (!skinViewer) return;
-  const displayEl = document.getElementById('shop-carousel-display');
-  const size = displayEl.clientWidth || 300;
-  skinViewer.renderer.setSize(size, size, false);
-  skinViewer.camera.aspect = 1;
-  skinViewer.camera.updateProjectionMatrix();
-}
-
-function clearSkinModel() {
-  if (!skinViewer) return;
-  while (skinViewer.group.children.length) {
-    skinViewer.group.remove(skinViewer.group.children[0]);
-  }
-}
-
-// Lädt das FBX-Modell des gewählten Skins, zentriert und skaliert es einheitlich
-// (FBX-Dateien haben oft sehr unterschiedliche Ursprungsgrößen/-einheiten).
-function loadSkinModel(file) {
-  const viewer = initSkinViewer();
-  resizeSkinViewer();
-  clearSkinModel();
-  const myToken = ++skinModelToken;
-  const loadingEl = document.getElementById('shop-carousel-loading');
-  const canvasEl = document.getElementById('shop-carousel-canvas');
-  loadingEl.textContent = 'Lädt...';
-  loadingEl.style.display = 'block';
-  canvasEl.style.display = 'none';
-
-  skinViewerLoader.load(file, (fbx) => {
-    if (myToken !== skinModelToken) return;
-    try {
-      const box = new THREE.Box3().setFromObject(fbx);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 4.5 / maxDim;
-      fbx.scale.setScalar(scale);
-      fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-      viewer.group.add(fbx);
-      loadingEl.style.display = 'none';
-      canvasEl.style.display = 'block';
-    } catch (err) {
-      console.error('Skin-Modell Verarbeitungsfehler:', file, err);
-      loadingEl.textContent = 'Fehler beim Anzeigen: ' + err.message;
-    }
-  }, undefined, (err) => {
-    if (myToken !== skinModelToken) return;
-    console.error('Skin-Modell Ladefehler:', file, err);
-    loadingEl.textContent = 'Ladefehler: ' + (err && err.message ? err.message : String(err));
-  });
-}
-
+// Skin-Browsing zeigt jetzt keinen eigenen Viewer mehr, sondern denselben Charakter/
+// Globus vom Startbildschirm (siehe loadMenuGlobeCharacter weiter oben) - beim Duchblättern
+// wird einfach das jeweilige Modell dort geladen, nicht besessene Skins werden per
+// Graustufen-Filter auf dem Globus-Canvas als "gesperrt" markiert.
 function renderShop() {
   const item = SHOP_ITEMS[shopCarouselIndex];
   const isDefault = item.key === DEFAULT_SKIN_KEY;
   const owned = isDefault || inventory.owned.includes(item.key);
   const equipped = inventory.equipped === item.key;
 
-  const canvasEl = document.getElementById('shop-carousel-canvas');
-  document.getElementById('shop-carousel-emoji').style.display = 'none';
-  canvasEl.className = 'shop-carousel-canvas' + (owned ? '' : ' locked');
-  loadSkinModel(item.file);
+  loadMenuGlobeCharacter(item.file);
+  const globeCanvasEl = document.getElementById('menu-globe-canvas');
+  globeCanvasEl.classList.toggle('locked', !owned);
 
   document.getElementById('shop-carousel-price').textContent = isDefault
     ? (equipped ? 'Ausgerüstet' : 'Immer verfügbar')
@@ -5978,8 +5869,7 @@ if (!document.documentElement.requestFullscreen && !document.documentElement.web
   btnFullscreenEl.style.display = 'none';
 }
 
-// ---------- Startbildschirm-Navigation: Globus+Skin <-> Modus-Auswahl <-> Skins-Menü ----------
-const skinsMenuEl = document.getElementById('skins-menu');
+// ---------- Startbildschirm-Navigation: Globus+Skin <-> Modus-Auswahl <-> Skins-Browsing ----------
 // Belohnungs-Panel exakt so hoch wie der Knopf-Kasten daneben (von oben bis zum
 // letzten Knopf) - per JS statt CSS-Stretch gemessen, da flexbox align-items:stretch
 // hier wegen der undefinierten Höhe des position:absolute-Elternelements nicht
@@ -6003,13 +5893,15 @@ document.getElementById('btn-menu-back').addEventListener('click', () => {
   menuEl.classList.remove('mode-select');
 });
 document.getElementById('btn-menu-skins').addEventListener('click', () => {
-  menuEl.style.display = 'none';
-  skinsMenuEl.classList.add('show');
+  const idx = SHOP_ITEMS.findIndex(s => s.key === inventory.equipped);
+  shopCarouselIndex = idx >= 0 ? idx : 0;
+  menuEl.classList.add('skins-select');
   renderShop();
 });
 document.getElementById('btn-skins-back').addEventListener('click', () => {
-  skinsMenuEl.classList.remove('show');
-  menuEl.style.display = 'grid';
+  menuEl.classList.remove('skins-select');
+  document.getElementById('menu-globe-canvas').classList.remove('locked');
+  refreshMenuGlobeCharacter();
 });
 // Zusätzlich: in der Modus-Auswahl auch per Klick auf die Kugel/den Skin selbst
 // zurückgehen - großer, leicht zu findender Klickbereich statt nur der kleine Button.
