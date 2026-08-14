@@ -837,7 +837,7 @@
     align-items: center;
     gap: 12px;
   }
-  #btn-settings {
+  #btn-settings, #btn-fullscreen {
     width: 52px;
     height: 52px;
     padding: 0;
@@ -850,6 +850,9 @@
   }
   #btn-settings:hover:not(:disabled) {
     transform: rotate(35deg) scale(1.1);
+  }
+  #btn-fullscreen:hover:not(:disabled) {
+    transform: scale(1.1);
   }
   .rewards-modes {
     display: flex;
@@ -1138,6 +1141,7 @@
       <div id="btn-rewards" class="coin-badge">
         <span id="menu-coin-value">0</span> &#129689;
       </div>
+      <button id="btn-fullscreen" aria-label="Vollbild">&#9974;</button>
       <button id="btn-settings" aria-label="Einstellungen">&#9881;</button>
     </div>
     <div class="menu-rewards-panel" id="menu-rewards-panel">
@@ -4851,6 +4855,31 @@ document.getElementById('btn-online-end-menu').addEventListener('click', () => {
   onlineEndOverlayEl.classList.remove('show');
   menuEl.style.display = 'grid';
 });
+
+// Vollbild-Umschalter - v.a. für Handy/Tablet, wo dadurch Adressleiste/Systemleiste
+// verschwindet. Nutzt die Standard-Fullscreen-API mit Webkit-Fallback (Safari/iPad).
+// Auf dem iPhone unterstützt Safari die Fullscreen-API grundsätzlich nicht (Apple-
+// Einschränkung), dort bleibt der Button ohne Effekt.
+const btnFullscreenEl = document.getElementById('btn-fullscreen');
+function isFullscreenActive() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function updateFullscreenIcon() {
+  btnFullscreenEl.innerHTML = isFullscreenActive() ? '&#10005;' : '&#9974;';
+  btnFullscreenEl.setAttribute('aria-label', isFullscreenActive() ? 'Vollbild verlassen' : 'Vollbild');
+}
+btnFullscreenEl.addEventListener('click', () => {
+  const el = document.documentElement;
+  if (!isFullscreenActive()) {
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+});
+document.addEventListener('fullscreenchange', updateFullscreenIcon);
+document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
 
 applyLanguage(settings.language);
 updateSettingsUI();
