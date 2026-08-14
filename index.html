@@ -126,20 +126,21 @@
   }
   .menu-home-actions {
     position: absolute;
-    top: calc(48% + min(32vh, 24vw, 290px) + 50px);
-    left: 50%;
-    transform: translate(-50%, 0);
+    top: 50%;
+    right: 5%;
+    transform: translate(0, -50%);
     display: flex;
-    gap: 18px;
+    flex-direction: column;
+    gap: 22px;
     opacity: 1;
     transition: opacity 0.35s ease, transform 0.35s ease;
     animation: popIn 0.5s ease;
     z-index: 5;
   }
   .menu-home-btn {
-    min-width: 170px;
-    font-size: 18px;
-    padding: 16px 26px;
+    min-width: 210px;
+    font-size: 21px;
+    padding: 20px 32px;
   }
   #btn-menu-play {
     background: linear-gradient(135deg, #4fd1c5, #2b9e93);
@@ -155,7 +156,7 @@
   #menu.mode-select .menu-home-actions {
     opacity: 0;
     pointer-events: none;
-    transform: translate(-50%, 24px);
+    transform: translate(24px, -50%);
   }
   /* ---------- Tägliche Quests: eigenes Panel links im Startbildschirm, nur in der
      Home-Ansicht sichtbar (nicht während Modus-Auswahl oder Skins-Galerie). ---------- */
