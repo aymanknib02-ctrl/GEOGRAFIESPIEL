@@ -163,7 +163,7 @@
     right: 5%;
     transform: translate(0, -50%) translateX(60px);
     display: flex;
-    align-items: stretch;
+    align-items: flex-start;
     gap: 30px;
     opacity: 0;
     pointer-events: none;
@@ -188,7 +188,6 @@
   }
   .menu-rewards-panel {
     width: 300px;
-    height: 100%;
     box-sizing: border-box;
     overflow-y: auto;
     padding: 30px 24px;
@@ -5981,8 +5980,24 @@ if (!document.documentElement.requestFullscreen && !document.documentElement.web
 
 // ---------- Startbildschirm-Navigation: Globus+Skin <-> Modus-Auswahl <-> Skins-Menü ----------
 const skinsMenuEl = document.getElementById('skins-menu');
+// Belohnungs-Panel exakt so hoch wie der Knopf-Kasten daneben (von oben bis zum
+// letzten Knopf) - per JS statt CSS-Stretch gemessen, da flexbox align-items:stretch
+// hier wegen der undefinierten Höhe des position:absolute-Elternelements nicht
+// zuverlässig funktioniert hat (das Panel wuchs stattdessen auf seine eigene, viel
+// größere Inhaltshöhe).
+function syncRewardsPanelHeight() {
+  const boxEl = document.querySelector('#menu-mode-panel .menu-box');
+  const panelEl = document.getElementById('menu-rewards-panel');
+  if (!boxEl || !panelEl) return;
+  panelEl.style.height = boxEl.offsetHeight + 'px';
+}
+window.addEventListener('resize', () => {
+  if (menuEl.classList.contains('mode-select')) syncRewardsPanelHeight();
+});
+
 document.getElementById('btn-menu-play').addEventListener('click', () => {
   menuEl.classList.add('mode-select');
+  syncRewardsPanelHeight();
 });
 document.getElementById('btn-menu-back').addEventListener('click', () => {
   menuEl.classList.remove('mode-select');
