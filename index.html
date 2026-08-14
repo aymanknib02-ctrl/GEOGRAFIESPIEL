@@ -4371,12 +4371,24 @@ function tileLocalToLngLat(localX, localY, extent, z, tileX, tileY) {
   return { lat: latRad * 180 / Math.PI, lng };
 }
 
+// Bricht einen fetch nach timeoutMs ab, damit eine einzelne langsame/hängende
+// Anfrage nicht die komplette Rundengenerierung blockiert.
+async function fetchWithTimeout(url, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Holt die Foto-Punkte einer Mapillary-Vector-Tile an der gegebenen Position.
 async function fetchMapillaryTileImages(lat, lng, z) {
   const { x, y } = lngLatToTile(lng, lat, z);
   const url = `https://tiles.mapillary.com/maps/vtp/mly1_public/2/${z}/${x}/${y}?access_token=${MAPILLARY_TOKEN}`;
   try {
-    const resp = await fetch(url);
+    const resp = await fetchWithTimeout(url, 8000);
     if (!resp.ok) return [];
     const buffer = await resp.arrayBuffer();
     const layer = findVectorTileLayer(buffer, 'image');
@@ -4395,36 +4407,43 @@ async function fetchMapillaryTileImages(lat, lng, z) {
   }
 }
 
-// Sucht ein zufälliges echtes Straßenfoto: kuratierten Ort wählen, Vector-Tile laden,
-// zufälliges Foto daraus nehmen, volle Bilddaten (URL + genaue Position) einzeln abrufen.
-async function pickGeoGuessrRound() {
-  for (let attempt = 0; attempt < 12; attempt++) {
-    const loc = GEOGUESSR_LOCATIONS[Math.floor(Math.random() * GEOGUESSR_LOCATIONS.length)];
+// Sucht ein zufälliges echtes Straßenfoto: kuratierten Ort wählen, Vector-Tile laden (nur
+// EIN Kachel-Fetch pro Ort), dann mehrere Fotos aus dieser Kachel durchprobieren, bevor ein
+// neuer Ort (= neuer, teurer Kachel-Fetch) versucht wird. usedNames sorgt für Abwechslung
+// zwischen parallel laufenden Runden.
+async function pickGeoGuessrRound(usedNames) {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const unused = usedNames ? GEOGUESSR_LOCATIONS.filter(l => !usedNames.has(l.name)) : GEOGUESSR_LOCATIONS;
+    const pool = unused.length ? unused : GEOGUESSR_LOCATIONS;
+    const loc = pool[Math.floor(Math.random() * pool.length)];
+    if (usedNames) usedNames.add(loc.name);
     const jitterLat = loc.lat + (Math.random() - 0.5) * 0.06;
     const jitterLng = loc.lng + (Math.random() - 0.5) * 0.06;
     const images = await fetchMapillaryTileImages(jitterLat, jitterLng, 14);
     if (images.length === 0) continue;
-    const pick = images[Math.floor(Math.random() * images.length)];
-    try {
-      const detailUrl = `https://graph.mapillary.com/${pick.id}?access_token=${MAPILLARY_TOKEN}&fields=id,thumb_2048_url,computed_geometry`;
-      const detailResp = await fetch(detailUrl);
-      if (!detailResp.ok) continue;
-      const detail = await detailResp.json();
-      if (!detail.thumb_2048_url) continue;
-      const coords = detail.computed_geometry ? detail.computed_geometry.coordinates : [pick.lng, pick.lat];
-      return { imageUrl: detail.thumb_2048_url, lat: coords[1], lng: coords[0] };
-    } catch (e) { continue; }
+
+    const candidates = images.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+    for (const pick of candidates) {
+      try {
+        const detailUrl = `https://graph.mapillary.com/${pick.id}?access_token=${MAPILLARY_TOKEN}&fields=id,thumb_2048_url,computed_geometry`;
+        const detailResp = await fetchWithTimeout(detailUrl, 8000);
+        if (!detailResp.ok) continue;
+        const detail = await detailResp.json();
+        if (!detail.thumb_2048_url) continue;
+        const coords = detail.computed_geometry ? detail.computed_geometry.coordinates : [pick.lng, pick.lat];
+        return { imageUrl: detail.thumb_2048_url, lat: coords[1], lng: coords[0] };
+      } catch (e) { continue; }
+    }
   }
   return null;
 }
 
 async function generateGeoGuessrRounds(count) {
-  const rounds = [];
-  for (let i = 0; i < count; i++) {
-    const round = await pickGeoGuessrRound();
-    if (round) rounds.push(round);
-  }
-  return rounds;
+  const usedNames = new Set();
+  const results = await Promise.all(
+    Array.from({ length: count }, () => pickGeoGuessrRound(usedNames))
+  );
+  return results.filter(Boolean);
 }
 
 function geoDistanceKm(lat1, lng1, lat2, lng2) {
