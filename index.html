@@ -164,6 +164,12 @@
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
   }
+  @keyframes pinDrop {
+    0% { opacity: 0; transform: translateY(-40px) scale(0.5); }
+    60% { opacity: 1; transform: translateY(4px) scale(1.15); }
+    80% { transform: translateY(-3px) scale(0.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
 
   button {
     font-family: inherit;
@@ -456,6 +462,73 @@
   }
   .online-health-fill.low {
     background: linear-gradient(90deg, #e74c3c, #c0392b);
+  }
+  #online-me-stat, #online-opp-stat {
+    position: relative;
+  }
+  @keyframes healthHitShake {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-5px); }
+    30% { transform: translateX(5px); }
+    45% { transform: translateX(-4px); }
+    60% { transform: translateX(4px); }
+    75% { transform: translateX(-2px); }
+  }
+  #online-me-stat.hit, #online-opp-stat.hit {
+    animation: healthHitShake 0.5s ease;
+  }
+  #online-me-stat.hit .online-health-bar, #online-opp-stat.hit .online-health-bar {
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.9), 0 0 14px 2px rgba(231, 76, 60, 0.8);
+    transition: box-shadow 0.15s ease;
+  }
+  @keyframes floatDamage {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.7); }
+    20% { opacity: 1; transform: translate(-50%, -6px) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -38px) scale(1); }
+  }
+  .online-damage-float {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    z-index: 1700;
+    font-size: 19px;
+    font-weight: bold;
+    color: #ff5555;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    pointer-events: none;
+    animation: floatDamage 1s ease forwards;
+    white-space: nowrap;
+  }
+  @keyframes multiplierPop {
+    0% { opacity: 0; transform: translateX(-50%) scale(0.4) rotate(-8deg); }
+    55% { opacity: 1; transform: translateX(-50%) scale(1.15) rotate(3deg); }
+    75% { transform: translateX(-50%) scale(0.95) rotate(-2deg); }
+    100% { opacity: 1; transform: translateX(-50%) scale(1) rotate(0); }
+  }
+  .online-multiplier-badge {
+    position: absolute;
+    top: 92px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1650;
+    display: none;
+    background: linear-gradient(135deg, #ff6b6b, #c0392b);
+    color: #fff;
+    font-weight: bold;
+    font-size: 15px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(192, 57, 43, 0.5);
+    letter-spacing: 0.5px;
+  }
+  .online-multiplier-badge.show {
+    display: block;
+    animation: multiplierPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .geo-round-result .dist-value {
+    display: inline-block;
+    color: #4fd1c5;
+    font-weight: bold;
   }
   .geo-photo-area {
     position: absolute;
@@ -1360,7 +1433,7 @@
 
   <div id="online-game">
     <div class="hud-bar online-hud">
-      <div>
+      <div id="online-me-stat">
         <img id="online-me-avatar" alt="" style="display:none;" />
         <span class="label" id="online-me-name">Du</span>
         <div class="online-health-bar"><div class="online-health-fill" id="online-me-health-fill"></div></div>
@@ -1370,13 +1443,14 @@
         <span class="label">Runde</span>
         <span class="value" id="online-round-value">1</span>
       </div>
-      <div>
+      <div id="online-opp-stat">
         <span class="label" id="online-opponent-name">Gegner</span>
         <div class="online-health-bar"><div class="online-health-fill" id="online-opp-health-fill"></div></div>
         <span class="value" id="online-opp-health">5000</span>
       </div>
       <button id="btn-online-leave" class="menu-btn">Verlassen</button>
     </div>
+    <div class="online-multiplier-badge" id="online-multiplier-badge"></div>
     <div class="online-status-msg" id="online-status-msg"></div>
     <div class="online-round-intro" id="online-round-intro">
       <div class="online-intro-player">
@@ -4872,6 +4946,18 @@ function startOnlineGameScreen(room, opponentId) {
   renderOnlineRound();
 }
 
+// Setzt Füllstand + Zahl einer Health-Bar direkt (who: 'me'|'opp'). Wird sowohl vom
+// Firebase-Sync als auch von der lokalen Schadens-Vorhersage in handleOnlineRoundResult
+// genutzt, damit die Animation sofort und nicht erst nach dem Netzwerk-Roundtrip läuft.
+function setOnlineHealthDisplay(who, value) {
+  const fillEl = document.getElementById(`online-${who}-health-fill`);
+  const valEl = document.getElementById(`online-${who}-health`);
+  valEl.textContent = Math.max(0, Math.round(value));
+  fillEl.style.width = Math.max(0, value / GEO_START_HEALTH * 100) + '%';
+  fillEl.classList.toggle('low', value / GEO_START_HEALTH < 0.25);
+  bumpValue(valEl);
+}
+
 function updateOnlineHealthFromRoom(room) {
   const health = room.health || {};
   const myHealth = health[onlinePlayerId] !== undefined ? health[onlinePlayerId] : onlineMyHealth;
@@ -4879,22 +4965,56 @@ function updateOnlineHealthFromRoom(room) {
 
   if (myHealth !== onlineMyHealth) {
     onlineMyHealth = myHealth;
-    const fillEl = document.getElementById('online-me-health-fill');
-    const valEl = document.getElementById('online-me-health');
-    valEl.textContent = Math.max(0, Math.round(myHealth));
-    fillEl.style.width = Math.max(0, myHealth / GEO_START_HEALTH * 100) + '%';
-    fillEl.classList.toggle('low', myHealth / GEO_START_HEALTH < 0.25);
-    bumpValue(valEl);
+    setOnlineHealthDisplay('me', myHealth);
   }
   if (oppHealth !== onlineOpponentHealth) {
     onlineOpponentHealth = oppHealth;
-    const fillEl = document.getElementById('online-opp-health-fill');
-    const valEl = document.getElementById('online-opp-health');
-    valEl.textContent = Math.max(0, Math.round(oppHealth));
-    fillEl.style.width = Math.max(0, oppHealth / GEO_START_HEALTH * 100) + '%';
-    fillEl.classList.toggle('low', oppHealth / GEO_START_HEALTH < 0.25);
-    bumpValue(valEl);
+    setOnlineHealthDisplay('opp', oppHealth);
   }
+}
+
+// Zählt eine Zahl in einem Element von "from" nach "to" hoch (GeoGuessr-artiger
+// Distanz-Reveal), mit sanftem Ease-out statt linearer Bewegung.
+function animateNumberTo(el, from, to, duration, formatFn) {
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const current = from + (to - from) * eased;
+    el.textContent = formatFn(current);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function showOnlineDamageFloat(who, amount) {
+  const host = document.getElementById(`online-${who}-stat`);
+  if (!host) return;
+  const el = document.createElement('div');
+  el.className = 'online-damage-float';
+  el.textContent = `-${Math.round(amount)}`;
+  host.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+function flashOnlineHealthHit(who) {
+  const host = document.getElementById(`online-${who}-stat`);
+  if (!host) return;
+  host.classList.remove('hit');
+  void host.offsetWidth;
+  host.classList.add('hit');
+  setTimeout(() => host.classList.remove('hit'), 500);
+}
+
+function showOnlineMultiplierBadge(multiplier) {
+  const el = document.getElementById('online-multiplier-badge');
+  el.textContent = `⚔️ Schaden ×${multiplier.toFixed(1)}`;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+function hideOnlineMultiplierBadge() {
+  document.getElementById('online-multiplier-badge').classList.remove('show');
 }
 
 // Zeigt vor jeder Runde kurz beide Spieler (Skin, Name, Herkunftsland) wie bei
@@ -4939,7 +5059,10 @@ function renderOnlineRound() {
   onlineAnswered = false;
   const round = onlineRounds[onlineCurrentRound];
   if (!round) { endOnlineGame(); return; }
-  document.getElementById('online-round-value').textContent = onlineCurrentRound + 1;
+  hideOnlineMultiplierBadge();
+  const roundValEl = document.getElementById('online-round-value');
+  roundValEl.textContent = onlineCurrentRound + 1;
+  bumpValue(roundValEl);
 
   showOnlineRoundIntro();
   setTimeout(() => {
@@ -5202,6 +5325,14 @@ function submitGeoGuess() {
   onlineRoomRef.child(`guesses/${onlineCurrentRound}/${onlinePlayerId}`).set(geoMyGuess).catch(() => {});
 }
 
+const fmtDistKm = (km) => km < 1 ? Math.round(km * 1000) + ' m' : Math.round(km) + ' km';
+
+// Gestaffelte GeoGuessr-artige Rundenauflösung: Karte zoomt zur Wahrheit raus, beide
+// Distanzen zählen hoch, der Schadens-Multiplikator poppt rein, dann verliert die
+// weiter entfernte Seite sichtbar (Screen-Shake + fliegende Zahl) Leben. Der Schaden
+// wird SOFORT lokal berechnet und angezeigt (nicht erst nach dem Firebase-Roundtrip),
+// damit die Animation nicht auf das Netzwerk warten muss; der Transaction-Write läuft
+// im Hintergrund als Quelle der Wahrheit für den Reconnect-Fall.
 function handleOnlineRoundResult(room) {
   if (onlineRoundResolving) return;
   const guesses = (room.guesses && room.guesses[onlineCurrentRound]) || {};
@@ -5215,36 +5346,75 @@ function handleOnlineRoundResult(room) {
   const oppDist = geoDistanceKm(oppGuess.lat, oppGuess.lng, round.lat, round.lng);
   const multiplier = 1 + onlineCurrentRound * GEO_DAMAGE_STEP;
 
+  let damage = 0, loser = null;
   if (myDist > oppDist) {
-    const damage = geoRoundDamage(myDist, multiplier);
+    damage = geoRoundDamage(myDist, multiplier);
+    loser = 'me';
     onlineRoomRef.child(`health/${onlinePlayerId}`).transaction(current => {
       const base = current === null || current === undefined ? GEO_START_HEALTH : current;
       return Math.max(0, base - damage);
     });
   } else if (oppDist > myDist) {
+    damage = geoRoundDamage(oppDist, multiplier);
+    loser = 'opp';
     awardCorrect('online');
   }
 
   const actualLatLng = [round.lat, round.lng];
   const myLatLng = [myGuess.lat, myGuess.lng];
   const oppLatLng = [oppGuess.lat, oppGuess.lng];
-  const pinIcon = L.divIcon({ className: '', html: '<div style="font-size:26px;line-height:26px;">📍</div>', iconSize: [26, 26], iconAnchor: [13, 26] });
+  const pinIcon = L.divIcon({ className: '', html: '<div style="font-size:30px;line-height:30px;animation:pinDrop 0.6s ease;">📍</div>', iconSize: [30, 30], iconAnchor: [15, 30] });
 
   if (geoGuessMarker) { geoGuessMap.removeLayer(geoGuessMarker); geoGuessMarker = null; }
-  const revealGroup = L.layerGroup();
-  L.marker(actualLatLng, { icon: pinIcon }).addTo(revealGroup);
-  L.circleMarker(myLatLng, { radius: 7, color: '#fff', weight: 2, fillColor: '#3388ff', fillOpacity: 1 }).addTo(revealGroup);
-  L.circleMarker(oppLatLng, { radius: 7, color: '#fff', weight: 2, fillColor: '#ff4444', fillOpacity: 1 }).addTo(revealGroup);
-  L.polyline([myLatLng, actualLatLng], { color: '#3388ff', dashArray: '4,6', weight: 2 }).addTo(revealGroup);
-  L.polyline([oppLatLng, actualLatLng], { color: '#ff4444', dashArray: '4,6', weight: 2 }).addTo(revealGroup);
-  revealGroup.addTo(geoGuessMap);
+  const revealGroup = L.layerGroup().addTo(geoGuessMap);
   geoRevealLayer = revealGroup;
-  geoGuessMap.flyToBounds(L.latLngBounds([actualLatLng, myLatLng, oppLatLng]), { padding: [40, 40], maxZoom: 8, animate: true, duration: 0.8 });
+  L.marker(actualLatLng, { icon: pinIcon }).addTo(revealGroup);
+  geoGuessMap.flyToBounds(L.latLngBounds([actualLatLng, myLatLng, oppLatLng]), { padding: [40, 40], maxZoom: 8, animate: true, duration: 0.9 });
 
-  const fmtDist = (km) => km < 1 ? Math.round(km * 1000) + ' m' : Math.round(km) + ' km';
   const resultEl = document.getElementById('geo-round-result');
-  resultEl.innerHTML = `<b>Du:</b> ${fmtDist(myDist)} entfernt &nbsp;|&nbsp; <b>${onlineOpponentName}:</b> ${fmtDist(oppDist)} entfernt`;
+  resultEl.innerHTML = `<b>Du:</b> <span class="dist-value" id="geo-my-dist">0 m</span> entfernt &nbsp;|&nbsp; <b>${onlineOpponentName}:</b> <span class="dist-value" id="geo-opp-dist">0 m</span> entfernt`;
   resultEl.classList.add('show');
+  animateNumberTo(document.getElementById('geo-my-dist'), 0, myDist, 900, fmtDistKm);
+  animateNumberTo(document.getElementById('geo-opp-dist'), 0, oppDist, 900, fmtDistKm);
+
+  function growMarker(marker) {
+    let r = 2;
+    marker.setRadius(r);
+    const grow = setInterval(() => {
+      if (!geoGuessMap) { clearInterval(grow); return; }
+      r += 1.2;
+      marker.setRadius(r);
+      if (r >= 8) clearInterval(grow);
+    }, 16);
+  }
+  setTimeout(() => {
+    if (!geoGuessMap) return;
+    const myMarker = L.circleMarker(myLatLng, { radius: 8, color: '#fff', weight: 2, fillColor: '#3388ff', fillOpacity: 1 }).addTo(revealGroup);
+    L.polyline([myLatLng, actualLatLng], { color: '#3388ff', dashArray: '4,6', weight: 2 }).addTo(revealGroup);
+    growMarker(myMarker);
+  }, 350);
+  setTimeout(() => {
+    if (!geoGuessMap) return;
+    const oppMarker = L.circleMarker(oppLatLng, { radius: 8, color: '#fff', weight: 2, fillColor: '#ff4444', fillOpacity: 1 }).addTo(revealGroup);
+    L.polyline([oppLatLng, actualLatLng], { color: '#ff4444', dashArray: '4,6', weight: 2 }).addTo(revealGroup);
+    growMarker(oppMarker);
+  }, 650);
+
+  setTimeout(() => showOnlineMultiplierBadge(multiplier), 1200);
+
+  setTimeout(() => {
+    if (loser === 'me') {
+      onlineMyHealth = Math.max(0, onlineMyHealth - damage);
+      setOnlineHealthDisplay('me', onlineMyHealth);
+      flashOnlineHealthHit('me');
+      showOnlineDamageFloat('me', damage);
+    } else if (loser === 'opp') {
+      onlineOpponentHealth = Math.max(0, onlineOpponentHealth - damage);
+      setOnlineHealthDisplay('opp', onlineOpponentHealth);
+      flashOnlineHealthHit('opp');
+      showOnlineDamageFloat('opp', damage);
+    }
+  }, 1700);
 
   setTimeout(() => {
     onlineRoundResolving = false;
@@ -5254,7 +5424,7 @@ function handleOnlineRoundResult(room) {
     } else {
       renderOnlineRound();
     }
-  }, 3200);
+  }, 4200);
 }
 
 function cleanupOnlineRoom() {
@@ -5275,10 +5445,26 @@ function cleanupOnlineRoom() {
 
 function endOnlineGame() {
   onlineGameEl.classList.remove('show');
+  const myFinal = Math.max(0, Math.round(onlineMyHealth));
+  const oppFinal = Math.max(0, Math.round(onlineOpponentHealth));
   const title = onlineMyHealth > onlineOpponentHealth ? 'Du hast gewonnen! 🎉' : onlineMyHealth < onlineOpponentHealth ? 'Verloren!' : 'Unentschieden!';
-  document.getElementById('online-end-title').textContent = title;
-  document.getElementById('online-end-text').textContent = `${Math.max(0, Math.round(onlineMyHealth))} HP : ${Math.max(0, Math.round(onlineOpponentHealth))} HP gegen ${onlineOpponentName}`;
+  const titleEl = document.getElementById('online-end-title');
+  const textEl = document.getElementById('online-end-text');
+  titleEl.textContent = title;
+  bumpValue(titleEl);
+  textEl.textContent = `0 HP : 0 HP gegen ${onlineOpponentName}`;
   onlineEndOverlayEl.classList.add('show');
+  let animMy = 0, animOpp = 0;
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / 900);
+    const eased = 1 - Math.pow(1 - t, 3);
+    animMy = Math.round(myFinal * eased);
+    animOpp = Math.round(oppFinal * eased);
+    textEl.textContent = `${animMy} HP : ${animOpp} HP gegen ${onlineOpponentName}`;
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
   if (onlineMyHealth > onlineOpponentHealth) launchConfetti(70);
   cleanupOnlineRoom();
 }
