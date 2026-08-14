@@ -47,10 +47,10 @@
      (menu.mode-select) und die Modus-Auswahl fährt rechts rein. ---------- */
   .menu-globe-stage {
     position: absolute;
-    top: 46%;
+    top: 48%;
     left: 50%;
-    width: min(50vh, 38vw, 440px);
-    height: min(50vh, 38vw, 440px);
+    width: min(64vh, 48vw, 580px);
+    height: min(64vh, 48vw, 580px);
     transform: translate(-50%, -50%) scale(1);
     transform-origin: center center;
     transition: left 0.7s cubic-bezier(0.65, 0, 0.35, 1), top 0.7s cubic-bezier(0.65, 0, 0.35, 1), transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
@@ -68,10 +68,25 @@
   #menu-globe-canvas:active {
     cursor: grabbing;
   }
+  #menu.mode-select .menu-globe-stage {
+    cursor: pointer;
+  }
   .menu-globe-loading {
     position: absolute;
     font-size: 15px;
     opacity: 0.6;
+  }
+  .menu-player-name {
+    position: absolute;
+    top: 4%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    opacity: 0.75;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    white-space: nowrap;
   }
   .menu-online-count {
     position: absolute;
@@ -106,7 +121,7 @@
   }
   .menu-home-actions {
     position: absolute;
-    top: calc(46% + min(25vh, 19vw, 220px) + 56px);
+    top: calc(48% + min(32vh, 24vw, 290px) + 50px);
     left: 50%;
     transform: translate(-50%, 0);
     display: flex;
@@ -155,13 +170,16 @@
     transform: translate(0, -50%) translateX(0);
   }
   .menu-back-btn {
-    background: transparent;
-    opacity: 0.65;
-    padding: 8px 10px;
-    margin-bottom: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    opacity: 0.9;
+    font-size: 14px;
+    padding: 10px 16px;
+    margin-bottom: 18px;
   }
   .menu-back-btn:hover {
     opacity: 1;
+    background: rgba(79, 209, 197, 0.25);
   }
   .menu-rewards-panel {
     width: 300px;
@@ -1387,6 +1405,7 @@
     </div>
 
     <div class="menu-globe-stage" id="menu-globe-stage">
+      <div class="menu-player-name" id="menu-player-name">Spieler</div>
       <canvas id="menu-globe-canvas" style="display:none;"></canvas>
       <div class="menu-globe-loading" id="menu-globe-loading">Lädt...</div>
       <div class="menu-online-count" id="menu-online-count"><span class="dot"></span>&#8211;</div>
@@ -2534,7 +2553,7 @@ function initMenuGlobeViewer() {
   const group = new THREE.Group();
   scene.add(group);
 
-  const globeRadius = 3;
+  const globeRadius = 3.4;
   const globeMesh = new THREE.Mesh(
     new THREE.SphereGeometry(globeRadius, 40, 28),
     new THREE.MeshStandardMaterial({ color: 0x1c2842, roughness: 0.75, metalness: 0.1 })
@@ -2592,10 +2611,25 @@ function loadMenuGlobeCharacter(file) {
       const center = new THREE.Vector3();
       box.getCenter(center);
       const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 2.6 / maxDim;
+      const scale = 3.1 / maxDim;
       fbx.scale.setScalar(scale);
       fbx.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
       viewer.charGroup.add(fbx);
+
+      // Kamera dynamisch so einpassen, dass Kugel UND Charakter (unabhängig von der
+      // genauen Modell-Höhe) komplett im Bild sind - vorher war die Kamera fest
+      // positioniert, wodurch Kopf/Kugelrand je nach Modellgröße abgeschnitten wurden.
+      const charHeight = size.y * scale;
+      const top = viewer.globeRadius + charHeight;
+      const bottom = -viewer.globeRadius;
+      const sceneHeight = top - bottom;
+      const centerY = (top + bottom) / 2;
+      const fovRad = THREE.MathUtils.degToRad(viewer.camera.fov);
+      const dist = (sceneHeight * 1.18) / (2 * Math.tan(fovRad / 2));
+      viewer.camera.position.set(0, centerY, dist);
+      viewer.controls.target.set(0, centerY, 0);
+      viewer.controls.update();
+
       loadingEl.style.display = 'none';
       canvasEl.style.display = 'block';
     } catch (err) {
@@ -4916,6 +4950,11 @@ function getOnlineNickname() {
 }
 function setOnlineNickname(name) {
   localStorage.setItem('geoquiz-online-nickname', name.trim());
+  updateMenuPlayerNameDisplay();
+}
+function updateMenuPlayerNameDisplay() {
+  const el = document.getElementById('menu-player-name');
+  if (el) el.textContent = getOnlineNickname() || 'Spieler';
 }
 
 function getOnlineCountry() {
@@ -5874,6 +5913,24 @@ document.getElementById('btn-skins-back').addEventListener('click', () => {
   skinsMenuEl.classList.remove('show');
   menuEl.style.display = 'grid';
 });
+// Zusätzlich: in der Modus-Auswahl auch per Klick auf die Kugel/den Skin selbst
+// zurückgehen - großer, leicht zu findender Klickbereich statt nur der kleine Button.
+// Per Distanz-Check vom echten Ziehen (Kugel drehen per OrbitControls) unterschieden,
+// damit ein Dreh-Versuch nicht versehentlich zurücknavigiert.
+(function setupMenuGlobeBackTap() {
+  const stageEl = document.getElementById('menu-globe-stage');
+  let downPos = null;
+  stageEl.addEventListener('pointerdown', (e) => { downPos = { x: e.clientX, y: e.clientY }; });
+  stageEl.addEventListener('pointerup', (e) => {
+    if (!downPos) return;
+    const moved = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
+    downPos = null;
+    if (moved < 6 && menuEl.classList.contains('mode-select')) {
+      menuEl.classList.remove('mode-select');
+    }
+  });
+})();
+updateMenuPlayerNameDisplay();
 
 applyLanguage(settings.language);
 updateSettingsUI();
