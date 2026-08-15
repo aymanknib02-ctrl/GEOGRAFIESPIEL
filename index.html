@@ -82,6 +82,9 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     background: rgba(15, 18, 26, 0.6);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -92,6 +95,14 @@
     font-weight: bold;
     letter-spacing: 0.5px;
     white-space: nowrap;
+  }
+  .menu-player-badges {
+    display: inline-flex;
+    gap: 3px;
+    font-size: 15px;
+  }
+  .menu-player-badges:empty {
+    display: none;
   }
   .menu-online-count {
     position: absolute;
@@ -1522,7 +1533,9 @@
     </div>
 
     <div class="menu-globe-stage" id="menu-globe-stage">
-      <div class="menu-player-name" id="menu-player-name">Spieler</div>
+      <div class="menu-player-name" id="menu-player-name">
+        <span id="menu-player-name-text">Spieler</span><span class="menu-player-badges" id="menu-player-badges"></span>
+      </div>
       <canvas id="menu-globe-canvas" style="display:none;"></canvas>
       <div class="menu-globe-loading" id="menu-globe-loading">Lädt...</div>
       <div class="menu-online-count" id="menu-online-count"><span class="dot"></span>&#8211;</div>
@@ -2643,7 +2656,7 @@ function awardCorrect(mode) {
   updateCoinDisplays();
   showCoinPopup(coinsEarned);
   renderRewardsScreen();
-  if (newlyUnlocked) showRewardToast(newlyUnlocked, mode);
+  if (newlyUnlocked) { showRewardToast(newlyUnlocked, mode); updateMenuPlayerBadges(); }
   trackDailyQuestProgress(mode);
 }
 
@@ -5247,8 +5260,29 @@ function setOnlineNickname(name) {
   updateMenuPlayerNameDisplay();
 }
 function updateMenuPlayerNameDisplay() {
-  const el = document.getElementById('menu-player-name');
+  const el = document.getElementById('menu-player-name-text');
   if (el) el.textContent = getOnlineNickname() || 'Spieler';
+}
+
+// "Flex": zeigt die besten Abzeichen (höchste erreichte Meilenstein-Stufe, egal aus
+// welchem Modus, dedupliziert) direkt neben dem Namen - nutzt die schon vorhandenen
+// Belohnungsdaten (rewards.unlocked), keine neue Fortschrittsverfolgung nötig.
+function getFlexBadges(count) {
+  const thresholds = new Set();
+  Object.keys(rewards.unlocked || {}).forEach(mode => {
+    (rewards.unlocked[mode] || []).forEach(t => thresholds.add(t));
+  });
+  return [...thresholds]
+    .sort((a, b) => b - a)
+    .slice(0, count)
+    .map(t => REWARD_MILESTONES.find(m => m.threshold === t))
+    .filter(Boolean);
+}
+function updateMenuPlayerBadges() {
+  const el = document.getElementById('menu-player-badges');
+  if (!el) return;
+  const badges = getFlexBadges(3);
+  el.innerHTML = badges.map(b => `<span title="${b.label}">${b.icon}</span>`).join('');
 }
 
 function getOnlineCountry() {
@@ -6236,6 +6270,7 @@ document.getElementById('btn-skins-back').addEventListener('click', () => {
   });
 })();
 updateMenuPlayerNameDisplay();
+updateMenuPlayerBadges();
 
 applyLanguage(settings.language);
 updateSettingsUI();
