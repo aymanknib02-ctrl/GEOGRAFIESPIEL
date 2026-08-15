@@ -3012,7 +3012,10 @@ function buildMenuGlobeTexture(geoData) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  ctx.fillStyle = '#0f1a2e';
+  // Dieselben Land-/Wasserfarben wie im eigentlichen Spiel (LAND_COLOR/LAND_BORDER,
+  // siehe die Karten in den Quiz-Modi), damit der Startbildschirm-Globus farblich zum
+  // Rest des Spiels passt statt einer eigenen Teal-Akzentfarbe.
+  ctx.fillStyle = '#1a5f8a';
   ctx.fillRect(0, 0, width, height);
 
   const project = (lng, lat) => [(lng + 180) / 360 * width, (90 - lat) / 180 * height];
@@ -3030,8 +3033,8 @@ function buildMenuGlobeTexture(geoData) {
     });
   }
 
-  ctx.fillStyle = '#2b466e';
-  ctx.strokeStyle = 'rgba(79, 209, 197, 0.5)';
+  ctx.fillStyle = LAND_COLOR;
+  ctx.strokeStyle = LAND_BORDER;
   ctx.lineWidth = 1;
   (geoData.features || []).forEach(feature => {
     const geom = feature.geometry;
