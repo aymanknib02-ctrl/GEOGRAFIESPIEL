@@ -3012,9 +3012,8 @@ function buildMenuGlobeTexture(geoData) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  // Dieselben Land-/Wasserfarben wie im eigentlichen Spiel (LAND_COLOR/LAND_BORDER,
-  // siehe die Karten in den Quiz-Modi), damit der Startbildschirm-Globus farblich zum
-  // Rest des Spiels passt statt einer eigenen Teal-Akzentfarbe.
+  // Blaues Wasser wie im Spiel, aber grüne Kontinente statt der grauen In-Game-Landfarbe,
+  // damit der Startbildschirm-Globus wie eine echte Weltkugel aussieht.
   ctx.fillStyle = '#1a5f8a';
   ctx.fillRect(0, 0, width, height);
 
@@ -3033,8 +3032,8 @@ function buildMenuGlobeTexture(geoData) {
     });
   }
 
-  ctx.fillStyle = LAND_COLOR;
-  ctx.strokeStyle = LAND_BORDER;
+  ctx.fillStyle = '#5a8f4f';
+  ctx.strokeStyle = '#3f6b3a';
   ctx.lineWidth = 1;
   (geoData.features || []).forEach(feature => {
     const geom = feature.geometry;
