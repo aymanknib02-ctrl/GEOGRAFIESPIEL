@@ -3942,6 +3942,7 @@ function invalidateMaps() {
   if (map) { map.remove(); map = null; mapReady = false; }
   if (borderMap) { borderMap.remove(); borderMap = null; borderMapReady = false; }
   if (capitalMap) { capitalMap.remove(); capitalMap = null; capitalMapReady = false; }
+  if (silMap) { silMap.remove(); silMap = null; silMapReady = false; }
 }
 
 function fetchLandmarkImage(title) {
@@ -4835,10 +4836,7 @@ function initSilMap() {
     attributionControl: false,
   });
 
-  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 8,
-    maxNativeZoom: 8,
-  }).addTo(silMap);
+  addBaseTileLayer(silMap);
 
   silCountriesLayer = L.geoJSON(countryGeoJsonData, {
     style: silHiddenStyle,
