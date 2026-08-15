@@ -520,10 +520,21 @@
     flex-direction: column;
     align-items: center;
     animation: tileIn 0.3s ease backwards;
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .skin-card:not(.locked):hover {
+    transform: translateY(-6px);
+    border-color: rgba(79, 209, 197, 0.5);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
   }
   .skin-card.equipped {
     border-color: #4fd1c5;
     box-shadow: 0 0 0 1px #4fd1c5, 0 12px 28px rgba(79, 209, 197, 0.25);
+    animation: tileIn 0.3s ease backwards, equippedPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes equippedPulse {
+    0%, 100% { box-shadow: 0 0 0 1px #4fd1c5, 0 12px 28px rgba(79, 209, 197, 0.25); }
+    50% { box-shadow: 0 0 0 1px #4fd1c5, 0 12px 40px rgba(79, 209, 197, 0.5); }
   }
   .skin-card-thumb {
     width: 100%;
@@ -561,14 +572,24 @@
     font-size: 14px;
     padding: 10px 8px;
   }
+  .skin-card-btn {
+    background: linear-gradient(135deg, #ffd166, #d69f2e);
+    color: #3a2600;
+    font-weight: bold;
+  }
+  .skin-card-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ffe08a, #e8b348);
+  }
   .skin-card-btn.equip-btn {
     background: linear-gradient(135deg, #2ecc71, #1e9e57);
+    color: #fff;
   }
   .skin-card-btn.equip-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, #3ee081, #26b566);
   }
   .skin-card-btn.equipped-btn {
     background: #1e2536;
+    color: #fff;
     opacity: 0.7;
     cursor: default;
   }
@@ -1737,7 +1758,8 @@
   }
   .opt-btn.active {
     border-color: #4fd1c5;
-    background: #3b4460;
+    background: linear-gradient(135deg, #3b5460, #2a3a50);
+    box-shadow: 0 0 16px rgba(79, 209, 197, 0.35);
   }
   .settings-volume-row {
     align-items: center;
