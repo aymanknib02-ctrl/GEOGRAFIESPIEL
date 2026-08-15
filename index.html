@@ -1130,6 +1130,17 @@
     background: linear-gradient(90deg, #e74c3c, #c0392b);
     box-shadow: 0 0 10px rgba(231, 76, 60, 0.7);
   }
+  /* Einstellungen > Barrierefreiheit > Farbenblind-Modus: richtig/falsch-Feedback von
+     gruen/rot auf blau/orange umfaerben (fuer die JS-gesteuerten Kartenfarben siehe
+     applyColorblindMode()). */
+  html.colorblind .online-health-fill {
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  }
+  html.colorblind .online-health-fill.low {
+    background: linear-gradient(90deg, #f97316, #ea580c);
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.7);
+  }
   #online-me-stat, #online-opp-stat {
     position: relative;
   }
@@ -1391,6 +1402,16 @@
     40% { transform: translateX(calc(-50% + 6px)) translateY(0) scale(1); }
     60% { transform: translateX(calc(-50% - 4px)) translateY(0) scale(1); }
     80% { transform: translateX(calc(-50% + 4px)) translateY(0) scale(1); }
+  }
+  html.colorblind .status-msg.show-correct {
+    background: rgba(59, 130, 246, 0.9);
+    color: #0a1a33;
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5);
+  }
+  html.colorblind .status-msg.show-wrong {
+    background: rgba(249, 115, 22, 0.9);
+    color: #331400;
+    box-shadow: 0 6px 24px rgba(249, 115, 22, 0.5);
   }
   .status-msg.show-reveal {
     opacity: 1;
@@ -2191,6 +2212,20 @@
         <div class="settings-label" data-i18n="settings.motion">Animationen</div>
         <div class="settings-row">
           <button class="opt-btn" id="btn-settings-reduce-motion" data-i18n="settings.motion.reduce">Animationen reduzieren</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label" data-i18n="settings.accessibility">Barrierefreiheit</div>
+        <div class="settings-row">
+          <button class="opt-btn" id="btn-settings-colorblind" data-i18n="settings.accessibility.colorblind">Farbenblind-Modus</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label" data-i18n="settings.avatar">Avatar</div>
+        <div class="settings-row">
+          <button id="btn-settings-skins" data-i18n="settings.avatar.open">Skins öffnen</button>
         </div>
       </div>
 
@@ -3013,7 +3048,7 @@ function baseStyle(feature) {
 }
 
 // Globale Einstellungen (Kartenstil, Sprache, Lautstärke) - persistiert in localStorage
-const DEFAULT_SETTINGS = { mapStyle: 'ocean', language: 'en', volume: 60, reduceMotion: false };
+const DEFAULT_SETTINGS = { mapStyle: 'ocean', language: 'en', volume: 60, reduceMotion: false, colorblind: false };
 let settings = loadSettings();
 
 function loadSettings() {
@@ -4021,10 +4056,12 @@ const MAP_STYLES = {
 
 const LAND_COLOR = '#9ca3af';
 const LAND_BORDER = '#3f4552';
-const CORRECT_COLOR = '#2ecc71';
-const CORRECT_BORDER = '#145a32';
-const WRONG_COLOR = '#e74c3c';
-const WRONG_BORDER = '#7b241c';
+// let statt const: Einstellungen > Barrierefreiheit > Farbenblind-Modus faerbt richtig/falsch
+// auf der Karte von gruen/rot auf blau/orange um (applyColorblindMode() unten).
+let CORRECT_COLOR = '#2ecc71';
+let CORRECT_BORDER = '#145a32';
+let WRONG_COLOR = '#e74c3c';
+let WRONG_BORDER = '#7b241c';
 
 const landStyle    = { color: LAND_BORDER, weight: 1.5, fillColor: LAND_COLOR, fillOpacity: 0.85 };
 const correctStyle = { color: CORRECT_BORDER, weight: 2, fillColor: CORRECT_COLOR, fillOpacity: 0.95 };
@@ -4032,6 +4069,19 @@ const wrongStyle   = { color: WRONG_BORDER, weight: 2, fillColor: WRONG_COLOR, f
 const SELECT_COLOR = '#f1c40f';
 const SELECT_BORDER = '#7d6608';
 const selectStyle  = { color: SELECT_BORDER, weight: 2.5, fillColor: SELECT_COLOR, fillOpacity: 0.95 };
+
+function applyColorblindMode() {
+  if (settings.colorblind) {
+    CORRECT_COLOR = '#3b82f6'; CORRECT_BORDER = '#1e3a8a';
+    WRONG_COLOR = '#f97316'; WRONG_BORDER = '#9a3412';
+  } else {
+    CORRECT_COLOR = '#2ecc71'; CORRECT_BORDER = '#145a32';
+    WRONG_COLOR = '#e74c3c'; WRONG_BORDER = '#7b241c';
+  }
+  correctStyle.color = CORRECT_BORDER; correctStyle.fillColor = CORRECT_COLOR;
+  wrongStyle.color = WRONG_BORDER; wrongStyle.fillColor = WRONG_COLOR;
+  document.documentElement.classList.toggle('colorblind', !!settings.colorblind);
+}
 
 const MAP_STYLE_NAMES = ['ocean', 'google'];
 
@@ -5577,6 +5627,10 @@ const I18N = {
     'settings.playerName.placeholder': 'Name eingeben',
     'settings.motion': 'Animationen',
     'settings.motion.reduce': 'Animationen reduzieren',
+    'settings.accessibility': 'Barrierefreiheit',
+    'settings.accessibility.colorblind': 'Farbenblind-Modus',
+    'settings.avatar': 'Avatar',
+    'settings.avatar.open': 'Skins öffnen',
     'settings.progress': 'Fortschritt',
     'settings.progress.reset': 'Fortschritt zurücksetzen',
     'settings.progress.confirmMsg': 'Fortschritt (Münzen, Skins, Quests) wirklich zurücksetzen? Das kann nicht rückgängig gemacht werden.',
@@ -5605,6 +5659,10 @@ const I18N = {
     'settings.playerName.placeholder': 'Enter name',
     'settings.motion': 'Animations',
     'settings.motion.reduce': 'Reduce animations',
+    'settings.accessibility': 'Accessibility',
+    'settings.accessibility.colorblind': 'Colorblind mode',
+    'settings.avatar': 'Avatar',
+    'settings.avatar.open': 'Open skins',
     'settings.progress': 'Progress',
     'settings.progress.reset': 'Reset progress',
     'settings.progress.confirmMsg': 'Really reset all progress (coins, skins, quests)? This cannot be undone.',
@@ -5633,6 +5691,10 @@ const I18N = {
     'settings.playerName.placeholder': 'Entrez un nom',
     'settings.motion': 'Animations',
     'settings.motion.reduce': 'Réduire les animations',
+    'settings.accessibility': 'Accessibilité',
+    'settings.accessibility.colorblind': 'Mode daltonien',
+    'settings.avatar': 'Avatar',
+    'settings.avatar.open': 'Ouvrir les skins',
     'settings.progress': 'Progression',
     'settings.progress.reset': 'Réinitialiser la progression',
     'settings.progress.confirmMsg': 'Vraiment réinitialiser toute la progression (pièces, skins, quêtes) ? Cette action est irréversible.',
@@ -5661,6 +5723,10 @@ const I18N = {
     'settings.playerName.placeholder': 'Ingresa un nombre',
     'settings.motion': 'Animaciones',
     'settings.motion.reduce': 'Reducir animaciones',
+    'settings.accessibility': 'Accesibilidad',
+    'settings.accessibility.colorblind': 'Modo daltónico',
+    'settings.avatar': 'Avatar',
+    'settings.avatar.open': 'Abrir skins',
     'settings.progress': 'Progreso',
     'settings.progress.reset': 'Restablecer progreso',
     'settings.progress.confirmMsg': '¿Restablecer todo el progreso (monedas, skins, misiones)? Esto no se puede deshacer.',
@@ -5689,6 +5755,10 @@ const I18N = {
     'settings.playerName.placeholder': '输入名称',
     'settings.motion': '动画',
     'settings.motion.reduce': '减少动画',
+    'settings.accessibility': '无障碍',
+    'settings.accessibility.colorblind': '色盲模式',
+    'settings.avatar': '形象',
+    'settings.avatar.open': '打开皮肤',
     'settings.progress': '进度',
     'settings.progress.reset': '重置进度',
     'settings.progress.confirmMsg': '确定要重置所有进度(金币、皮肤、任务)吗?此操作无法撤销。',
@@ -5717,6 +5787,10 @@ const I18N = {
     'settings.playerName.placeholder': 'أدخل الاسم',
     'settings.motion': 'الرسوم المتحركة',
     'settings.motion.reduce': 'تقليل الحركة',
+    'settings.accessibility': 'إمكانية الوصول',
+    'settings.accessibility.colorblind': 'وضع عمى الألوان',
+    'settings.avatar': 'الصورة الرمزية',
+    'settings.avatar.open': 'فتح الأشكال',
     'settings.progress': 'التقدم',
     'settings.progress.reset': 'إعادة تعيين التقدم',
     'settings.progress.confirmMsg': 'هل تريد حقًا إعادة تعيين كل التقدم (العملات، الأشكال، المهام)؟ لا يمكن التراجع عن هذا.',
@@ -5764,6 +5838,8 @@ const settingsVolumeValueEl = document.getElementById('settings-volume-value');
 const settingsVolumeIconEl = document.getElementById('settings-volume-icon');
 const settingsPlayerNameEl = document.getElementById('settings-player-name');
 const btnSettingsReduceMotionEl = document.getElementById('btn-settings-reduce-motion');
+const btnSettingsColorblindEl = document.getElementById('btn-settings-colorblind');
+const btnSettingsSkinsEl = document.getElementById('btn-settings-skins');
 const btnSettingsResetEl = document.getElementById('btn-settings-reset');
 
 function volumeIcon(v) {
@@ -5789,6 +5865,7 @@ function updateSettingsUI() {
   settingsVolumeIconEl.textContent = volumeIcon(settings.volume);
   settingsPlayerNameEl.value = getOnlineNickname();
   btnSettingsReduceMotionEl.classList.toggle('active', !!settings.reduceMotion);
+  btnSettingsColorblindEl.classList.toggle('active', !!settings.colorblind);
 }
 
 // Live-Vorschau-Kaertchen im Kartenstil-Auswahl: zwei echte, nicht interaktive
@@ -5838,6 +5915,18 @@ btnSettingsReduceMotionEl.addEventListener('click', () => {
   settings.reduceMotion = !settings.reduceMotion;
   saveSettings();
   applyReduceMotion();
+  playClickSound();
+});
+btnSettingsColorblindEl.addEventListener('click', () => {
+  settings.colorblind = !settings.colorblind;
+  saveSettings();
+  applyColorblindMode();
+  updateSettingsUI();
+  playClickSound();
+});
+btnSettingsSkinsEl.addEventListener('click', () => {
+  settingsOverlayEl.classList.remove('show');
+  openSkinsGallery();
   playClickSound();
 });
 btnSettingsResetEl.addEventListener('click', () => {
@@ -7303,6 +7392,7 @@ updateMenuPlayerBadges();
 
 applyLanguage(settings.language);
 applyReduceMotion();
+applyColorblindMode();
 updateSettingsUI();
 updateCoinDisplays();
 </script>
