@@ -571,8 +571,39 @@
     font-size: 36px;
     margin-bottom: 24px;
   }
-  #continent-menu .buttons {
+  .continent-menu-box {
+    width: 740px;
+  }
+  .continent-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .continent-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 10px;
+    padding: 14px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    animation: tileIn 0.3s ease backwards;
+  }
+  .continent-card:hover {
+    background: rgba(79, 209, 197, 0.15);
+    border-color: #4fd1c5;
+  }
+  .continent-thumb-canvas {
+    width: 100%;
+    height: 90px;
+    display: block;
+  }
+  .continent-card-label {
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 1.2;
   }
   .diff-btn {
     text-align: left;
@@ -1765,32 +1796,39 @@
   </div>
 
   <div id="continent-menu">
-    <div class="menu-box">
+    <div class="menu-box continent-menu-box">
       <h1>KONTINENT</h1>
-      <div class="buttons">
-        <button class="diff-btn" data-continent="">
-          <span class="diff-title">Alle Kontinente</span>
+      <div class="continent-grid">
+        <button class="continent-card" data-continent="">
+          <canvas class="continent-thumb-canvas"></canvas>
+          <span class="continent-card-label">Alle Kontinente</span>
         </button>
-        <button class="diff-btn" data-continent="Europe">
-          <span class="diff-title">Europa</span>
+        <button class="continent-card" data-continent="Europe">
+          <canvas class="continent-thumb-canvas"></canvas>
+          <span class="continent-card-label">Europa</span>
         </button>
-        <button class="diff-btn" data-continent="Asia">
-          <span class="diff-title">Asien</span>
+        <button class="continent-card" data-continent="Asia">
+          <canvas class="continent-thumb-canvas"></canvas>
+          <span class="continent-card-label">Asien</span>
         </button>
-        <button class="diff-btn" data-continent="Africa">
-          <span class="diff-title">Afrika</span>
+        <button class="continent-card" data-continent="Africa">
+          <canvas class="continent-thumb-canvas"></canvas>
+          <span class="continent-card-label">Afrika</span>
         </button>
-        <button class="diff-btn" data-continent="North America">
-          <span class="diff-title">Nordamerika</span>
+        <button class="continent-card" data-continent="North America">
+          <canvas class="continent-thumb-canvas"></canvas>
+          <span class="continent-card-label">Nordamerika</span>
         </button>
-        <button class="diff-btn" data-continent="South America">
-          <span class="diff-title">Südamerika</span>
+        <button class="continent-card" data-continent="South America">
+          <canvas class="continent-thumb-canvas"></canvas>
+          <span class="continent-card-label">Südamerika</span>
         </button>
-        <button class="diff-btn" data-continent="Oceania">
-          <span class="diff-title">Ozeanien</span>
+        <button class="continent-card" data-continent="Oceania">
+          <canvas class="continent-thumb-canvas"></canvas>
+          <span class="continent-card-label">Ozeanien</span>
         </button>
-        <button id="btn-continent-back">Zurück</button>
       </div>
+      <button id="btn-continent-back">Zurück</button>
     </div>
   </div>
 
@@ -2023,6 +2061,92 @@ let pendingMode = null;
 
 function inSelectedContinent(continent) {
   return !selectedContinent || continent === selectedContinent;
+}
+
+// Zeichnet eine kleine Vorschau-Silhouette für eine Kontinent-Karte aus den echten
+// Ländergrenzen (dieselben Natural-Earth-Daten wie der Silhouette-Modus und der
+// Startbildschirm-Globus) - kein externes Bild nötig. continentFilter=null zeigt die
+// ganze Welt (für "Alle Kontinente"), sonst wird auf die Bounding-Box des jeweiligen
+// Kontinents gezoomt, damit die Form gut erkennbar ist.
+function drawContinentThumbnail(canvas, continentFilter) {
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width, height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+  if (!countryGeoJsonData) return;
+
+  const features = countryGeoJsonData.features.filter(f =>
+    !continentFilter || (f.properties && f.properties.CONTINENT === continentFilter)
+  );
+  if (!features.length) return;
+
+  function forEachPolyRing(cb) {
+    features.forEach(f => {
+      const geom = f.geometry;
+      if (!geom) return;
+      const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+      polys.forEach(rings => cb(rings));
+    });
+  }
+
+  let minLng, maxLng, minLat, maxLat;
+  if (!continentFilter) {
+    minLng = -180; maxLng = 180; minLat = -85; maxLat = 85;
+  } else {
+    minLng = 180; maxLng = -180; minLat = 90; maxLat = -90;
+    forEachPolyRing(rings => rings.forEach(ring => ring.forEach(([lng, lat]) => {
+      if (lng < minLng) minLng = lng;
+      if (lng > maxLng) maxLng = lng;
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+    })));
+  }
+
+  const pad = 0.1;
+  const centerLng = (minLng + maxLng) / 2;
+  const centerLat = (minLat + maxLat) / 2;
+  let halfLng = Math.max((maxLng - minLng) / 2 * (1 + pad), 1);
+  let halfLat = Math.max((maxLat - minLat) / 2 * (1 + pad), 1);
+  const aspect = width / height;
+  if (halfLng / halfLat > aspect) { halfLat = halfLng / aspect; } else { halfLng = halfLat * aspect; }
+
+  function project(lng, lat) {
+    return [
+      ((lng - centerLng) / (halfLng * 2) + 0.5) * width,
+      (1 - ((lat - centerLat) / (halfLat * 2) + 0.5)) * height,
+    ];
+  }
+  function drawRing(ring) {
+    let prevX = null;
+    ring.forEach(([lng, lat], i) => {
+      const [x, y] = project(lng, lat);
+      if (i === 0 || prevX === null || Math.abs(x - prevX) > width / 2) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+      prevX = x;
+    });
+  }
+
+  ctx.fillStyle = '#4fd1c5';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.lineWidth = 1;
+  forEachPolyRing(rings => {
+    ctx.beginPath();
+    rings.forEach(drawRing);
+    ctx.closePath();
+    ctx.fill('evenodd');
+    ctx.stroke();
+  });
+}
+
+function renderContinentThumbnails() {
+  document.querySelectorAll('#continent-menu .continent-card').forEach(card => {
+    const canvas = card.querySelector('.continent-thumb-canvas');
+    if (!canvas) return;
+    const cssWidth = canvas.clientWidth || 150;
+    const cssHeight = canvas.clientHeight || 90;
+    if (canvas.width !== cssWidth) canvas.width = cssWidth;
+    if (canvas.height !== cssHeight) canvas.height = cssHeight;
+    drawContinentThumbnail(canvas, card.dataset.continent || null);
+  });
 }
 
 let countryContinentById = {};
@@ -4488,6 +4612,7 @@ document.querySelectorAll('#menu .diff-btn[data-mode]').forEach(btn => {
       categoryPickMenuEl.classList.add('show');
     } else {
       continentMenuEl.classList.add('show');
+      loadCountryData(() => renderContinentThumbnails());
     }
   });
 });
@@ -4504,7 +4629,7 @@ document.getElementById('btn-continent-back').addEventListener('click', () => {
   menuEl.style.display = 'grid';
 });
 
-document.querySelectorAll('#continent-menu .diff-btn').forEach(btn => {
+document.querySelectorAll('#continent-menu .continent-card').forEach(btn => {
   btn.addEventListener('click', () => {
     selectedContinent = btn.dataset.continent || null;
     continentMenuEl.classList.remove('show');
@@ -4515,6 +4640,7 @@ document.querySelectorAll('#continent-menu .diff-btn').forEach(btn => {
 document.getElementById('btn-diff-back').addEventListener('click', () => {
   difficultyMenuEl.classList.remove('show');
   continentMenuEl.classList.add('show');
+  loadCountryData(() => renderContinentThumbnails());
 });
 
 document.getElementById('btn-category-back').addEventListener('click', () => {
