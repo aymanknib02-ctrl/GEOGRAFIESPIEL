@@ -850,6 +850,12 @@
   }
   .diff-btn {
     text-align: left;
+    background: linear-gradient(160deg, #342b58, #241f42 60%, #191530);
+    border: 1px solid rgba(124, 92, 252, 0.18);
+  }
+  .diff-btn:hover:not(:disabled) {
+    background: linear-gradient(160deg, #453a75, #2d2650 60%, #221c3d);
+    border-color: rgba(124, 92, 252, 0.45);
   }
   .diff-btn .diff-title {
     display: block;
@@ -863,8 +869,18 @@
   .diff-icon {
     font-size: 22px;
     line-height: 1;
-    display: inline-block;
-    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgba(124, 92, 252, 0.18);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s ease;
+  }
+  .diff-btn:hover .diff-icon {
+    background: rgba(124, 92, 252, 0.35);
   }
   .diff-btn:hover .diff-icon {
     transform: scale(1.3) rotate(-8deg);
@@ -899,6 +915,10 @@
     border: 2px solid #2b3245;
     background: #1c2130;
     color: #fff;
+  }
+  #online-nickname-input:focus, #online-join-code-input:focus, #online-country-select:focus {
+    outline: none;
+    border-color: #7c5cfc;
   }
   #settings-player-name {
     width: 100%;
@@ -936,6 +956,19 @@
   #btn-online-back {
     background: transparent;
     opacity: 0.6;
+  }
+  #btn-online-create, #btn-online-matchmaking, #btn-online-join, #btn-online-again {
+    background: linear-gradient(160deg, #9575ff, #7c5cfc 60%, #6344d6);
+    box-shadow: 0 4px 0 #402c8f, 0 8px 20px rgba(124, 92, 252, 0.35);
+  }
+  #btn-online-create:hover:not(:disabled), #btn-online-matchmaking:hover:not(:disabled),
+  #btn-online-join:hover:not(:disabled), #btn-online-again:hover:not(:disabled) {
+    background: linear-gradient(160deg, #a98bff, #9575ff 60%, #7c5cfc);
+    box-shadow: 0 5px 0 #402c8f, 0 10px 24px rgba(124, 92, 252, 0.45);
+  }
+  #btn-online-create:active:not(:disabled), #btn-online-matchmaking:active:not(:disabled),
+  #btn-online-join:active:not(:disabled), #btn-online-again:active:not(:disabled) {
+    box-shadow: 0 1px 0 #402c8f, 0 4px 10px rgba(124, 92, 252, 0.35);
   }
   .online-error {
     min-height: 20px;
