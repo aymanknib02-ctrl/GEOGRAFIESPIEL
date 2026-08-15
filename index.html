@@ -259,42 +259,73 @@
     pointer-events: none;
     transform: translate(24px, -50%);
   }
-  /* ---------- Tägliche Quests: eigenes Panel links im Startbildschirm, nur in der
-     Home-Ansicht sichtbar (nicht während Modus-Auswahl oder Skins-Galerie). ---------- */
+  /* ---------- Tägliche Quests + Daily Challenge: gemeinsame linke Spalte im
+     Startbildschirm, nur in der Home-Ansicht sichtbar (nicht während Modus-Auswahl
+     oder Skins-Galerie). ---------- */
   @keyframes questsEnter {
     from { opacity: 0; transform: translate(-24px, -50%); }
     to { opacity: 1; transform: translate(0, -50%); }
   }
-  .menu-quests-panel {
+  .menu-left-column {
     position: absolute;
     top: 50%;
     left: 5%;
     transform: translate(0, -50%);
     width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    opacity: 1;
+    animation: questsEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s backwards;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    z-index: 5;
+  }
+  #menu.mode-select .menu-left-column,
+  #menu.skins-select .menu-left-column {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-24px, -50%);
+  }
+  .menu-quests-panel, .menu-challenge-panel {
     box-sizing: border-box;
-    padding: 26px 24px;
-    border-radius: 24px;
+    padding: 22px 22px;
+    border-radius: 22px;
     background: rgba(22, 26, 42, 0.55);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 255, 255, 0.09);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
-    animation: questsEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s backwards;
-    opacity: 1;
-    transition: opacity 0.35s ease, transform 0.35s ease;
-    z-index: 5;
   }
-  #menu.mode-select .menu-quests-panel,
-  #menu.skins-select .menu-quests-panel {
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(-24px, -50%);
+  .menu-challenge-panel {
+    border: 1px solid rgba(241, 196, 15, 0.35);
+    background: linear-gradient(160deg, rgba(241, 196, 15, 0.1), rgba(22, 26, 42, 0.6));
   }
   .menu-quests-title {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: bold;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     letter-spacing: 0.5px;
+  }
+  .challenge-box .quest-desc {
+    font-size: 13px;
+  }
+  .challenge-item {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(15, 18, 26, 0.4);
+    border: 1px solid rgba(241, 196, 15, 0.2);
+  }
+  .challenge-item.done {
+    border-color: #2ecc71;
+    background: rgba(46, 204, 113, 0.12);
+  }
+  .challenge-item.ready {
+    border-color: #f1c40f;
+    background: rgba(241, 196, 15, 0.18);
+    animation: questReadyPulse 1.6s ease-in-out infinite;
+  }
+  .challenge-item.ready .quest-progress-fill {
+    background: linear-gradient(90deg, #f1c40f, #d4a90a);
   }
   .quest-list {
     display: flex;
@@ -1682,9 +1713,15 @@
       <button id="btn-settings" aria-label="Einstellungen">&#9881;</button>
     </div>
 
-    <div class="menu-quests-panel" id="menu-quests-panel">
-      <div class="menu-quests-title">Tägliche Quests</div>
-      <div class="quest-list" id="daily-quests-list"></div>
+    <div class="menu-left-column" id="menu-left-column">
+      <div class="menu-challenge-panel">
+        <div class="menu-quests-title">&#11088; Daily Challenge</div>
+        <div class="challenge-box" id="daily-challenge-box"></div>
+      </div>
+      <div class="menu-quests-panel">
+        <div class="menu-quests-title">Tägliche Quests</div>
+        <div class="quest-list" id="daily-quests-list"></div>
+      </div>
     </div>
 
     <div class="menu-globe-stage" id="menu-globe-stage">
@@ -2893,6 +2930,130 @@ function renderDailyQuests() {
   });
 }
 
+// ================= Daily Challenge =================
+// Eine einzelne, größere/schwerere Aufgabe pro Tag (deutlich mehr Belohnung als die
+// normalen täglichen Quests) - entweder "spiel den Kontinent X durch" (angenähert: X
+// richtige Antworten, während dieser Kontinent als Filter ausgewählt ist - nutzt den
+// bereits vorhandenen Kontinent-Filter, statt einzelne Länder zu tracken, damit keine
+// der Spielmodus-Dateien selbst angefasst werden muss) oder "gewinne N Online-Runden".
+const DAILY_CHALLENGE_POOL = [
+  { id: 'chal_asia', type: 'continent', continent: 'Asia', label: 'Asien' },
+  { id: 'chal_europe', type: 'continent', continent: 'Europe', label: 'Europa' },
+  { id: 'chal_africa', type: 'continent', continent: 'Africa', label: 'Afrika' },
+  { id: 'chal_namerica', type: 'continent', continent: 'North America', label: 'Nordamerika' },
+  { id: 'chal_samerica', type: 'continent', continent: 'South America', label: 'Südamerika' },
+  { id: 'chal_oceania', type: 'continent', continent: 'Oceania', label: 'Ozeanien' },
+  { id: 'chal_online10', type: 'mode', mode: 'online', target: 10, label: 'Online-Duell' },
+];
+const DAILY_CHALLENGE_REWARD = 300;
+
+function getChallengeDef(id) {
+  return DAILY_CHALLENGE_POOL.find(c => c.id === id) || null;
+}
+function getChallengeTarget(def) {
+  if (def.type === 'mode') return def.target;
+  const count = allCountries.filter(c => c.continent === def.continent).length;
+  return count > 0 ? count : 20;
+}
+function getChallengeDesc(def) {
+  if (def.type === 'mode') return `Gewinne ${def.target} Runden im Online-Duell`;
+  return `Beantworte ${getChallengeTarget(def)} Fragen richtig, während "${def.label}" als Kontinent ausgewählt ist`;
+}
+
+function pickDailyChallengeId(dateStr) {
+  const seed = dateSeed(dateStr + '-challenge');
+  const pool = DAILY_CHALLENGE_POOL.map((c, i) => ({ id: c.id, r: seededRandom(seed + i * 53) }));
+  pool.sort((a, b) => a.r - b.r);
+  return pool[0].id;
+}
+
+function loadDailyChallenge() {
+  const today = todayDateString();
+  try {
+    const raw = localStorage.getItem('geoquiz-daily-challenge');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.date === today && parsed.id) return parsed;
+    }
+  } catch (e) { /* ignore */ }
+  const fresh = { date: today, id: pickDailyChallengeId(today), progress: 0, claimed: false };
+  saveDailyChallenge(fresh);
+  return fresh;
+}
+function saveDailyChallenge(state) {
+  try { localStorage.setItem('geoquiz-daily-challenge', JSON.stringify(state)); } catch (e) { /* ignore */ }
+}
+
+let dailyChallenge = loadDailyChallenge();
+
+function trackDailyChallengeProgress(mode) {
+  if (dailyChallenge.claimed) return;
+  const def = getChallengeDef(dailyChallenge.id);
+  if (!def) return;
+  let matched = false;
+  if (def.type === 'continent' && selectedContinent === def.continent) matched = true;
+  else if (def.type === 'mode' && def.mode === mode) matched = true;
+  if (!matched) return;
+  const target = getChallengeTarget(def);
+  const newProgress = Math.min((dailyChallenge.progress || 0) + 1, target);
+  if (newProgress === dailyChallenge.progress) return;
+  dailyChallenge.progress = newProgress;
+  saveDailyChallenge(dailyChallenge);
+  renderDailyChallenge();
+}
+
+function claimDailyChallenge() {
+  const def = getChallengeDef(dailyChallenge.id);
+  if (!def || dailyChallenge.claimed) return;
+  if (dailyChallenge.progress < getChallengeTarget(def)) return;
+  dailyChallenge.claimed = true;
+  saveDailyChallenge(dailyChallenge);
+  rewards.coins += DAILY_CHALLENGE_REWARD;
+  saveRewards();
+  updateCoinDisplays();
+  showCoinPopup(DAILY_CHALLENGE_REWARD);
+  launchConfetti(60);
+  renderDailyChallenge();
+}
+
+function renderDailyChallenge() {
+  const boxEl = document.getElementById('daily-challenge-box');
+  if (!boxEl) return;
+  const def = getChallengeDef(dailyChallenge.id);
+  if (!def) { boxEl.innerHTML = ''; return; }
+  const target = getChallengeTarget(def);
+  const progress = Math.min(dailyChallenge.progress || 0, target);
+  const claimed = dailyChallenge.claimed;
+  const completed = progress >= target;
+  boxEl.innerHTML = '';
+  const item = document.createElement('div');
+  item.className = 'challenge-item' + (claimed ? ' done' : '') + (completed && !claimed ? ' ready' : '');
+  const bar = document.createElement('div');
+  bar.className = 'quest-progress-bar';
+  const fill = document.createElement('div');
+  fill.className = 'quest-progress-fill';
+  fill.style.width = (progress / target * 100) + '%';
+  bar.appendChild(fill);
+  const descEl = document.createElement('div');
+  descEl.className = 'quest-desc';
+  descEl.textContent = (claimed ? '🏆 ' : completed ? '🎁 ' : '⭐ ') + getChallengeDesc(def);
+  item.appendChild(descEl);
+  item.appendChild(bar);
+  if (completed && !claimed) {
+    const claimBtn = document.createElement('button');
+    claimBtn.className = 'quest-claim-btn';
+    claimBtn.textContent = `Einsammeln (+${DAILY_CHALLENGE_REWARD} 🪙)`;
+    claimBtn.addEventListener('click', claimDailyChallenge);
+    item.appendChild(claimBtn);
+  } else {
+    const textEl = document.createElement('div');
+    textEl.className = 'quest-progress-text';
+    textEl.textContent = claimed ? `Abgeholt · +${DAILY_CHALLENGE_REWARD} 🪙` : `${progress}/${target} · +${DAILY_CHALLENGE_REWARD} 🪙`;
+    item.appendChild(textEl);
+  }
+  boxEl.appendChild(item);
+}
+
 // Wird bei jeder richtigen Antwort aufgerufen - mode ist 'country'/'landmark'/
 // 'silhouette'/'capital'/'border', jeder hat seinen eigenen Fortschritt/Abzeichen.
 // Die Münzbelohnung skaliert mit dem Schwierigkeitsgrad (mehr Münzen bei "Schwer").
@@ -2917,6 +3078,7 @@ function awardCorrect(mode) {
   renderRewardsScreen();
   if (newlyUnlocked) { showRewardToast(newlyUnlocked, mode); updateMenuPlayerBadges(); }
   trackDailyQuestProgress(mode);
+  trackDailyChallengeProgress(mode);
 }
 
 // Wird bei falscher Antwort oder Aufgeben aufgerufen - beendet nur die Serie des
@@ -3119,6 +3281,7 @@ function initMenuGlobeViewer() {
 // kein externes Erdbild, nur die im Spiel ohnehin schon geladenen Ländergrenz-Daten.
 function applyMenuGlobeContinents() {
   loadCountryData(() => {
+    renderDailyChallenge(); // Kontinent-Ländercount ist erst jetzt bekannt
     if (!menuGlobeViewer || !countryGeoJsonData) return;
     const texture = buildMenuGlobeTexture(countryGeoJsonData);
     if (!texture) return;
@@ -5121,6 +5284,7 @@ settingsVolumeEl.addEventListener('change', () => {
 // Klick-Overlays - wird beim Start und nach jeder richtigen Antwort aktualisiert.
 renderRewardsScreen();
 renderDailyQuests();
+renderDailyChallenge();
 
 updateEquippedSkinDisplays();
 
