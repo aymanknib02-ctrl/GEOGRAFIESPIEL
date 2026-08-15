@@ -206,6 +206,28 @@
     border-color: #2ecc71;
     background: rgba(46, 204, 113, 0.12);
   }
+  .quest-item.ready {
+    border-color: #f1c40f;
+    background: rgba(241, 196, 15, 0.12);
+    animation: questReadyPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes questReadyPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); }
+    50% { box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.18); }
+  }
+  .quest-item.ready .quest-progress-fill {
+    background: linear-gradient(90deg, #f1c40f, #d4a90a);
+  }
+  .quest-claim-btn {
+    width: 100%;
+    font-size: 13px;
+    padding: 10px 8px;
+    background: linear-gradient(135deg, #f1c40f, #d4a90a);
+    color: #2b1f00;
+  }
+  .quest-claim-btn:hover {
+    background: linear-gradient(135deg, #ffd633, #e0b80f);
+  }
   .quest-desc {
     font-size: 13px;
     margin-bottom: 8px;
@@ -2517,6 +2539,8 @@ function saveDailyQuests(state) {
 
 let dailyQuests = loadDailyQuests();
 
+// Fortschritt wird automatisch erhöht, die Belohnung aber erst gutgeschrieben, wenn
+// per Klick auf "Einsammeln" (claimDailyQuest) aktiv abgeholt wird.
 function trackDailyQuestProgress(mode) {
   let changed = false;
   dailyQuests.selected.forEach(id => {
@@ -2534,21 +2558,28 @@ function trackDailyQuestProgress(mode) {
       return;
     }
     if (newProgress === dailyQuests.progress[id]) return;
-    dailyQuests.progress[id] = newProgress;
+    dailyQuests.progress[id] = Math.min(newProgress, def.target);
     changed = true;
-    if (newProgress >= def.target && !dailyQuests.claimed[id]) {
-      dailyQuests.claimed[id] = true;
-      rewards.coins += DAILY_QUEST_REWARD;
-      saveRewards();
-      updateCoinDisplays();
-      showCoinPopup(DAILY_QUEST_REWARD);
-      launchConfetti(30);
-    }
   });
   if (changed) {
     saveDailyQuests(dailyQuests);
     renderDailyQuests();
   }
+}
+
+function claimDailyQuest(id) {
+  const def = getQuestDef(id);
+  if (!def || dailyQuests.claimed[id]) return;
+  const progress = dailyQuests.progress[id] || 0;
+  if (progress < def.target) return;
+  dailyQuests.claimed[id] = true;
+  saveDailyQuests(dailyQuests);
+  rewards.coins += DAILY_QUEST_REWARD;
+  saveRewards();
+  updateCoinDisplays();
+  showCoinPopup(DAILY_QUEST_REWARD);
+  launchConfetti(30);
+  renderDailyQuests();
 }
 
 function renderDailyQuests() {
@@ -2559,9 +2590,10 @@ function renderDailyQuests() {
     const def = getQuestDef(id);
     if (!def) return;
     const progress = Math.min(dailyQuests.progress[id] || 0, def.target);
-    const done = dailyQuests.claimed[id];
+    const claimed = dailyQuests.claimed[id];
+    const completed = progress >= def.target;
     const item = document.createElement('div');
-    item.className = 'quest-item' + (done ? ' done' : '');
+    item.className = 'quest-item' + (claimed ? ' done' : '') + (completed && !claimed ? ' ready' : '');
     const bar = document.createElement('div');
     bar.className = 'quest-progress-bar';
     const fill = document.createElement('div');
@@ -2570,13 +2602,21 @@ function renderDailyQuests() {
     bar.appendChild(fill);
     const descEl = document.createElement('div');
     descEl.className = 'quest-desc';
-    descEl.textContent = (done ? '✅ ' : '🎯 ') + def.desc;
-    const textEl = document.createElement('div');
-    textEl.className = 'quest-progress-text';
-    textEl.textContent = `${progress}/${def.target} · +${DAILY_QUEST_REWARD} 🪙`;
+    descEl.textContent = (claimed ? '✅ ' : completed ? '🎁 ' : '🎯 ') + def.desc;
     item.appendChild(descEl);
     item.appendChild(bar);
-    item.appendChild(textEl);
+    if (completed && !claimed) {
+      const claimBtn = document.createElement('button');
+      claimBtn.className = 'quest-claim-btn';
+      claimBtn.textContent = `Einsammeln (+${DAILY_QUEST_REWARD} 🪙)`;
+      claimBtn.addEventListener('click', () => claimDailyQuest(id));
+      item.appendChild(claimBtn);
+    } else {
+      const textEl = document.createElement('div');
+      textEl.className = 'quest-progress-text';
+      textEl.textContent = claimed ? `Abgeholt · +${DAILY_QUEST_REWARD} 🪙` : `${progress}/${def.target} · +${DAILY_QUEST_REWARD} 🪙`;
+      item.appendChild(textEl);
+    }
     listEl.appendChild(item);
   });
 }
