@@ -972,7 +972,8 @@
     height: 96px;
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+    border: 3px solid rgba(79, 209, 197, 0.6);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 0 22px rgba(79, 209, 197, 0.35);
   }
   .online-intro-emoji {
     width: 96px;
@@ -983,7 +984,8 @@
     justify-content: center;
     font-size: 52px;
     background: #232a3f;
-    box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+    border: 3px solid rgba(79, 209, 197, 0.6);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 0 22px rgba(79, 209, 197, 0.35);
   }
   .online-intro-name {
     font-weight: bold;
@@ -997,6 +999,12 @@
     font-size: 30px;
     font-weight: 800;
     color: #4fd1c5;
+    text-shadow: 0 0 18px rgba(79, 209, 197, 0.7);
+    animation: vsPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes vsPulse {
+    0%, 100% { transform: scale(1); text-shadow: 0 0 12px rgba(79, 209, 197, 0.5); }
+    50% { transform: scale(1.12); text-shadow: 0 0 24px rgba(79, 209, 197, 0.9); }
   }
   .online-health-bar {
     width: 130px;
@@ -1005,15 +1013,18 @@
     background: #2b3245;
     overflow: hidden;
     margin: 4px 0;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
   }
   .online-health-fill {
     height: 100%;
     width: 100%;
     background: linear-gradient(90deg, #2ecc71, #27ae60);
-    transition: width 0.6s ease, background 0.4s ease;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+    transition: width 0.6s ease, background 0.4s ease, box-shadow 0.4s ease;
   }
   .online-health-fill.low {
     background: linear-gradient(90deg, #e74c3c, #c0392b);
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.7);
   }
   #online-me-stat, #online-opp-stat {
     position: relative;
