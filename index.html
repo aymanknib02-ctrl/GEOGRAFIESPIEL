@@ -572,23 +572,23 @@
     margin-bottom: 24px;
   }
   .continent-menu-box {
-    width: 740px;
+    width: min(94vw, 1080px);
   }
   .continent-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 22px;
+    gap: 22px;
+    margin-bottom: 28px;
   }
   .continent-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 14px 10px;
+    gap: 12px;
+    padding: 18px 14px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
+    border-radius: 16px;
     animation: tileIn 0.3s ease backwards;
   }
   .continent-card:hover {
@@ -597,11 +597,11 @@
   }
   .continent-thumb-canvas {
     width: 100%;
-    height: 90px;
+    height: 150px;
     display: block;
   }
   .continent-card-label {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: bold;
     line-height: 1.2;
   }
@@ -2088,9 +2088,11 @@ function drawContinentThumbnail(canvas, continentFilter) {
     });
   }
 
-  let minLng, maxLng, minLat, maxLat;
+  let minLng, maxLng, minLat, maxLat, pad;
   if (!continentFilter) {
+    // Weltkarte soll die Kachel randlos ausfüllen, kein Rand-Puffer.
     minLng = -180; maxLng = 180; minLat = -85; maxLat = 85;
+    pad = 0;
   } else {
     minLng = 180; maxLng = -180; minLat = 90; maxLat = -90;
     forEachPolyRing(rings => rings.forEach(ring => ring.forEach(([lng, lat]) => {
@@ -2099,15 +2101,24 @@ function drawContinentThumbnail(canvas, continentFilter) {
       if (lat < minLat) minLat = lat;
       if (lat > maxLat) maxLat = lat;
     })));
+    pad = 0.1;
   }
 
-  const pad = 0.1;
   const centerLng = (minLng + maxLng) / 2;
   const centerLat = (minLat + maxLat) / 2;
   let halfLng = Math.max((maxLng - minLng) / 2 * (1 + pad), 1);
   let halfLat = Math.max((maxLat - minLat) / 2 * (1 + pad), 1);
   const aspect = width / height;
-  if (halfLng / halfLat > aspect) { halfLat = halfLng / aspect; } else { halfLng = halfLat * aspect; }
+  // Bei der Weltkarte soll die volle Breite (kompletter Knopf, nicht abgeschnitten)
+  // genutzt werden, notfalls auf Kosten von oben/unten oder etwas Überstand bei den
+  // Polen - deshalb hier IMMER an der Breite ausrichten statt am jeweils größeren Wert.
+  if (!continentFilter) {
+    halfLat = halfLng / aspect;
+  } else if (halfLng / halfLat > aspect) {
+    halfLat = halfLng / aspect;
+  } else {
+    halfLng = halfLat * aspect;
+  }
 
   function project(lng, lat) {
     return [
