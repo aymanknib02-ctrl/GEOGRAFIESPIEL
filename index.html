@@ -1845,6 +1845,39 @@
     background: linear-gradient(135deg, #3b5460, #2a3a50);
     box-shadow: 0 0 16px rgba(79, 209, 197, 0.35);
   }
+  .settings-map-row {
+    display: flex;
+    gap: 14px;
+  }
+  .settings-map-preview {
+    flex: 1;
+    cursor: pointer;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    background: #10131c;
+    transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
+  }
+  .settings-map-preview:hover {
+    transform: translateY(-3px);
+    border-color: rgba(79, 209, 197, 0.5);
+  }
+  .settings-map-preview.active {
+    border-color: #4fd1c5;
+    box-shadow: 0 0 16px rgba(79, 209, 197, 0.4);
+  }
+  .settings-map-preview-canvas {
+    width: 100%;
+    height: 100px;
+    background: #10131c;
+    pointer-events: none;
+  }
+  .settings-map-preview-label {
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px 4px;
+  }
   .settings-volume-row {
     align-items: center;
   }
@@ -2010,9 +2043,15 @@
 
       <div class="settings-section">
         <div class="settings-label" data-i18n="settings.mapStyle">Kartenstil</div>
-        <div class="settings-row" id="settings-maps">
-          <button class="opt-btn" data-map="ocean" data-i18n="settings.mapStyle.ocean">Normal</button>
-          <button class="opt-btn" data-map="colorful" data-i18n="settings.mapStyle.colorful">Bunt</button>
+        <div class="settings-map-row" id="settings-maps">
+          <div class="settings-map-preview" data-map="ocean">
+            <div class="settings-map-preview-canvas" id="settings-map-preview-ocean"></div>
+            <div class="settings-map-preview-label" data-i18n="settings.mapStyle.ocean">Normal</div>
+          </div>
+          <div class="settings-map-preview" data-map="google">
+            <div class="settings-map-preview-canvas" id="settings-map-preview-google"></div>
+            <div class="settings-map-preview-label" data-i18n="settings.mapStyle.google">Google Maps</div>
+          </div>
         </div>
       </div>
 
@@ -3862,10 +3901,11 @@ function openSkinsGallery() {
   renderSkinsGallery();
 }
 
-// Kartenstile: 'ocean' ist der normale Kachel-Hintergrund, 'colorful' ist kein eigener
-// Kachel-Hintergrund sondern ein Landfärbe-Modus (jedes Land bekommt seine eigene Farbe).
+// Kartenstile: zwei echte Kachel-Hintergruende zur Auswahl (Satelliten-artiges 'ocean'
+// vs. Straßenkarten-artiges 'google').
 const MAP_STYLES = {
   ocean: { url: 'https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', maxZoom: 10 },
+  google: { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', maxZoom: 18, subdomains: 'abcd' },
 };
 
 const LAND_COLOR = '#9ca3af';
@@ -3882,7 +3922,7 @@ const SELECT_COLOR = '#f1c40f';
 const SELECT_BORDER = '#7d6608';
 const selectStyle  = { color: SELECT_BORDER, weight: 2.5, fillColor: SELECT_COLOR, fillOpacity: 0.95 };
 
-const MAP_STYLE_NAMES = ['ocean', 'colorful'];
+const MAP_STYLE_NAMES = ['ocean', 'google'];
 
 function applyMapStyle(name) {
   settings.mapStyle = MAP_STYLE_NAMES.includes(name) ? name : 'ocean';
@@ -3890,23 +3930,9 @@ function applyMapStyle(name) {
   invalidateMaps();
 }
 
-// Bunte Landfarben: jedes Land bekommt eine eigene, kräftige Farbe (per Hash aus Land-ID).
-function colorForCountry(feature) {
-  const key = feature.id || (feature.properties && feature.properties.name) || '';
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) {
-    hash = key.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 70%, 55%)`;
-}
-
 // Style-Funktion statt festem Objekt, damit Leaflet sie bei jedem resetStyle() erneut
-// aufruft - so bleibt der bunte Modus auch nach Hervorhebungen (Auswahl/Richtig/Falsch) korrekt.
+// aufruft.
 function landStyleFor(feature) {
-  if (settings.mapStyle === 'colorful') {
-    return { color: '#20242c', weight: 1.2, fillColor: colorForCountry(feature), fillOpacity: 0.9 };
-  }
   return landStyle;
 }
 
@@ -5435,7 +5461,7 @@ const I18N = {
     'settings.title': 'Einstellungen',
     'settings.mapStyle': 'Kartenstil',
     'settings.mapStyle.ocean': 'Normal',
-    'settings.mapStyle.colorful': 'Bunt',
+    'settings.mapStyle.google': 'Google Maps',
     'settings.language': 'Sprache',
     'settings.volume': 'Lautstärke',
     'settings.playerName': 'Spielername',
@@ -5463,7 +5489,7 @@ const I18N = {
     'settings.title': 'Settings',
     'settings.mapStyle': 'Map Style',
     'settings.mapStyle.ocean': 'Normal',
-    'settings.mapStyle.colorful': 'Colorful',
+    'settings.mapStyle.google': 'Google Maps',
     'settings.language': 'Language',
     'settings.volume': 'Volume',
     'settings.playerName': 'Player Name',
@@ -5491,7 +5517,7 @@ const I18N = {
     'settings.title': 'Paramètres',
     'settings.mapStyle': 'Style de carte',
     'settings.mapStyle.ocean': 'Normal',
-    'settings.mapStyle.colorful': 'Coloré',
+    'settings.mapStyle.google': 'Google Maps',
     'settings.language': 'Langue',
     'settings.volume': 'Volume',
     'settings.playerName': 'Nom du joueur',
@@ -5519,7 +5545,7 @@ const I18N = {
     'settings.title': 'Configuración',
     'settings.mapStyle': 'Estilo de mapa',
     'settings.mapStyle.ocean': 'Normal',
-    'settings.mapStyle.colorful': 'Colorido',
+    'settings.mapStyle.google': 'Google Maps',
     'settings.language': 'Idioma',
     'settings.volume': 'Volumen',
     'settings.playerName': 'Nombre de jugador',
@@ -5547,7 +5573,7 @@ const I18N = {
     'settings.title': '设置',
     'settings.mapStyle': '地图样式',
     'settings.mapStyle.ocean': '普通',
-    'settings.mapStyle.colorful': '彩色',
+    'settings.mapStyle.google': 'Google 地图',
     'settings.language': '语言',
     'settings.volume': '音量',
     'settings.playerName': '玩家名称',
@@ -5575,7 +5601,7 @@ const I18N = {
     'settings.title': 'الإعدادات',
     'settings.mapStyle': 'نمط الخريطة',
     'settings.mapStyle.ocean': 'عادي',
-    'settings.mapStyle.colorful': 'ملون',
+    'settings.mapStyle.google': 'خرائط جوجل',
     'settings.language': 'اللغة',
     'settings.volume': 'مستوى الصوت',
     'settings.playerName': 'اسم اللاعب',
@@ -5643,7 +5669,7 @@ function applyReduceMotion() {
 }
 
 function updateSettingsUI() {
-  document.querySelectorAll('#settings-maps .opt-btn').forEach(b => {
+  document.querySelectorAll('#settings-maps .settings-map-preview').forEach(b => {
     b.classList.toggle('active', b.dataset.map === settings.mapStyle);
   });
   document.querySelectorAll('#settings-languages .opt-btn').forEach(b => {
@@ -5656,9 +5682,42 @@ function updateSettingsUI() {
   btnSettingsReduceMotionEl.classList.toggle('active', !!settings.reduceMotion);
 }
 
+// Live-Vorschau-Kaertchen im Kartenstil-Auswahl: zwei echte, nicht interaktive
+// Leaflet-Karten statt statischer Bilder, jede mit dem jeweiligen Kachel-Stil - werden
+// erst beim ersten Oeffnen der Einstellungen erzeugt (Container muss sichtbar sein,
+// damit Leaflet die Groesse korrekt ermittelt).
+let settingsMapPreviewsReady = false;
+function initSettingsMapPreviews() {
+  if (settingsMapPreviewsReady) {
+    document.querySelectorAll('.settings-map-preview-canvas').forEach(el => {
+      if (el._leafletMap) el._leafletMap.invalidateSize();
+    });
+    return;
+  }
+  settingsMapPreviewsReady = true;
+  Object.keys(MAP_STYLES).forEach(name => {
+    const el = document.getElementById('settings-map-preview-' + name);
+    if (!el) return;
+    const previewMap = L.map(el, {
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      touchZoom: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+    }).setView([25, 10], 1);
+    const style = MAP_STYLES[name];
+    L.tileLayer(style.url, { maxZoom: style.maxZoom, subdomains: style.subdomains || 'abc' }).addTo(previewMap);
+    el._leafletMap = previewMap;
+  });
+}
+
 btnSettingsEl.addEventListener('click', () => {
   updateSettingsUI();
   settingsOverlayEl.classList.add('show');
+  requestAnimationFrame(initSettingsMapPreviews);
 });
 settingsPlayerNameEl.addEventListener('change', () => {
   setOnlineNickname(settingsPlayerNameEl.value.slice(0, 18));
@@ -5688,9 +5747,9 @@ settingsOverlayEl.addEventListener('click', (e) => {
   if (e.target === settingsOverlayEl) settingsOverlayEl.classList.remove('show');
 });
 
-document.querySelectorAll('#settings-maps .opt-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    applyMapStyle(btn.dataset.map);
+document.querySelectorAll('#settings-maps .settings-map-preview').forEach(card => {
+  card.addEventListener('click', () => {
+    applyMapStyle(card.dataset.map);
     updateSettingsUI();
     playClickSound();
   });
