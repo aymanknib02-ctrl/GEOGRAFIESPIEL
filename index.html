@@ -19,20 +19,42 @@
 <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
+  /* GeoGuessr-artiger dunkler Sternenhimmel-Hintergrund statt des frueheren
+     wandernden Farbverlaufs - ueberall im Spiel sichtbar (Menue + alle Bildschirme). */
   html, body {
     margin: 0;
     height: 100%;
-    background: linear-gradient(135deg, #0f1220, #1a2140, #120f22, #16233a);
-    background-size: 300% 300%;
-    animation: bgShift 20s ease infinite;
+    background: radial-gradient(ellipse 120% 70% at 50% -10%, #1c1640 0%, #100d28 45%, #05060f 100%);
     font-family: 'Baloo 2', 'Segoe UI', sans-serif;
     color: #fff;
     overflow: hidden;
+    position: relative;
   }
-  @keyframes bgShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(1.6px 1.6px at 15% 20%, #fff, transparent 100%),
+      radial-gradient(1.2px 1.2px at 35% 65%, #fff, transparent 100%),
+      radial-gradient(1.8px 1.8px at 55% 15%, #fff, transparent 100%),
+      radial-gradient(1.2px 1.2px at 72% 48%, #fff, transparent 100%),
+      radial-gradient(1.5px 1.5px at 88% 78%, #fff, transparent 100%),
+      radial-gradient(1.1px 1.1px at 8% 82%, #fff, transparent 100%),
+      radial-gradient(1.7px 1.7px at 44% 92%, #fff, transparent 100%),
+      radial-gradient(1.3px 1.3px at 95% 25%, #fff, transparent 100%),
+      radial-gradient(1.4px 1.4px at 25% 40%, #fff, transparent 100%),
+      radial-gradient(1.2px 1.2px at 63% 8%, #fff, transparent 100%);
+    background-repeat: repeat;
+    background-size: 340px 340px;
+    opacity: 0.55;
+    animation: starsTwinkle 5s ease-in-out infinite alternate;
+  }
+  @keyframes starsTwinkle {
+    from { opacity: 0.35; }
+    to { opacity: 0.7; }
   }
   /* Einstellungen > Animationen reduzieren: fast alle Animationen/Übergänge werden auf
      eine Mini-Dauer gesetzt statt komplett entfernt, damit Code, der auf 'animationend'
@@ -221,20 +243,20 @@
     border-radius: 18px;
   }
   #btn-menu-play {
-    background: linear-gradient(160deg, #63e6d9, #4fd1c5 60%, #2b9e93);
-    box-shadow: 0 5px 0 #1a6058, 0 8px 26px rgba(79, 209, 197, 0.45);
+    background: linear-gradient(160deg, #9575ff, #7c5cfc 60%, #6344d6);
+    box-shadow: 0 5px 0 #402c8f, 0 8px 26px rgba(124, 92, 252, 0.45);
     animation: playPulse 2.4s ease-in-out infinite;
   }
   #btn-menu-play:hover {
-    background: linear-gradient(160deg, #7bf0e3, #63e6d9 60%, #35b4a8);
-    box-shadow: 0 7px 0 #1a6058, 0 16px 36px rgba(79, 209, 197, 0.6);
+    background: linear-gradient(160deg, #a98bff, #9575ff 60%, #7c5cfc);
+    box-shadow: 0 7px 0 #402c8f, 0 16px 36px rgba(124, 92, 252, 0.6);
   }
   #btn-menu-play:active {
-    box-shadow: 0 2px 0 #1a6058, 0 6px 14px rgba(79, 209, 197, 0.4);
+    box-shadow: 0 2px 0 #402c8f, 0 6px 14px rgba(124, 92, 252, 0.4);
   }
   @keyframes playPulse {
-    0%, 100% { box-shadow: 0 5px 0 #1a6058, 0 8px 26px rgba(79, 209, 197, 0.45); }
-    50% { box-shadow: 0 5px 0 #1a6058, 0 8px 34px rgba(79, 209, 197, 0.75); }
+    0%, 100% { box-shadow: 0 5px 0 #402c8f, 0 8px 26px rgba(124, 92, 252, 0.45); }
+    50% { box-shadow: 0 5px 0 #402c8f, 0 8px 34px rgba(124, 92, 252, 0.75); }
   }
   .menu-home-btn::after {
     content: '';
@@ -459,10 +481,10 @@
   .coin-badge {
     position: relative;
     overflow: hidden;
-    height: 52px;
-    padding: 0 18px;
-    border-radius: 26px;
-    font-size: 17px;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 15px;
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -1606,11 +1628,60 @@
     justify-content: center;
   }
 
-  .menu-top-icons {
+  /* GeoGuessr-artige Navbar-Leiste ganz oben: Logo links, Profil-Chip + Icons rechts. */
+  .menu-navbar {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 1500;
+    box-sizing: border-box;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, rgba(8, 9, 20, 0.75), rgba(8, 9, 20, 0));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .menu-navbar-logo {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .menu-navbar-logo-pin {
+    font-size: 20px;
+  }
+  .menu-navbar-logo-accent {
+    color: #9575ff;
+  }
+  .menu-profile-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 5px 6px;
+  }
+  .menu-profile-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #9575ff, #6344d6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+  }
+  .menu-profile-name {
+    font-size: 15px;
+    font-weight: bold;
+    padding-right: 4px;
+  }
+  .menu-top-icons {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -1915,12 +1986,19 @@
       <span class="particle p-purple" style="left:10%; animation-delay:11s; animation-duration:17s;"></span>
     </div>
 
-    <div class="menu-top-icons">
-      <div id="btn-rewards" class="coin-badge">
-        <span id="menu-coin-value">0</span> &#129689;
+    <div class="menu-navbar">
+      <div class="menu-navbar-logo"><span class="menu-navbar-logo-pin">&#128205;</span>GEO<span class="menu-navbar-logo-accent">QUIZ</span></div>
+      <div class="menu-top-icons">
+        <div class="menu-profile-chip">
+          <span class="menu-profile-avatar">&#128100;</span>
+          <span class="menu-profile-name" id="navbar-player-name">Spieler</span>
+          <span id="btn-rewards" class="coin-badge">
+            <span id="menu-coin-value">0</span> &#129689;
+          </span>
+        </div>
+        <button id="btn-fullscreen" aria-label="Vollbild">&#9974;</button>
+        <button id="btn-settings" aria-label="Einstellungen">&#9881;</button>
       </div>
-      <button id="btn-fullscreen" aria-label="Vollbild">&#9974;</button>
-      <button id="btn-settings" aria-label="Einstellungen">&#9881;</button>
     </div>
 
     <div class="menu-left-column" id="menu-left-column">
@@ -6175,8 +6253,11 @@ function setOnlineNickname(name) {
   updateMenuPlayerNameDisplay();
 }
 function updateMenuPlayerNameDisplay() {
+  const name = getOnlineNickname() || 'Spieler';
   const el = document.getElementById('menu-player-name-text');
-  if (el) el.textContent = getOnlineNickname() || 'Spieler';
+  if (el) el.textContent = name;
+  const navEl = document.getElementById('navbar-player-name');
+  if (navEl) navEl.textContent = name;
 }
 
 // "Flex": zeigt die besten Abzeichen (höchste erreichte Meilenstein-Stufe, egal aus
