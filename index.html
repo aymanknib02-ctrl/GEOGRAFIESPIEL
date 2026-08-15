@@ -34,6 +34,14 @@
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
   }
+  /* Einstellungen > Animationen reduzieren: fast alle Animationen/Übergänge werden auf
+     eine Mini-Dauer gesetzt statt komplett entfernt, damit Code, der auf 'animationend'
+     wartet (z.B. die Klick-Funken), trotzdem sauber weiterlaeuft. */
+  html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
   #menu {
     position: relative;
     height: 100%;
@@ -862,13 +870,33 @@
     font-size: 12px;
     opacity: 0.7;
   }
-  #online-nickname-input, #online-join-code-input, #online-country-select {
+  #online-nickname-input, #online-join-code-input, #online-country-select, #settings-player-name {
     font-size: 16px;
     padding: 10px 12px;
     border-radius: 8px;
     border: 2px solid #2b3245;
     background: #1c2130;
     color: #fff;
+  }
+  #settings-player-name {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #settings-player-name:focus {
+    outline: none;
+    border-color: #4fd1c5;
+  }
+  .settings-danger-btn {
+    width: 100%;
+    background: linear-gradient(160deg, #e8695c, #c0392b 60%, #922016);
+    box-shadow: 0 4px 0 #5c150d, 0 8px 20px rgba(192, 57, 43, 0.35);
+  }
+  .settings-danger-btn:hover:not(:disabled) {
+    background: linear-gradient(160deg, #f0857a, #d64a3a 60%, #a3291c);
+    box-shadow: 0 5px 0 #5c150d, 0 10px 24px rgba(192, 57, 43, 0.45);
+  }
+  .settings-danger-btn:active:not(:disabled) {
+    box-shadow: 0 1px 0 #5c150d, 0 4px 10px rgba(192, 57, 43, 0.35);
   }
   #online-join-code-input {
     text-transform: uppercase;
@@ -1974,6 +2002,13 @@
       <h2 data-i18n="settings.title">Einstellungen</h2>
 
       <div class="settings-section">
+        <div class="settings-label" data-i18n="settings.playerName">Spielername</div>
+        <div class="settings-row">
+          <input type="text" id="settings-player-name" maxlength="18" data-i18n-placeholder="settings.playerName.placeholder" placeholder="Name eingeben" />
+        </div>
+      </div>
+
+      <div class="settings-section">
         <div class="settings-label" data-i18n="settings.mapStyle">Kartenstil</div>
         <div class="settings-row" id="settings-maps">
           <button class="opt-btn" data-map="ocean" data-i18n="settings.mapStyle.ocean">Normal</button>
@@ -1999,6 +2034,20 @@
           <span id="settings-volume-icon">&#128266;</span>
           <input type="range" id="settings-volume" min="0" max="100" value="60" />
           <span id="settings-volume-value">60%</span>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label" data-i18n="settings.motion">Animationen</div>
+        <div class="settings-row">
+          <button class="opt-btn" id="btn-settings-reduce-motion" data-i18n="settings.motion.reduce">Animationen reduzieren</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label" data-i18n="settings.progress">Fortschritt</div>
+        <div class="settings-row">
+          <button id="btn-settings-reset" class="settings-danger-btn" data-i18n="settings.progress.reset">Fortschritt zurücksetzen</button>
         </div>
       </div>
 
@@ -2814,7 +2863,7 @@ function baseStyle(feature) {
 }
 
 // Globale Einstellungen (Kartenstil, Sprache, Lautstärke) - persistiert in localStorage
-const DEFAULT_SETTINGS = { mapStyle: 'ocean', language: 'de', volume: 60 };
+const DEFAULT_SETTINGS = { mapStyle: 'ocean', language: 'en', volume: 60, reduceMotion: false };
 let settings = loadSettings();
 
 function loadSettings() {
@@ -3944,6 +3993,7 @@ document.addEventListener('click', (e) => {
     spark.style.background = SPARK_COLORS[i % SPARK_COLORS.length];
     document.body.appendChild(spark);
     spark.addEventListener('animationend', () => spark.remove());
+    setTimeout(() => spark.remove(), 600);
   }
 });
 
@@ -5388,6 +5438,13 @@ const I18N = {
     'settings.mapStyle.colorful': 'Bunt',
     'settings.language': 'Sprache',
     'settings.volume': 'Lautstärke',
+    'settings.playerName': 'Spielername',
+    'settings.playerName.placeholder': 'Name eingeben',
+    'settings.motion': 'Animationen',
+    'settings.motion.reduce': 'Animationen reduzieren',
+    'settings.progress': 'Fortschritt',
+    'settings.progress.reset': 'Fortschritt zurücksetzen',
+    'settings.progress.confirmMsg': 'Fortschritt (Münzen, Skins, Quests) wirklich zurücksetzen? Das kann nicht rückgängig gemacht werden.',
     'settings.close': 'Schließen',
     'menu.country.title': 'Länder-Quiz',
     'menu.country.desc': 'Land wird als Name genannt',
@@ -5409,6 +5466,13 @@ const I18N = {
     'settings.mapStyle.colorful': 'Colorful',
     'settings.language': 'Language',
     'settings.volume': 'Volume',
+    'settings.playerName': 'Player Name',
+    'settings.playerName.placeholder': 'Enter name',
+    'settings.motion': 'Animations',
+    'settings.motion.reduce': 'Reduce animations',
+    'settings.progress': 'Progress',
+    'settings.progress.reset': 'Reset progress',
+    'settings.progress.confirmMsg': 'Really reset all progress (coins, skins, quests)? This cannot be undone.',
     'settings.close': 'Close',
     'menu.country.title': 'Country Quiz',
     'menu.country.desc': 'Country is given by name',
@@ -5430,6 +5494,13 @@ const I18N = {
     'settings.mapStyle.colorful': 'Coloré',
     'settings.language': 'Langue',
     'settings.volume': 'Volume',
+    'settings.playerName': 'Nom du joueur',
+    'settings.playerName.placeholder': 'Entrez un nom',
+    'settings.motion': 'Animations',
+    'settings.motion.reduce': 'Réduire les animations',
+    'settings.progress': 'Progression',
+    'settings.progress.reset': 'Réinitialiser la progression',
+    'settings.progress.confirmMsg': 'Vraiment réinitialiser toute la progression (pièces, skins, quêtes) ? Cette action est irréversible.',
     'settings.close': 'Fermer',
     'menu.country.title': 'Quiz des pays',
     'menu.country.desc': 'Le pays est donné par son nom',
@@ -5451,6 +5522,13 @@ const I18N = {
     'settings.mapStyle.colorful': 'Colorido',
     'settings.language': 'Idioma',
     'settings.volume': 'Volumen',
+    'settings.playerName': 'Nombre de jugador',
+    'settings.playerName.placeholder': 'Ingresa un nombre',
+    'settings.motion': 'Animaciones',
+    'settings.motion.reduce': 'Reducir animaciones',
+    'settings.progress': 'Progreso',
+    'settings.progress.reset': 'Restablecer progreso',
+    'settings.progress.confirmMsg': '¿Restablecer todo el progreso (monedas, skins, misiones)? Esto no se puede deshacer.',
     'settings.close': 'Cerrar',
     'menu.country.title': 'Quiz de países',
     'menu.country.desc': 'El país se indica por su nombre',
@@ -5472,6 +5550,13 @@ const I18N = {
     'settings.mapStyle.colorful': '彩色',
     'settings.language': '语言',
     'settings.volume': '音量',
+    'settings.playerName': '玩家名称',
+    'settings.playerName.placeholder': '输入名称',
+    'settings.motion': '动画',
+    'settings.motion.reduce': '减少动画',
+    'settings.progress': '进度',
+    'settings.progress.reset': '重置进度',
+    'settings.progress.confirmMsg': '确定要重置所有进度(金币、皮肤、任务)吗?此操作无法撤销。',
     'settings.close': '关闭',
     'menu.country.title': '国家问答',
     'menu.country.desc': '以名称给出国家',
@@ -5493,6 +5578,13 @@ const I18N = {
     'settings.mapStyle.colorful': 'ملون',
     'settings.language': 'اللغة',
     'settings.volume': 'مستوى الصوت',
+    'settings.playerName': 'اسم اللاعب',
+    'settings.playerName.placeholder': 'أدخل الاسم',
+    'settings.motion': 'الرسوم المتحركة',
+    'settings.motion.reduce': 'تقليل الحركة',
+    'settings.progress': 'التقدم',
+    'settings.progress.reset': 'إعادة تعيين التقدم',
+    'settings.progress.confirmMsg': 'هل تريد حقًا إعادة تعيين كل التقدم (العملات، الأشكال، المهام)؟ لا يمكن التراجع عن هذا.',
     'settings.close': 'إغلاق',
     'menu.country.title': 'مسابقة الدول',
     'menu.country.desc': 'يُذكر اسم الدولة',
@@ -5510,12 +5602,16 @@ const I18N = {
 };
 
 function applyLanguage(lang) {
-  settings.language = I18N[lang] ? lang : 'de';
+  settings.language = I18N[lang] ? lang : 'en';
   saveSettings();
   const dict = I18N[settings.language];
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     if (dict[key]) el.textContent = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (dict[key]) el.placeholder = dict[key];
   });
   document.documentElement.lang = settings.language;
   document.documentElement.dir = settings.language === 'ar' ? 'rtl' : 'ltr';
@@ -5531,11 +5627,19 @@ const btnSettingsCloseEl = document.getElementById('btn-settings-close');
 const settingsVolumeEl = document.getElementById('settings-volume');
 const settingsVolumeValueEl = document.getElementById('settings-volume-value');
 const settingsVolumeIconEl = document.getElementById('settings-volume-icon');
+const settingsPlayerNameEl = document.getElementById('settings-player-name');
+const btnSettingsReduceMotionEl = document.getElementById('btn-settings-reduce-motion');
+const btnSettingsResetEl = document.getElementById('btn-settings-reset');
 
 function volumeIcon(v) {
   if (v <= 0) return '\u{1F507}';
   if (v < 50) return '\u{1F509}';
   return '\u{1F50A}';
+}
+
+function applyReduceMotion() {
+  document.documentElement.classList.toggle('reduce-motion', !!settings.reduceMotion);
+  if (btnSettingsReduceMotionEl) btnSettingsReduceMotionEl.classList.toggle('active', !!settings.reduceMotion);
 }
 
 function updateSettingsUI() {
@@ -5548,11 +5652,34 @@ function updateSettingsUI() {
   settingsVolumeEl.value = settings.volume;
   settingsVolumeValueEl.textContent = `${settings.volume}%`;
   settingsVolumeIconEl.textContent = volumeIcon(settings.volume);
+  settingsPlayerNameEl.value = getOnlineNickname();
+  btnSettingsReduceMotionEl.classList.toggle('active', !!settings.reduceMotion);
 }
 
 btnSettingsEl.addEventListener('click', () => {
   updateSettingsUI();
   settingsOverlayEl.classList.add('show');
+});
+settingsPlayerNameEl.addEventListener('change', () => {
+  setOnlineNickname(settingsPlayerNameEl.value.slice(0, 18));
+});
+settingsPlayerNameEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') settingsPlayerNameEl.blur();
+});
+btnSettingsReduceMotionEl.addEventListener('click', () => {
+  settings.reduceMotion = !settings.reduceMotion;
+  saveSettings();
+  applyReduceMotion();
+  playClickSound();
+});
+btnSettingsResetEl.addEventListener('click', () => {
+  const dict = I18N[settings.language] || I18N.en;
+  const msg = dict['settings.progress.confirmMsg'] || I18N.en['settings.progress.confirmMsg'];
+  if (!confirm(msg)) return;
+  ['geoquiz-rewards', 'geoquiz-daily-quests', 'geoquiz-daily-challenge', 'geoquiz-inventory'].forEach(key => {
+    localStorage.removeItem(key);
+  });
+  location.reload();
 });
 btnSettingsCloseEl.addEventListener('click', () => {
   settingsOverlayEl.classList.remove('show');
@@ -7004,6 +7131,7 @@ updateMenuPlayerNameDisplay();
 updateMenuPlayerBadges();
 
 applyLanguage(settings.language);
+applyReduceMotion();
 updateSettingsUI();
 updateCoinDisplays();
 </script>
