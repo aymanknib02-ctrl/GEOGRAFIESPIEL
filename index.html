@@ -3882,6 +3882,25 @@ function resizeMenuGlobeViewer() {
   menuGlobeViewer.camera.updateProjectionMatrix();
 }
 
+// Skins sollen komplett matt aussehen, kein Glanz/Hochglanz - FBX-Modelle bringen
+// aber oft Materialien mit eigenem Glanz (Phong shininess/specular oder Standard-
+// Material metalness) mit, deshalb hier nach dem Laden hart auf 100% matt umstellen.
+function flattenToMatte(root) {
+  root.traverse(obj => {
+    if (!obj.isMesh || !obj.material) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(mat => {
+      if (!mat) return;
+      if (mat.roughness !== undefined) mat.roughness = 1;
+      if (mat.metalness !== undefined) mat.metalness = 0;
+      if (mat.shininess !== undefined) mat.shininess = 0;
+      if (mat.specular) mat.specular.setScalar(0);
+      if (mat.envMapIntensity !== undefined) mat.envMapIntensity = 0;
+      mat.needsUpdate = true;
+    });
+  });
+}
+
 function loadMenuGlobeCharacter(file) {
   const viewer = initMenuGlobeViewer();
   resizeMenuGlobeViewer();
@@ -3905,6 +3924,7 @@ function loadMenuGlobeCharacter(file) {
       const scale = 3.7 / maxDim;
       fbx.scale.setScalar(scale);
       fbx.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+      flattenToMatte(fbx);
       viewer.charGroup.add(fbx);
 
       // Kugel+Charakter (die ganze "group") so skalieren/verschieben, dass sie
@@ -3976,6 +3996,7 @@ function initSkinCardPreview(canvas, file) {
       const scale = 4.4 / maxDim;
       fbx.scale.setScalar(scale);
       fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+      flattenToMatte(fbx);
       scene.add(fbx);
       renderer.render(scene, camera);
       requestAnimationFrame(() => renderer.render(scene, camera));
