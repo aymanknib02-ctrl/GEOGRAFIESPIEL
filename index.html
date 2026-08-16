@@ -2282,7 +2282,9 @@
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
+    /* Reicht nicht bis in die Freunde-Seitenleiste rechts hinein (die sonst darunter/
+       dahinter verdeckt waere) - hoert genau an deren linkem Rand auf. */
+    right: min(22vw, 360px);
     z-index: 1500;
     box-sizing: border-box;
     padding: 16px 32px;
