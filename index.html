@@ -1552,6 +1552,42 @@
     gap: 14px;
     padding-bottom: 3vh;
   }
+  /* Kein statisches Stehenbleiben: beide Skins fliegen von aussen rein und krachen
+     in der Mitte zusammen (Flash + Partikel, siehe spawnIntroClashBurst), statt einfach
+     nur aufzuploppen und dann fuer 1.7s reglos dazustehen. */
+  @keyframes introSlideLeft {
+    0% { opacity: 0; transform: translateX(-38vw) scale(0.85) rotate(-4deg); }
+    70% { transform: translateX(6px) scale(1.03) rotate(1deg); }
+    100% { opacity: 1; transform: translateX(0) scale(1) rotate(0); }
+  }
+  @keyframes introSlideRight {
+    0% { opacity: 0; transform: translateX(38vw) scale(0.85) rotate(4deg); }
+    70% { transform: translateX(-6px) scale(1.03) rotate(-1deg); }
+    100% { opacity: 1; transform: translateX(0) scale(1) rotate(0); }
+  }
+  .online-round-intro.show .online-intro-player:first-child {
+    animation: introSlideLeft 0.5s cubic-bezier(0.22, 0.9, 0.35, 1) both;
+  }
+  .online-round-intro.show .online-intro-player:last-child {
+    animation: introSlideRight 0.5s cubic-bezier(0.22, 0.9, 0.35, 1) both;
+  }
+  @keyframes introExitLeft {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to { opacity: 0; transform: translateX(-10vw) scale(0.92); }
+  }
+  @keyframes introExitRight {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to { opacity: 0; transform: translateX(10vw) scale(0.92); }
+  }
+  .online-round-intro.exiting .online-intro-player:first-child {
+    animation: introExitLeft 0.25s ease forwards;
+  }
+  .online-round-intro.exiting .online-intro-player:last-child {
+    animation: introExitRight 0.25s ease forwards;
+  }
+  .online-round-intro.exiting {
+    animation: introFadeIn 0.25s ease reverse forwards;
+  }
   .online-intro-badge {
     display: flex;
     flex-direction: column;
@@ -1601,16 +1637,50 @@
     position: absolute;
     top: 42%;
     left: 50%;
-    transform: translate(-50%, -50%);
     font-size: 48px;
     font-weight: 800;
     color: #7c5cfc;
     text-shadow: 0 0 18px rgba(124, 92, 252, 0.7);
-    animation: vsPulse 1.2s ease-in-out infinite;
+    opacity: 0;
+    /* Impact-Pop erst wenn die beiden Skins sich treffen (0.42s Delay, synchron mit
+       spawnIntroClashBurst), geht danach nahtlos in den Dauer-Pulse ueber - beide
+       Keyframe-Saetze muessen den translate(-50%,-50%)-Basisversatz mitfuehren, sonst
+       springt der Text aus der Mitte (aktive CSS-Animationen ueberschreiben die normale
+       "transform"-Eigenschaft komplett, unabhaengig von der Spezifitaet). */
+    animation: vsImpact 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.42s forwards,
+               vsPulse 1.2s ease-in-out 0.82s infinite;
+  }
+  @keyframes vsImpact {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(-20deg); }
+    60% { opacity: 1; transform: translate(-50%, -50%) scale(1.35) rotate(8deg); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
   }
   @keyframes vsPulse {
-    0%, 100% { transform: scale(1); text-shadow: 0 0 12px rgba(124, 92, 252, 0.5); }
-    50% { transform: scale(1.12); text-shadow: 0 0 24px rgba(124, 92, 252, 0.9); }
+    0%, 100% { transform: translate(-50%, -50%) scale(1); text-shadow: 0 0 12px rgba(124, 92, 252, 0.5); }
+    50% { transform: translate(-50%, -50%) scale(1.12); text-shadow: 0 0 24px rgba(124, 92, 252, 0.9); }
+  }
+  .online-round-intro.exiting .online-intro-vs {
+    animation: introExitFlash 0.25s ease forwards;
+  }
+  @keyframes introExitFlash {
+    from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    to { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+  }
+  .intro-clash-piece {
+    position: fixed;
+    top: 42%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    z-index: 3100;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    animation: introClashFly 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  }
+  @keyframes introClashFly {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.3); opacity: 0; }
   }
   .online-health-bar {
     width: 130px;
@@ -3885,6 +3955,24 @@ function spawnWrongFlash() {
   flash.className = 'screen-flash wrong';
   document.body.appendChild(flash);
   setTimeout(() => flash.remove(), 600);
+}
+// Partikel-Krachen in der Bildschirmmitte, sobald sich die beiden Skins im Online-
+// Duell-Zwischenscreen treffen (siehe showOnlineRoundIntro) - macht aus der reinen
+// Wartezeit einen aktiven, animierten Moment statt eines stillen Stehenbleibens.
+const INTRO_CLASH_COLORS = ['#7c5cfc', '#a78bfa', '#f1c40f', '#ffffff'];
+function spawnIntroClashBurst() {
+  for (let i = 0; i < 22; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'intro-clash-piece';
+    const angle = (Math.PI * 2 * i) / 22 + Math.random() * 0.3;
+    const dist = 90 + Math.random() * 160;
+    piece.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    piece.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    piece.style.background = INTRO_CLASH_COLORS[i % INTRO_CLASH_COLORS.length];
+    document.body.appendChild(piece);
+    piece.addEventListener('animationend', () => piece.remove());
+    setTimeout(() => piece.remove(), 700);
+  }
 }
 function showStreakToast(streak) {
   const toast = document.createElement('div');
@@ -6509,6 +6597,12 @@ function playErrorSound() {
   playTone(220, 0.1, 'square', 0, { gainMult: 0.8 });
   playTone(160, 0.16, 'square', 0.08, { sweepTo: 110, gainMult: 0.8 });
 }
+// Wummernder Einschlag - synchron zu spawnIntroClashBurst, wenn die beiden Skins im
+// Online-Duell-Zwischenscreen aufeinandertreffen.
+function playIntroClashSound() {
+  playTone(200, 0.14, 'sawtooth', 0, { sweepTo: 500, gainMult: 0.55 });
+  playTone(80, 0.2, 'square', 0.02, { gainMult: 0.95 });
+}
 
 // ---------- Übersetzungen (Sprachauswahl in den Einstellungen) ----------
 const I18N = {
@@ -8047,13 +8141,18 @@ function showOnlineRoundIntro() {
   document.getElementById('online-intro-opp-country').textContent = countryLabel(onlineOpponentCountry);
   setOnlineIntroAvatar('opp', onlineOpponentSkin);
 
-  document.getElementById('online-round-intro').classList.add('show');
+  const introEl = document.getElementById('online-round-intro');
+  introEl.classList.remove('exiting');
+  introEl.classList.add('show');
   document.getElementById('geo-photo-area').style.visibility = 'hidden';
   document.getElementById('geo-guess-panel').style.visibility = 'hidden';
+  // Synchron zum Clash-Moment der Einflug-Animation (siehe introSlideLeft/Right, 0.42s
+  // Delay des VS-Impacts) - macht aus der Wartezeit einen aktiven Effekt-Moment.
+  setTimeout(() => { spawnIntroClashBurst(); playIntroClashSound(); }, 460);
 }
 
 function hideOnlineRoundIntro() {
-  document.getElementById('online-round-intro').classList.remove('show');
+  document.getElementById('online-round-intro').classList.remove('show', 'exiting');
   document.getElementById('geo-photo-area').style.visibility = 'visible';
   document.getElementById('geo-guess-panel').style.visibility = 'visible';
 }
@@ -8068,10 +8167,15 @@ function renderOnlineRound() {
   bumpValue(roundValEl);
 
   showOnlineRoundIntro();
+  // Kein reglos stehendes "totes" Warten mehr: Einflug -> Clash-Effekt -> kurzer Abgang,
+  // insgesamt kuerzer als die alte statische 1.7s-Pause.
+  setTimeout(() => {
+    document.getElementById('online-round-intro').classList.add('exiting');
+  }, 1200);
   setTimeout(() => {
     hideOnlineRoundIntro();
     renderGeoGuessrRoundQuestion(round);
-  }, 1700);
+  }, 1450);
 }
 
 function initGeoGuessMap() {
