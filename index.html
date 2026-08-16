@@ -1520,49 +1520,89 @@
     opacity: 1;
     transform: translateX(-50%) scale(1);
   }
+  /* Voller Bildschirm-Zwischenscreen vor jeder Runde - die kompletten Skins stehen
+     GROSS am linken/rechten Bildschirmrand, genau wie bei GeoGuessr's Duell-Modus,
+     statt eines kleinen Kreis-Avatars. */
   .online-round-intro {
     display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 44px;
-    margin-bottom: 30px;
-    animation: popIn 0.3s ease;
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    align-items: stretch;
+    justify-content: space-between;
+    padding: 0 3vw;
+    box-sizing: border-box;
+    background: radial-gradient(ellipse 90% 70% at 50% 38%, rgba(28, 22, 64, 0.55), rgba(5, 6, 15, 0.9));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: introFadeIn 0.35s ease;
   }
   .online-round-intro.show {
     display: flex;
+  }
+  @keyframes introFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   .online-intro-player {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: flex-end;
+    gap: 14px;
+    padding-bottom: 3vh;
+  }
+  .online-intro-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(15, 18, 26, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 10px 22px;
   }
   .online-intro-avatar {
-    width: 96px;
-    height: 96px;
-    border-radius: 50%;
-    overflow: hidden;
+    position: relative;
+    height: min(66vh, 640px);
+    aspect-ratio: 2 / 3;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
-    background: radial-gradient(circle at 50% 38%, rgba(124, 92, 252, 0.25), #232a3f 75%);
-    border: 3px solid rgba(124, 92, 252, 0.6);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 0 22px rgba(124, 92, 252, 0.35);
+  }
+  .online-intro-avatar::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 2%;
+    width: 55%;
+    height: 5%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.55), transparent 72%);
+    border-radius: 50%;
+    z-index: -1;
   }
   .online-intro-avatar canvas {
     width: 100%;
     height: 100%;
+    filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.5));
   }
   .online-intro-name {
     font-weight: bold;
-    font-size: 19px;
+    font-size: 22px;
   }
   .online-intro-country {
     font-size: 14px;
     opacity: 0.8;
   }
   .online-intro-vs {
-    font-size: 30px;
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
     font-weight: 800;
     color: #7c5cfc;
     text-shadow: 0 0 18px rgba(124, 92, 252, 0.7);
@@ -2982,15 +3022,19 @@
     <div class="online-status-msg" id="online-status-msg"></div>
     <div class="online-round-intro" id="online-round-intro">
       <div class="online-intro-player">
+        <div class="online-intro-badge">
+          <div class="online-intro-name" id="online-intro-me-name">You</div>
+          <div class="online-intro-country" id="online-intro-me-country"></div>
+        </div>
         <div class="online-intro-avatar"><canvas id="online-intro-me-canvas"></canvas></div>
-        <div class="online-intro-name" id="online-intro-me-name">You</div>
-        <div class="online-intro-country" id="online-intro-me-country"></div>
       </div>
       <div class="online-intro-vs">VS</div>
       <div class="online-intro-player">
+        <div class="online-intro-badge">
+          <div class="online-intro-name" id="online-intro-opp-name">Opponent</div>
+          <div class="online-intro-country" id="online-intro-opp-country"></div>
+        </div>
         <div class="online-intro-avatar"><canvas id="online-intro-opp-canvas"></canvas></div>
-        <div class="online-intro-name" id="online-intro-opp-name">Opponent</div>
-        <div class="online-intro-country" id="online-intro-opp-country"></div>
       </div>
     </div>
 
@@ -7925,10 +7969,15 @@ function renderOnlineIntroAvatar(who, colorKey) {
   if (!state) {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    const size = canvas.clientWidth || 96;
-    renderer.setSize(size, size, false);
+    // Feste, von der Layout-Groesse entkoppelte interne Aufloesung (2:3, passend zur
+    // CSS aspect-ratio des Containers) - der Container ist beim allerersten Laden noch
+    // display:none (die Intro-Karte wird erst danach eingeblendet), clientWidth/Height
+    // waeren dann 0. CSS skaliert die feste Aufloesung anschliessend scharf auf die
+    // tatsaechliche Boxgroesse (dieselbe Lektion wie beim Hauptmenue-Globus).
+    const W = 480, H = 720;
+    renderer.setSize(W, H, false);
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
+    const camera = new THREE.PerspectiveCamera(35, W / H, 0.1, 5000);
     camera.position.set(0, 0, 9);
     camera.lookAt(0, 0, 0);
     scene.add(new THREE.AmbientLight(0xffffff, 1.1));
