@@ -3626,7 +3626,10 @@ function initMenuGlobeViewer() {
   if (menuGlobeViewer) return menuGlobeViewer;
   const canvas = document.getElementById('menu-globe-canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // Feste, von der CSS-Layout-Groesse/Timing unabhaengige interne Aufloesung (siehe
+  // resizeMenuGlobeViewer) - dadurch bleibt das Bild immer gleich scharf, egal wie groß
+  // die Kugel gerade auf dem Bildschirm dargestellt wird oder wann genau resize laeuft.
+  renderer.setPixelRatio(1);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
@@ -3901,11 +3904,13 @@ function buildMenuGlobeCloudTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
+// Immer dieselbe feste interne Aufloesung, unabhaengig von der aktuellen CSS-Groesse
+// von .menu-globe-stage (die sich je nach Ansicht/Animation aendert) - so wird nie ein
+// zu kleiner Canvas-Puffer per CSS hochskaliert (das sah verpixelt/grobkoernig aus).
+const GLOBE_CANVAS_RESOLUTION = 1600;
 function resizeMenuGlobeViewer() {
   if (!menuGlobeViewer) return;
-  const stageEl = document.getElementById('menu-globe-stage');
-  const size = stageEl.clientWidth || 300;
-  menuGlobeViewer.renderer.setSize(size, size, false);
+  menuGlobeViewer.renderer.setSize(GLOBE_CANVAS_RESOLUTION, GLOBE_CANVAS_RESOLUTION, false);
   menuGlobeViewer.camera.aspect = 1;
   menuGlobeViewer.camera.updateProjectionMatrix();
 }
