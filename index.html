@@ -8124,6 +8124,24 @@ function setOnlineIntroAvatar(who, colorKey) {
   renderOnlineIntroAvatar(who, colorKey || DEFAULT_SKIN_COLOR);
 }
 
+// Lässt den Skin einmal um die eigene Achse drehen (voller 360°-Turn), kurz bevor die
+// nächste Runde losgeht - reine 3D-Objektrotation + Re-Render pro Frame, kein CSS-Trick,
+// damit es sich wie eine echte Drehung anfühlt statt wie ein flaches Bild zu rotieren.
+function spinIntroAvatar(who, duration) {
+  const state = onlineIntroPreviews[who];
+  if (!state || !state.model) return;
+  const startY = state.model.rotation.y;
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    state.model.rotation.y = startY + eased * Math.PI * 2;
+    state.renderer.render(state.scene, state.camera);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
 function countryLabel(countryId) {
   if (!countryId) return '';
   const country = allCountries.find(c => c.id === countryId);
@@ -8149,6 +8167,9 @@ function showOnlineRoundIntro() {
   // Synchron zum Clash-Moment der Einflug-Animation (siehe introSlideLeft/Right, 0.42s
   // Delay des VS-Impacts) - macht aus der Wartezeit einen aktiven Effekt-Moment.
   setTimeout(() => { spawnIntroClashBurst(); playIntroClashSound(); }, 460);
+  // Kurz bevor die Runde losgeht (renderOnlineRound loest "exiting" bei 1200ms aus):
+  // beide Skins drehen sich einmal komplett um die eigene Achse.
+  setTimeout(() => { spinIntroAvatar('me', 420); spinIntroAvatar('opp', 420); }, 800);
 }
 
 function hideOnlineRoundIntro() {
