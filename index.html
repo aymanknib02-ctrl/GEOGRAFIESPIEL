@@ -3727,17 +3727,19 @@ function colorFromStops(stops, t) {
   return stops[stops.length - 1][1];
 }
 
+// Bewusst unrealistisch-knallige Farben statt echter Gelaende-/Ozeanfarben - der
+// Startbildschirm-Globus soll wie ein buntes Spielzeug aussehen, keine echte Erde.
 const LAND_ELEVATION_STOPS = [
-  [0, [46, 107, 58]],
-  [0.4, [86, 122, 56]],
-  [0.68, [138, 116, 78]],
-  [0.86, [176, 166, 146]],
-  [1, [228, 226, 218]]
+  [0, [64, 226, 138]],
+  [0.4, [255, 214, 92]],
+  [0.68, [255, 138, 92]],
+  [0.86, [255, 110, 168]],
+  [1, [255, 255, 255]]
 ];
 const OCEAN_DEPTH_STOPS = [
-  [0, [63, 168, 216]],
-  [0.45, [26, 95, 138]],
-  [1, [8, 35, 61]]
+  [0, [86, 224, 235]],
+  [0.5, [64, 146, 237]],
+  [1, [116, 78, 224]]
 ];
 
 function buildMenuGlobeTexture(geoData) {
@@ -3824,7 +3826,7 @@ function buildMenuGlobeTexture(geoData) {
   bumpCtx.putImageData(bumpImg, 0, 0);
 
   // Küstenlinien-Umrisse oben drauf zeichnen, jetzt wo die Höhen-Einfärbung schon steht.
-  colorCtx.strokeStyle = 'rgba(35, 55, 30, 0.35)';
+  colorCtx.strokeStyle = 'rgba(20, 15, 45, 0.35)';
   colorCtx.lineWidth = 1;
   colorCtx.fillStyle = 'rgba(0,0,0,0)';
   tracePolygons(colorCtx);
