@@ -334,8 +334,7 @@
     transition: opacity 0.35s ease, transform 0.35s ease;
     z-index: 5;
   }
-  #menu.mode-select .menu-left-column,
-  #menu.skins-select .menu-left-column {
+  #menu.mode-select .menu-left-column {
     opacity: 0;
     pointer-events: none;
     transform: translate(-24px, -50%);
@@ -607,7 +606,7 @@
     animation: tileIn 0.3s ease backwards;
     transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease, border-color 0.2s ease;
   }
-  .skin-card:not(.locked):hover {
+  .skin-card:hover {
     transform: translateY(-6px);
     border-color: rgba(124, 92, 252, 0.5);
     box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
@@ -1965,9 +1964,6 @@
     0%, 100% { filter: drop-shadow(0 0 4px #ffd93d); }
     50% { filter: drop-shadow(0 0 14px #ff8fc7); }
   }
-  .shop-box {
-    text-align: center;
-  }
   .coin-block .value {
     color: #f1c40f;
   }
@@ -2253,7 +2249,7 @@
         <div class="menu-profile-chip">
           <span class="menu-profile-avatar">&#128100;</span>
           <span class="menu-profile-name" id="navbar-player-name">Player</span>
-          <span id="btn-rewards" class="coin-badge">
+          <span id="coin-display" class="coin-badge">
             <span id="menu-coin-value">0</span> &#129689;
           </span>
         </div>
@@ -2609,17 +2605,17 @@
   </div>
 
   <div id="game">
-    <div id="hud" class="hud-bar">
+    <div class="hud-bar">
       <div id="target-block">
         <span class="label" id="target-label">Find</span>
         <span class="value" id="target-value">-</span>
       </div>
-      <div id="score-block">
+      <div>
         <span class="label">Correct</span>
         <span class="value" id="score-value">0</span> / <span id="round-value">0</span>
         <span class="streak-badge" id="streak-badge-main"></span>
       </div>
-      <div id="wrong-block">
+      <div>
         <span class="label">Wrong</span>
         <span class="value" id="wrong-value">0</span>
       </div>
@@ -4265,12 +4261,12 @@ function loadMenuGlobeCharacter(file) {
       loadingEl.style.display = 'none';
       canvasEl.style.display = 'block';
     } catch (err) {
-      console.error('Globus-Charakter Verarbeitungsfehler:', file, err);
+      console.error('Globe character processing error:', file, err);
       loadingEl.textContent = 'Display error';
     }
   }, undefined, (err) => {
     if (myToken !== menuGlobeModelToken) return;
-    console.error('Globus-Charakter Ladefehler:', file, err);
+    console.error('Globe character load error:', file, err);
     loadingEl.textContent = 'Load error';
   });
 }
@@ -4360,10 +4356,10 @@ function loadSkinPreviewModel() {
       viewer.model = fbx;
       if (loadingEl) loadingEl.style.display = 'none';
     } catch (err) {
-      console.error('Skin-Vorschau Fehler:', err);
+      console.error('Skin preview error:', err);
     }
   }, undefined, (err) => {
-    console.error('Skin-Vorschau Ladefehler:', err);
+    console.error('Skin preview load error:', err);
   });
 }
 
@@ -5799,7 +5795,7 @@ function startCategoryMode(subtype) {
   // Kategorien-Modus hat keine eigene Schwierigkeitsauswahl - immer neutral starten,
   // sonst würde ein Schwierigkeitsgrad aus einer vorherigen normalen Runde nachwirken.
   currentDifficulty = 'medium';
-  showCategoryBanner(`Kategorie: ${pendingCategory.label}`);
+  showCategoryBanner(`Category: ${pendingCategory.label}`);
 
   if (subtype === 'landmark') {
     gameMode = 'landmark';
@@ -7206,10 +7202,10 @@ function renderOnlineIntroAvatar(who, colorKey) {
       state.renderer.render(state.scene, state.camera);
       requestAnimationFrame(() => state.renderer.render(state.scene, state.camera));
     } catch (err) {
-      console.error('Online-Intro-Vorschau Fehler:', err);
+      console.error('Online intro preview error:', err);
     }
   }, undefined, (err) => {
-    console.error('Online-Intro-Vorschau Ladefehler:', err);
+    console.error('Online intro preview load error:', err);
   });
 }
 function setOnlineIntroAvatar(who, colorKey) {
