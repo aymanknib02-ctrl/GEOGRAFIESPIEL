@@ -2311,6 +2311,14 @@
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+  /* Verschwindet in der Modus-Auswahl komplett, genau wie Freunde-Sidebar/Play-Skins-
+     Knoepfe/Quest-Spalte dort auch ausgeblendet werden. */
+  #menu.mode-select .menu-navbar {
+    opacity: 0;
+    pointer-events: none;
   }
   .menu-navbar-logo {
     font-size: 28px;
