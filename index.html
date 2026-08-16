@@ -6395,14 +6395,14 @@ function playWrongSound() {
   playTone(220, 0.26, 'sawtooth', 0, { sweepTo: 110 });
   playTone(155, 0.22, 'square', 0.04, { gainMult: 0.7 });
 }
+// Derselbe "Pop"-Sound ueberall im Spiel: bei JEDEM Knopf (per globalem Klick-Listener)
+// UND bei Auswahl-Interaktionen auf der Karte (Land/Marker anklicken, Guess-Pin setzen),
+// die keine <button>-Elemente sind und den globalen Listener nicht auslösen.
 function playClickSound() {
-  playTone(1100, 0.045, 'square', 0, { sweepTo: 300, gainMult: 0.55 });
-}
-// Auswahl-"Pop" fuer Interaktionen auf der Karte selbst (Land/Marker anklicken,
-// Guess-Pin setzen) - eigener, weicherer Sound statt des harten Knopf-Klicks, weil
-// hier keine <button>-Elemente beteiligt sind (der globale Klick-Listener greift nicht).
-function playSelectSound() {
   playTone(320, 0.09, 'triangle', 0, { sweepTo: 520 });
+}
+function playSelectSound() {
+  playClickSound();
 }
 function playFeedbackSound(kind) {
   if (kind === 'correct') playCorrectSound();
