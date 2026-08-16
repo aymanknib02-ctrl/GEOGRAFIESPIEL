@@ -748,12 +748,16 @@
     gap: 30px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s;
+    /* Kein Delay beim Zurueckgehen (Klasse wird entfernt) - muss genauso schnell
+       verschwinden wie die Home-Sidebar/-Knoepfe wieder einblenden (0.35s, kein Delay),
+       sonst ueberlappen sich beide Panels kurz im rechten Bildschirmbereich. */
+    transition: opacity 0.35s ease, transform 0.35s ease;
   }
   #menu.mode-select .menu-mode-panel {
     opacity: 1;
     pointer-events: auto;
     transform: translate(0, -50%) translateX(0);
+    transition: opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s;
   }
   .menu-back-btn {
     background: rgba(255, 255, 255, 0.08);
