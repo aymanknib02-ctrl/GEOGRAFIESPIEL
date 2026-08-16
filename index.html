@@ -3632,13 +3632,18 @@ function initMenuGlobeViewer() {
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
   camera.position.set(0, 1.4, 11.5);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.95);
   keyLight.position.set(5, 8, 6);
   scene.add(keyLight);
-  const rimLight = new THREE.DirectionalLight(0x4fd1c5, 0.5);
+  const rimLight = new THREE.DirectionalLight(0x4fd1c5, 0.35);
   rimLight.position.set(-6, 2, -4);
   scene.add(rimLight);
+  // Neutrales Zusatzlicht von vorne-unten, v.a. fuer den Charakter (Skin-Farben sollen
+  // hier genauso hell/klar aussehen wie in der Skins-Menü-Vorschau, nicht dunkler).
+  const charFillLight = new THREE.DirectionalLight(0xffffff, 0.55);
+  charFillLight.position.set(-3, 4, 8);
+  scene.add(charFillLight);
 
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -3937,6 +3942,28 @@ function buildTintedTexture(sourceTex, hex) {
   return tex;
 }
 
+// FBXLoader() feuert seinen onLoad-Callback, sobald die Modell-Struktur geparst ist -
+// die referenzierten Textur-BILDER koennen zu dem Zeitpunkt aber noch am Laden sein
+// (asynchron, unabhaengig vom onLoad). Wird buildTintedTexture() zu frueh aufgerufen
+// (Bild noch nicht dekodiert), lieferte es vorher "null" und die Original-Textur blieb
+// unveraendert stehen (dadurch wirkte z.B. "Blau" wie die urspruengliche Farbe des
+// Modells) - deshalb hier so lange erneut versuchen, bis das Bild wirklich bereit ist.
+function tintMaterialMapWhenReady(mat, colorDef, attempt) {
+  attempt = attempt || 0;
+  const src = mat.userData.origMap;
+  const img = src && src.image;
+  if (!img || !img.width) {
+    if (attempt > 300) return; // ~5s bei 60fps - Sicherheitsnetz gegen Endlosschleife
+    requestAnimationFrame(() => tintMaterialMapWhenReady(mat, colorDef, attempt + 1));
+    return;
+  }
+  const tinted = buildTintedTexture(src, colorDef.hex);
+  if (tinted) {
+    mat.map = tinted;
+    mat.needsUpdate = true;
+  }
+}
+
 // Skins sollen komplett matt aussehen, kein Glanz/Hochglanz - FBX-Modelle bringen
 // aber oft Materialien mit eigenem Glanz (Phong shininess/specular oder Standard-
 // Material metalness) mit, deshalb hier nach dem Laden hart auf 100% matt umstellen.
@@ -3959,14 +3986,13 @@ function applySkinAppearance(root, colorKey) {
       if (!mat.userData.origMap && mat.map) mat.userData.origMap = mat.map;
       if (colorDef.hex === null) {
         if (mat.userData.origMap) mat.map = mat.userData.origMap;
+        mat.needsUpdate = true;
       } else if (mat.userData.origMap) {
-        const tinted = buildTintedTexture(mat.userData.origMap, colorDef.hex);
-        if (tinted) mat.map = tinted;
-        else if (mat.color) mat.color.set(colorDef.hex);
+        tintMaterialMapWhenReady(mat, colorDef, 0);
       } else if (mat.color) {
         mat.color.set(colorDef.hex);
+        mat.needsUpdate = true;
       }
-      mat.needsUpdate = true;
     });
   });
 }
