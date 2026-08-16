@@ -5374,6 +5374,7 @@ function handleBorderClick(feature, layer) {
     btnBorderNextEl.style.display = 'block';
   } else {
     updateBorderMapStyles();
+    playSelectSound();
   }
 }
 
@@ -5626,6 +5627,7 @@ function handleCapitalMarkerClick(point, marker) {
   marker.setStyle({ fillColor: SELECT_COLOR, color: SELECT_BORDER });
   capitalCheckPhase = 'selected';
   updateCapitalCheckButton();
+  playSelectSound();
 }
 
 function updateCapitalCheckButton() {
@@ -5832,6 +5834,7 @@ function handleCountryClick(feature, layer) {
   layer.setStyle(selectStyle);
   checkPhase = 'selected';
   updateCheckButton();
+  playSelectSound();
 }
 
 function updateCheckButton() {
@@ -6358,17 +6361,24 @@ function getAudioCtx() {
   return audioCtx;
 }
 
-function playTone(freq, duration, type, delay) {
+// opts: { sweepTo, detune, gainMult } - sweepTo laesst die Tonhoehe waehrend des Tons
+// gleiten (fuer "juicy" Game-Feel statt starrer Pieptoene), detune (Cent) fuer einen
+// leicht verstimmten Zweitklang (Chorus/Fett-Effekt bei grossen Momenten).
+function playTone(freq, duration, type, delay, opts) {
   if (!settings.volume) return;
+  opts = opts || {};
   const ctx = getAudioCtx();
   const t0 = ctx.currentTime + (delay || 0);
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type || 'sine';
   osc.frequency.setValueAtTime(freq, t0);
-  const peak = (settings.volume / 100) * 0.22;
+  if (opts.sweepTo) osc.frequency.exponentialRampToValueAtTime(opts.sweepTo, t0 + duration);
+  if (opts.detune) osc.detune.setValueAtTime(opts.detune, t0);
+  // Deutlich lauter als frueher (0.22 -> 0.4 Basis-Peak), plus individueller Mix pro Sound.
+  const peak = (settings.volume / 100) * 0.4 * (opts.gainMult != null ? opts.gainMult : 1);
   gain.gain.setValueAtTime(0, t0);
-  gain.gain.linearRampToValueAtTime(peak, t0 + 0.01);
+  gain.gain.linearRampToValueAtTime(peak, t0 + 0.008);
   gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
   osc.connect(gain).connect(ctx.destination);
   osc.start(t0);
@@ -6376,14 +6386,23 @@ function playTone(freq, duration, type, delay) {
 }
 
 function playCorrectSound() {
-  playTone(523.25, 0.14, 'sine', 0);
-  playTone(783.99, 0.18, 'sine', 0.09);
+  playTone(523.25, 0.11, 'triangle', 0);
+  playTone(659.25, 0.11, 'triangle', 0.07);
+  playTone(1046.5, 0.24, 'triangle', 0.14, { sweepTo: 1318.5 });
+  playTone(1318.5, 0.16, 'sine', 0.14, { gainMult: 0.5 });
 }
 function playWrongSound() {
-  playTone(180, 0.3, 'sawtooth', 0);
+  playTone(220, 0.26, 'sawtooth', 0, { sweepTo: 110 });
+  playTone(155, 0.22, 'square', 0.04, { gainMult: 0.7 });
 }
 function playClickSound() {
-  playTone(440, 0.05, 'sine', 0);
+  playTone(1100, 0.045, 'square', 0, { sweepTo: 300, gainMult: 0.55 });
+}
+// Auswahl-"Pop" fuer Interaktionen auf der Karte selbst (Land/Marker anklicken,
+// Guess-Pin setzen) - eigener, weicherer Sound statt des harten Knopf-Klicks, weil
+// hier keine <button>-Elemente beteiligt sind (der globale Klick-Listener greift nicht).
+function playSelectSound() {
+  playTone(320, 0.09, 'triangle', 0, { sweepTo: 520 });
 }
 function playFeedbackSound(kind) {
   if (kind === 'correct') playCorrectSound();
@@ -6391,8 +6410,9 @@ function playFeedbackSound(kind) {
 }
 // Kleines "Cha-Ching" - läuft zusätzlich zum Richtig-Sound bei jeder Münzgutschrift.
 function playCoinSound() {
-  playTone(1046.5, 0.07, 'triangle', 0);
-  playTone(1568, 0.1, 'triangle', 0.05);
+  playTone(1046.5, 0.06, 'triangle', 0);
+  playTone(1568, 0.08, 'triangle', 0.04);
+  playTone(2093, 0.14, 'triangle', 0.08, { sweepTo: 2350, gainMult: 0.8 });
 }
 // Abzeichen-Fanfare - wird lauter/länger je höher die Stufe (1-4) des freigeschalteten
 // Meilensteins ist, damit seltene Abzeichen sich auch klanglich besonders anfühlen.
@@ -6401,47 +6421,49 @@ function playBadgeSound(tier) {
   playTone(523.25, 0.1, 'triangle', 0);
   playTone(659.25, 0.1, 'triangle', 0.08);
   playTone(783.99, 0.14, 'triangle', 0.16);
-  if (t >= 2) playTone(1046.5, 0.18, 'triangle', 0.26);
-  if (t >= 3) { playTone(1318.5, 0.16, 'sine', 0.3); playTone(1567.98, 0.22, 'sine', 0.38); }
-  if (t >= 4) { playTone(1046.5, 0.12, 'square', 0.5); playTone(1567.98, 0.24, 'square', 0.58); }
+  if (t >= 2) playTone(1046.5, 0.2, 'triangle', 0.26, { detune: 6 });
+  if (t >= 3) { playTone(1318.5, 0.18, 'sine', 0.3); playTone(1567.98, 0.24, 'sine', 0.38, { detune: -6 }); }
+  if (t >= 4) { playTone(1046.5, 0.14, 'square', 0.5, { gainMult: 0.6 }); playTone(2093, 0.32, 'triangle', 0.58, { sweepTo: 2637, gainMult: 0.9 }); }
 }
 // Aufsteigende Funkeln-Sequenz für ein Serien-Milestone (Streak).
 function playStreakSound() {
   playTone(659.25, 0.08, 'triangle', 0);
   playTone(830.61, 0.08, 'triangle', 0.06);
-  playTone(1046.5, 0.14, 'triangle', 0.12);
+  playTone(1046.5, 0.16, 'triangle', 0.12, { sweepTo: 1318.5, gainMult: 0.85 });
 }
 // Zufriedenstellendes "Ding" beim Abholen einer Quest-/Challenge-Belohnung.
 function playQuestCompleteSound() {
-  playTone(880, 0.1, 'sine', 0);
-  playTone(1318.5, 0.2, 'sine', 0.08);
+  playTone(880, 0.09, 'sine', 0);
+  playTone(1318.5, 0.22, 'sine', 0.08, { sweepTo: 1568 });
 }
-// Triumphierender Dreiklang - Online-Sieg oder eine starke Runden-Quote.
+// Triumphierender Fanfare - Online-Sieg oder eine starke Runden-Quote.
 function playVictorySound() {
-  playTone(523.25, 0.13, 'triangle', 0);
-  playTone(659.25, 0.13, 'triangle', 0.11);
-  playTone(783.99, 0.13, 'triangle', 0.22);
-  playTone(1046.5, 0.28, 'triangle', 0.33);
+  playTone(523.25, 0.12, 'triangle', 0);
+  playTone(659.25, 0.12, 'triangle', 0.1);
+  playTone(783.99, 0.12, 'triangle', 0.2);
+  playTone(1046.5, 0.14, 'triangle', 0.3);
+  playTone(1318.5, 0.4, 'triangle', 0.42, { sweepTo: 1568, detune: 8, gainMult: 0.95 });
+  playTone(1318.5, 0.4, 'sine', 0.42, { detune: -8, gainMult: 0.6 });
 }
-// Absteigender, gedämpfter Ton für eine Niederlage (Online-Duell verloren).
+// Voller, absteigender Ton für eine Niederlage (Online-Duell verloren).
 function playDefeatSound() {
-  playTone(392, 0.18, 'sawtooth', 0);
-  playTone(311.13, 0.22, 'sawtooth', 0.14);
-  playTone(233.08, 0.32, 'sawtooth', 0.3);
+  playTone(392, 0.2, 'sawtooth', 0);
+  playTone(311.13, 0.24, 'sawtooth', 0.16);
+  playTone(233.08, 0.4, 'sawtooth', 0.34, { sweepTo: 174.6, gainMult: 0.85 });
 }
-// Kurzer, neutraler Blip für Einstellungen-Umschalter (An/Aus).
+// Kurzer, knackiger Blip für Einstellungen-Umschalter (An/Aus).
 function playToggleSound() {
-  playTone(600, 0.05, 'square', 0);
+  playTone(700, 0.07, 'square', 0, { sweepTo: 900, gainMult: 0.7 });
 }
 // Zweiton-Glocke für eingehende Freundschafts-/Duell-Einladungen.
 function playNotificationSound() {
-  playTone(880, 0.09, 'sine', 0);
-  playTone(1108.73, 0.14, 'sine', 0.1);
+  playTone(880, 0.1, 'sine', 0);
+  playTone(1108.73, 0.16, 'sine', 0.1, { sweepTo: 1318.5 });
 }
 // Kurzer Fehlerton für ungültige Aktionen (z.B. unbekannte Freundes-ID).
 function playErrorSound() {
-  playTone(220, 0.09, 'square', 0);
-  playTone(160, 0.14, 'square', 0.08);
+  playTone(220, 0.1, 'square', 0, { gainMult: 0.8 });
+  playTone(160, 0.16, 'square', 0.08, { sweepTo: 110, gainMult: 0.8 });
 }
 
 // ---------- Übersetzungen (Sprachauswahl in den Einstellungen) ----------
@@ -8019,6 +8041,7 @@ function initGeoGuessMap() {
       }).addTo(geoGuessMap);
     }
     document.getElementById('btn-geo-guess-confirm').disabled = false;
+    playSelectSound();
   });
   geoGuessMapReady = true;
 }
