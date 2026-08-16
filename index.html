@@ -7379,6 +7379,8 @@ listenForIncomingInvites();
 // "Flex": zeigt die besten Abzeichen (höchste erreichte Meilenstein-Stufe, egal aus
 // welchem Modus, dedupliziert) direkt neben dem Namen - nutzt die schon vorhandenen
 // Belohnungsdaten (rewards.unlocked), keine neue Fortschrittsverfolgung nötig.
+// count weglassen (oder Infinity) zeigt wirklich ALLE bisher freigeschalteten Abzeichen-
+// Stufen, egal in welchem Modus erreicht (dedupliziert nach Stufe).
 function getFlexBadges(count) {
   const thresholds = new Set();
   Object.keys(rewards.unlocked || {}).forEach(mode => {
@@ -7386,14 +7388,14 @@ function getFlexBadges(count) {
   });
   return [...thresholds]
     .sort((a, b) => b - a)
-    .slice(0, count)
+    .slice(0, count || Infinity)
     .map(t => REWARD_MILESTONES.find(m => m.threshold === t))
     .filter(Boolean);
 }
 function updateMenuPlayerBadges() {
   const el = document.getElementById('menu-player-badges');
   if (!el) return;
-  const badges = getFlexBadges(3);
+  const badges = getFlexBadges();
   el.innerHTML = badges.map(b => `<span class="tier-${b.tier}" title="${b.label}">${b.icon}</span>`).join('');
 }
 
