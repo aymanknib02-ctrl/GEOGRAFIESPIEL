@@ -8167,9 +8167,10 @@ function showOnlineRoundIntro() {
   // Synchron zum Clash-Moment der Einflug-Animation (siehe introSlideLeft/Right, 0.42s
   // Delay des VS-Impacts) - macht aus der Wartezeit einen aktiven Effekt-Moment.
   setTimeout(() => { spawnIntroClashBurst(); playIntroClashSound(); }, 460);
-  // Kurz bevor die Runde losgeht (renderOnlineRound loest "exiting" bei 1200ms aus):
-  // beide Skins drehen sich einmal komplett um die eigene Achse.
-  setTimeout(() => { spinIntroAvatar('me', 420); spinIntroAvatar('opp', 420); }, 800);
+  // Direkt in dem Moment, in dem beide Skins auftauchen, drehen sie sich einmal komplett
+  // um die eigene Achse - kein Warten mehr, die Drehung laeuft parallel zum Einflug.
+  spinIntroAvatar('me', 420);
+  spinIntroAvatar('opp', 420);
 }
 
 function hideOnlineRoundIntro() {
