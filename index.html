@@ -238,7 +238,7 @@
   .menu-home-actions {
     position: absolute;
     top: 50%;
-    right: 5%;
+    right: calc(min(22vw, 360px) + 4%);
     transform: translate(0, -50%);
     display: flex;
     flex-direction: column;
@@ -338,6 +338,223 @@
     opacity: 0;
     pointer-events: none;
     transform: translate(-24px, -50%);
+  }
+  /* ---------- Freunde-Seitenleiste ganz rechts: nur in der Home-Ansicht sichtbar,
+     Groesse/Layout an einer klassischen rechten KI-Assistenten-Sidebar orientiert. ---------- */
+  @keyframes friendsPanelEnter {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .menu-friends-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(22vw, 360px);
+    box-sizing: border-box;
+    padding: 28px 20px;
+    background: rgba(12, 10, 24, 0.78);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 20;
+    opacity: 1;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    animation: friendsPanelEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s backwards;
+  }
+  #menu.mode-select .menu-friends-panel {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(24px);
+  }
+  .menu-friends-title {
+    font-size: 21px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .menu-friends-myid {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .menu-friends-myid-label {
+    opacity: 0.6;
+    white-space: nowrap;
+  }
+  .menu-friends-myid-code {
+    flex: 1;
+    min-width: 0;
+    font-family: monospace;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #b197fc;
+  }
+  .menu-friends-myid button, .menu-friends-add-row button {
+    padding: 6px 10px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .menu-friends-add-row {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .menu-friends-add-row input {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    padding: 10px 10px;
+    border-radius: 8px;
+    border: 2px solid #2b3245;
+    background: #1c2130;
+    color: #fff;
+  }
+  .menu-friends-add-row input:focus {
+    outline: none;
+    border-color: #7c5cfc;
+  }
+  .menu-friends-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .menu-friends-empty {
+    font-size: 13px;
+    opacity: 0.55;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.5;
+  }
+  .friend-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    animation: tileIn 0.3s ease backwards;
+  }
+  .friend-card:hover {
+    background: rgba(124, 92, 252, 0.15);
+    border-color: rgba(124, 92, 252, 0.4);
+    transform: translateX(-3px);
+  }
+  .friend-card-avatar {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #9575ff, #6344d6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .friend-card-dot {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #666;
+    border: 2px solid #191530;
+  }
+  .friend-card-dot.online {
+    background: #2ecc71;
+    box-shadow: 0 0 6px #2ecc71;
+    animation: onlineDotPulse 1.6s ease-in-out infinite;
+  }
+  .friend-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .friend-card-name {
+    font-weight: bold;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .friend-card-coins {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+  .friend-card-remove {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 15px;
+    padding: 4px 6px !important;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .friend-card-remove:hover {
+    color: #ff5c5c;
+    transform: none;
+  }
+  .friend-profile-box {
+    width: min(90vw, 480px);
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: center;
+  }
+  .friend-profile-avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #9575ff, #6344d6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 12px;
+  }
+  .friend-profile-id {
+    font-family: monospace;
+    font-size: 12px;
+    opacity: 0.55;
+    margin-bottom: 6px;
+  }
+  .friend-profile-country {
+    font-size: 15px;
+    opacity: 0.8;
+    margin-bottom: 6px;
+  }
+  .friend-profile-coins {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffd93d;
+    text-shadow: 0 0 12px rgba(255, 217, 61, 0.5);
+    margin-bottom: 20px;
+  }
+  .friend-profile-modes {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
   .menu-quests-panel, .menu-challenge-panel {
     box-sizing: border-box;
@@ -2387,6 +2604,32 @@
         </div>
       </div>
     </div>
+
+    <div class="menu-friends-panel" id="menu-friends-panel">
+      <div class="menu-friends-title">&#128101; Friends</div>
+      <div class="menu-friends-myid">
+        <span class="menu-friends-myid-label">Your ID</span>
+        <span class="menu-friends-myid-code" id="my-player-id-display">-</span>
+        <button id="btn-copy-my-id" title="Copy">&#128203;</button>
+      </div>
+      <div class="menu-friends-add-row">
+        <input type="text" id="friend-id-input" placeholder="Paste friend's ID..." maxlength="40" />
+        <button id="btn-add-friend">Add</button>
+      </div>
+      <div class="menu-friends-list" id="friends-list"></div>
+    </div>
+  </div>
+
+  <div id="friend-profile-overlay" class="overlay">
+    <div class="end-box friend-profile-box">
+      <button id="btn-friend-profile-close" class="menu-back-btn">&#8592; Back</button>
+      <div class="friend-profile-avatar">&#128100;</div>
+      <h2 id="friend-profile-name">Player</h2>
+      <div class="friend-profile-id" id="friend-profile-id"></div>
+      <div class="friend-profile-country" id="friend-profile-country"></div>
+      <div class="friend-profile-coins" id="friend-profile-coins"></div>
+      <div class="friend-profile-modes" id="friend-profile-modes"></div>
+    </div>
   </div>
 
   <div id="skins-menu">
@@ -3409,6 +3652,7 @@ function saveRewards() {
   try {
     localStorage.setItem('geoquiz-rewards', JSON.stringify(rewards));
   } catch (e) { /* ignore */ }
+  if (typeof publishMyPublicProfile === 'function') publishMyPublicProfile();
 }
 
 const CORRECT_BURST_COLORS = ['#5ce68c', '#ffd93d', '#5aa9ff', '#ff8fc7', '#b197fc', '#ff9f43'];
@@ -6839,6 +7083,7 @@ function getOnlineNickname() {
 function setOnlineNickname(name) {
   localStorage.setItem('geoquiz-online-nickname', name.trim());
   updateMenuPlayerNameDisplay();
+  if (typeof publishMyPublicProfile === 'function') publishMyPublicProfile();
 }
 function updateMenuPlayerNameDisplay() {
   const name = getOnlineNickname() || 'Player';
@@ -6847,6 +7092,195 @@ function updateMenuPlayerNameDisplay() {
   const navEl = document.getElementById('navbar-player-name');
   if (navEl) navEl.textContent = name;
 }
+
+// ================= Freunde =================
+// Kein Account-System noetig: jeder Spieler hat schon eine stabile, in localStorage
+// gespeicherte Geraete-ID (onlinePlayerId, siehe getOnlinePlayerId()). Freunde werden
+// per Copy&Paste dieser ID hinzugefuegt (Freundesliste bleibt rein lokal), ihr
+// oeffentliches Profil (Name/Muenzen/Fortschritt) wird per Firebase live abonniert -
+// dieselbe Datenbank, die schon fuer den Online-1v1-Modus laeuft.
+function loadFriendIds() {
+  try {
+    const raw = localStorage.getItem('geoquiz-friends');
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) { return []; }
+}
+function saveFriendIds(ids) {
+  try { localStorage.setItem('geoquiz-friends', JSON.stringify(ids)); } catch (e) { /* ignore */ }
+}
+let friendIds = loadFriendIds();
+const friendProfilesCache = {};
+const friendPresenceOnline = {};
+
+// Wird bei jeder Aenderung an rewards/Namen aufgerufen (siehe saveRewards() und
+// setOnlineNickname()) - haelt das oeffentliche Profil, das Freunde sehen, aktuell.
+function publishMyPublicProfile() {
+  if (typeof onlineDb === 'undefined' || !onlineDb) return;
+  onlineDb.ref('publicProfiles/' + onlinePlayerId).set({
+    name: getOnlineNickname() || 'Player',
+    country: getOnlineCountry() || null,
+    coins: rewards.coins,
+    correct: rewards.correct,
+    bestStreaks: rewards.bestStreaks,
+    unlocked: rewards.unlocked,
+    updatedAt: firebase.database.ServerValue.TIMESTAMP,
+  }).catch(() => { /* ignore */ });
+}
+
+// Eigene Praesenz unter der stabilen Spieler-ID (statt der zufaelligen Sitzungs-ID von
+// setupOnlinePresence oben) - dadurch koennen Freunde gezielt nachschauen, ob genau
+// DIESER Spieler online ist, nicht nur die Gesamtzahl aller Spieler.
+function setupFriendPresence() {
+  const myRef = onlineDb.ref('presenceById/' + onlinePlayerId);
+  onlineDb.ref('.info/connected').on('value', snap => {
+    if (snap.val() === true) {
+      myRef.onDisconnect().remove().then(() => myRef.set(true));
+    }
+  });
+}
+
+function watchFriend(id) {
+  onlineDb.ref('publicProfiles/' + id).on('value', snap => {
+    friendProfilesCache[id] = snap.val();
+    renderFriendsList();
+  });
+  onlineDb.ref('presenceById/' + id).on('value', snap => {
+    friendPresenceOnline[id] = snap.exists();
+    renderFriendsList();
+  });
+}
+
+function addFriend(rawId) {
+  const id = (rawId || '').trim();
+  const inputEl = document.getElementById('friend-id-input');
+  if (!id) return;
+  if (id === onlinePlayerId) {
+    if (inputEl) inputEl.value = '';
+    return;
+  }
+  if (friendIds.includes(id)) {
+    if (inputEl) inputEl.value = '';
+    return;
+  }
+  friendIds.push(id);
+  saveFriendIds(friendIds);
+  if (inputEl) inputEl.value = '';
+  renderFriendsList();
+  watchFriend(id);
+}
+
+function removeFriend(id) {
+  friendIds = friendIds.filter(f => f !== id);
+  saveFriendIds(friendIds);
+  onlineDb.ref('publicProfiles/' + id).off();
+  onlineDb.ref('presenceById/' + id).off();
+  delete friendProfilesCache[id];
+  delete friendPresenceOnline[id];
+  renderFriendsList();
+}
+
+function renderFriendsList() {
+  const listEl = document.getElementById('friends-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  if (!friendIds.length) {
+    const empty = document.createElement('div');
+    empty.className = 'menu-friends-empty';
+    empty.textContent = "No friends yet - share your ID above or paste a friend's ID to add them.";
+    listEl.appendChild(empty);
+    return;
+  }
+  friendIds.forEach(id => {
+    const profile = friendProfilesCache[id];
+    const online = !!friendPresenceOnline[id];
+    const card = document.createElement('div');
+    card.className = 'friend-card';
+    card.innerHTML = `
+      <div class="friend-card-avatar">&#128100;<span class="friend-card-dot${online ? ' online' : ''}"></span></div>
+      <div class="friend-card-info">
+        <div class="friend-card-name">${profile ? profile.name : 'Loading...'}</div>
+        <div class="friend-card-coins">${profile ? profile.coins + ' 🪙' : ''}</div>
+      </div>
+      <button class="friend-card-remove" title="Remove">&#10005;</button>
+    `;
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.friend-card-remove')) return;
+      openFriendProfile(id);
+    });
+    card.querySelector('.friend-card-remove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeFriend(id);
+    });
+    listEl.appendChild(card);
+  });
+}
+
+function openFriendProfile(id) {
+  const profile = friendProfilesCache[id];
+  if (!profile) return;
+  document.getElementById('friend-profile-name').textContent = profile.name || 'Player';
+  document.getElementById('friend-profile-id').textContent = id;
+  document.getElementById('friend-profile-coins').textContent = `${profile.coins || 0} 🪙`;
+  document.getElementById('friend-profile-country').textContent = profile.country ? countryLabel(profile.country) : '';
+  const modesEl = document.getElementById('friend-profile-modes');
+  modesEl.innerHTML = '';
+  REWARD_MODES.forEach(mode => {
+    const correct = (profile.correct && profile.correct[mode]) || 0;
+    const bestStreak = (profile.bestStreaks && profile.bestStreaks[mode]) || 0;
+    const unlocked = (profile.unlocked && profile.unlocked[mode]) || [];
+    const section = document.createElement('div');
+    section.className = 'rewards-mode-section';
+    section.innerHTML = `
+      <div class="rewards-mode-header">
+        <span class="rewards-mode-title">${MODE_LABELS[mode]}</span>
+        <span class="rewards-mode-stats">${correct} correct &middot; best streak ${bestStreak} &#128293;</span>
+      </div>
+      <div class="rewards-mode-badges"></div>
+    `;
+    const badgesEl = section.querySelector('.rewards-mode-badges');
+    REWARD_MILESTONES.forEach(m => {
+      const badge = document.createElement('div');
+      badge.className = 'reward-badge-mini' + (unlocked.includes(m.threshold) ? ` unlocked tier-${m.tier}` : '');
+      badge.title = `${m.label} (${m.threshold})`;
+      badge.textContent = m.icon;
+      badgesEl.appendChild(badge);
+    });
+    modesEl.appendChild(section);
+  });
+  document.getElementById('friend-profile-overlay').classList.add('show');
+}
+
+function initFriendsUI() {
+  const idDisplay = document.getElementById('my-player-id-display');
+  if (idDisplay) idDisplay.textContent = onlinePlayerId;
+  const copyBtn = document.getElementById('btn-copy-my-id');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      if (navigator.clipboard) navigator.clipboard.writeText(onlinePlayerId).catch(() => {});
+      copyBtn.textContent = '✅';
+      setTimeout(() => { copyBtn.innerHTML = '&#128203;'; }, 1200);
+    });
+  }
+  const addBtn = document.getElementById('btn-add-friend');
+  const input = document.getElementById('friend-id-input');
+  if (addBtn && input) {
+    addBtn.addEventListener('click', () => addFriend(input.value));
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') addFriend(input.value); });
+  }
+  const closeBtn = document.getElementById('btn-friend-profile-close');
+  const overlay = document.getElementById('friend-profile-overlay');
+  if (closeBtn && overlay) {
+    closeBtn.addEventListener('click', () => overlay.classList.remove('show'));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('show'); });
+  }
+  renderFriendsList();
+  friendIds.forEach(watchFriend);
+}
+
+setupFriendPresence();
+publishMyPublicProfile();
+initFriendsUI();
 
 // "Flex": zeigt die besten Abzeichen (höchste erreichte Meilenstein-Stufe, egal aus
 // welchem Modus, dedupliziert) direkt neben dem Namen - nutzt die schon vorhandenen
