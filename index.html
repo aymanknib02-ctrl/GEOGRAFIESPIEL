@@ -3847,6 +3847,7 @@ function showStreakToast(streak) {
   toast.className = 'streak-toast';
   toast.textContent = `🔥 ${streak} in a row!`;
   document.body.appendChild(toast);
+  playStreakSound();
   setTimeout(() => toast.remove(), 1700);
 }
 
@@ -3875,6 +3876,7 @@ function showRewardToast(milestone, mode) {
   toast.className = 'reward-toast tier-' + tier;
   toast.innerHTML = `<span class="reward-icon">${milestone.icon}</span><span>${MODE_LABELS[mode]}: ${milestone.label} unlocked!</span>`;
   document.body.appendChild(toast);
+  playBadgeSound(tier);
   // Je hoeher der Tier (seltener das Abzeichen), desto groesser die Konfetti-Feier.
   launchConfetti(tier >= 4 ? 130 : tier === 3 ? 85 : tier === 2 ? 55 : 40);
   setTimeout(() => toast.remove(), tier >= 4 ? 4200 : 3000);
@@ -3997,6 +3999,7 @@ function claimDailyQuest(id) {
   saveRewards();
   updateCoinDisplays();
   showCoinPopup(DAILY_QUEST_REWARD);
+  playQuestCompleteSound();
   launchConfetti(30);
   renderDailyQuests();
 }
@@ -4141,6 +4144,7 @@ function claimDailyChallenge() {
   saveRewards();
   updateCoinDisplays();
   showCoinPopup(DAILY_CHALLENGE_REWARD);
+  playQuestCompleteSound();
   launchConfetti(60);
   renderDailyChallenge();
 }
@@ -4204,6 +4208,7 @@ function awardCorrect(mode) {
   saveRewards();
   updateCoinDisplays();
   showCoinPopup(coinsEarned);
+  playCoinSound();
   spawnCorrectBurst();
   renderRewardsScreen();
   if (newlyUnlocked) { showRewardToast(newlyUnlocked, mode); updateMenuPlayerBadges(); }
@@ -4937,6 +4942,7 @@ const SPARK_COLORS = ['#7c5cfc', '#a78bfa', '#ffd166', '#ff6b6b'];
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('button');
   if (!btn || btn.disabled) return;
+  playClickSound();
   const count = 6;
   for (let i = 0; i < count; i++) {
     const spark = document.createElement('div');
@@ -4957,7 +4963,7 @@ document.addEventListener('click', (e) => {
 // Wird bei Rundenende aufgerufen - bei einer starken Quote (>=70%) gibt's Konfetti als
 // kleine Belohnung fürs gute Abschneiden.
 function maybeCelebrate(correct, total) {
-  if (total > 0 && correct / total >= 0.7) launchConfetti(50);
+  if (total > 0 && correct / total >= 0.7) { launchConfetti(50); playVictorySound(); }
 }
 
 // Serien-Flamme im HUD: erscheint erst ab einer Serie von 3, zeigt die aktuelle Zahl.
@@ -5899,6 +5905,7 @@ function revealAnswer() {
   wrongValueEl.textContent = wrongCount;
   bumpValue(wrongValueEl);
   resetStreak(gameMode);
+  playWrongSound();
   updateStreakBadge('streak-badge-main', gameMode);
 
   if (selectedLayer) geoLayer.resetStyle(selectedLayer);
@@ -6382,6 +6389,60 @@ function playFeedbackSound(kind) {
   if (kind === 'correct') playCorrectSound();
   else if (kind === 'wrong') playWrongSound();
 }
+// Kleines "Cha-Ching" - läuft zusätzlich zum Richtig-Sound bei jeder Münzgutschrift.
+function playCoinSound() {
+  playTone(1046.5, 0.07, 'triangle', 0);
+  playTone(1568, 0.1, 'triangle', 0.05);
+}
+// Abzeichen-Fanfare - wird lauter/länger je höher die Stufe (1-4) des freigeschalteten
+// Meilensteins ist, damit seltene Abzeichen sich auch klanglich besonders anfühlen.
+function playBadgeSound(tier) {
+  const t = tier || 1;
+  playTone(523.25, 0.1, 'triangle', 0);
+  playTone(659.25, 0.1, 'triangle', 0.08);
+  playTone(783.99, 0.14, 'triangle', 0.16);
+  if (t >= 2) playTone(1046.5, 0.18, 'triangle', 0.26);
+  if (t >= 3) { playTone(1318.5, 0.16, 'sine', 0.3); playTone(1567.98, 0.22, 'sine', 0.38); }
+  if (t >= 4) { playTone(1046.5, 0.12, 'square', 0.5); playTone(1567.98, 0.24, 'square', 0.58); }
+}
+// Aufsteigende Funkeln-Sequenz für ein Serien-Milestone (Streak).
+function playStreakSound() {
+  playTone(659.25, 0.08, 'triangle', 0);
+  playTone(830.61, 0.08, 'triangle', 0.06);
+  playTone(1046.5, 0.14, 'triangle', 0.12);
+}
+// Zufriedenstellendes "Ding" beim Abholen einer Quest-/Challenge-Belohnung.
+function playQuestCompleteSound() {
+  playTone(880, 0.1, 'sine', 0);
+  playTone(1318.5, 0.2, 'sine', 0.08);
+}
+// Triumphierender Dreiklang - Online-Sieg oder eine starke Runden-Quote.
+function playVictorySound() {
+  playTone(523.25, 0.13, 'triangle', 0);
+  playTone(659.25, 0.13, 'triangle', 0.11);
+  playTone(783.99, 0.13, 'triangle', 0.22);
+  playTone(1046.5, 0.28, 'triangle', 0.33);
+}
+// Absteigender, gedämpfter Ton für eine Niederlage (Online-Duell verloren).
+function playDefeatSound() {
+  playTone(392, 0.18, 'sawtooth', 0);
+  playTone(311.13, 0.22, 'sawtooth', 0.14);
+  playTone(233.08, 0.32, 'sawtooth', 0.3);
+}
+// Kurzer, neutraler Blip für Einstellungen-Umschalter (An/Aus).
+function playToggleSound() {
+  playTone(600, 0.05, 'square', 0);
+}
+// Zweiton-Glocke für eingehende Freundschafts-/Duell-Einladungen.
+function playNotificationSound() {
+  playTone(880, 0.09, 'sine', 0);
+  playTone(1108.73, 0.14, 'sine', 0.1);
+}
+// Kurzer Fehlerton für ungültige Aktionen (z.B. unbekannte Freundes-ID).
+function playErrorSound() {
+  playTone(220, 0.09, 'square', 0);
+  playTone(160, 0.14, 'square', 0.08);
+}
 
 // ---------- Übersetzungen (Sprachauswahl in den Einstellungen) ----------
 const I18N = {
@@ -6684,19 +6745,18 @@ btnSettingsReduceMotionEl.addEventListener('click', () => {
   settings.reduceMotion = !settings.reduceMotion;
   saveSettings();
   applyReduceMotion();
-  playClickSound();
+  playToggleSound();
 });
 btnSettingsColorblindEl.addEventListener('click', () => {
   settings.colorblind = !settings.colorblind;
   saveSettings();
   applyColorblindMode();
   updateSettingsUI();
-  playClickSound();
+  playToggleSound();
 });
 btnSettingsSkinsEl.addEventListener('click', () => {
   settingsOverlayEl.classList.remove('show');
   openSkinsGallery();
-  playClickSound();
 });
 btnSettingsResetEl.addEventListener('click', () => {
   const dict = I18N[settings.language] || I18N.en;
@@ -6724,7 +6784,6 @@ document.querySelectorAll('#settings-maps .settings-map-preview').forEach(card =
 document.querySelectorAll('#settings-languages .opt-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     applyLanguage(btn.dataset.lang);
-    playClickSound();
   });
 });
 settingsVolumeEl.addEventListener('input', () => {
@@ -7258,6 +7317,7 @@ function showIncomingInvite(invite, inviteKey) {
   if (nameEl) nameEl.textContent = invite.fromName || 'A friend';
   const toastEl = document.getElementById('invite-toast');
   if (toastEl) toastEl.classList.add('show');
+  playNotificationSound();
 }
 function clearPendingInvite() {
   if (pendingInvite) {
@@ -7519,6 +7579,7 @@ function showOnlineScreen(el) {
 }
 function showOnlineMenuError(text) {
   document.getElementById('online-menu-error').textContent = text;
+  if (text) playErrorSound();
 }
 
 let onlineStatusTimeout = null;
@@ -8331,7 +8392,8 @@ function endOnlineGame() {
     if (t < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
-  if (onlineMyHealth > onlineOpponentHealth) launchConfetti(70);
+  if (onlineMyHealth > onlineOpponentHealth) { launchConfetti(70); playVictorySound(); }
+  else if (onlineMyHealth < onlineOpponentHealth) playDefeatSound();
   cleanupOnlineRoom();
 }
 
