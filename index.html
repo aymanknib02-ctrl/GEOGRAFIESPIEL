@@ -4421,25 +4421,7 @@ const SKIN_COLORS = [
   { key: 'white', name: 'White', hex: 0xffffff },
 ];
 const DEFAULT_SKIN_COLOR = 'default';
-// Geriggtes Modell mit echter Skelett-Animation (Arme/Beine, per AccuRig gerigged) statt
-// des vorherigen unbeweglichen Einzel-Meshs. Die vom FBX referenzierten Texturen liegen
-// unter genau den Dateinamen, die im FBX selbst hinterlegt sind (siehe die beiden
-// tripo_mat_f898c525_*.jpg-Kopien im Projektroot), damit FBXLoader sie automatisch findet.
-const SKIN_MODEL_FILE = 'SKINANIMIERT.fbx';
-
-// Startet die im Modell mitgelieferte Animation (falls vorhanden) in Dauerschleife und
-// gibt den Mixer zurueck, der pro Frame mit der vergangenen Zeit aktualisiert werden muss
-// (siehe die animate()-Loops der drei Viewer, die den Skin zeigen). Modelle ohne
-// Animationsdaten (z.B. ein zukuenftiger neuer Skin ohne Rig) laufen einfach unbewegt
-// weiter statt einen Fehler zu werfen.
-function startModelAnimation(fbx) {
-  if (!fbx.animations || !fbx.animations.length) return null;
-  const mixer = new THREE.AnimationMixer(fbx);
-  const action = mixer.clipAction(fbx.animations[0]);
-  action.setLoop(THREE.LoopRepeat, Infinity);
-  action.play();
-  return mixer;
-}
+const SKIN_MODEL_FILE = 'standartskin.fbx';
 
 let inventory = loadInventory();
 
@@ -4583,16 +4565,13 @@ function initMenuGlobeViewer() {
   const camTargetDist = camera.position.distanceTo(controls.target);
   const visibleHeightAtTarget = 2 * camTargetDist * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
 
-  menuGlobeViewer = { renderer, scene, camera, controls, group, charGroup, globeMesh, cloudGroup, globeRadius, visibleHeightAtTarget, mixer: null };
+  menuGlobeViewer = { renderer, scene, camera, controls, group, charGroup, globeMesh, cloudGroup, globeRadius, visibleHeightAtTarget };
   menuGlobeLoader = new THREE.FBXLoader();
-  const clock = new THREE.Clock();
 
   (function animate() {
     requestAnimationFrame(animate);
     controls.update();
     cloudGroup.rotation.y += 0.0006;
-    if (menuGlobeViewer.mixer) menuGlobeViewer.mixer.update(clock.getDelta());
-    else clock.getDelta();
     renderer.render(scene, camera);
   })();
 
@@ -4780,7 +4759,6 @@ function loadMenuGlobeCharacter(file) {
   const viewer = initMenuGlobeViewer();
   resizeMenuGlobeViewer();
   while (viewer.charGroup.children.length) viewer.charGroup.remove(viewer.charGroup.children[0]);
-  viewer.mixer = null;
   const myToken = ++menuGlobeModelToken;
   const loadingEl = document.getElementById('menu-globe-loading');
   const canvasEl = document.getElementById('menu-globe-canvas');
@@ -4802,7 +4780,6 @@ function loadMenuGlobeCharacter(file) {
       fbx.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
       applySkinAppearance(fbx, inventory.color);
       viewer.charGroup.add(fbx);
-      viewer.mixer = startModelAnimation(fbx);
 
       // Kugel+Charakter (die ganze "group") so skalieren/verschieben, dass sie
       // unabhängig von der tatsächlichen Modell-Höhe komplett ins feste Kamera-
@@ -4867,14 +4844,11 @@ function initSkinPreviewViewer() {
   controls.autoRotateSpeed = 1.6;
   controls.target.set(0, 0.2, 0);
 
-  skinPreviewViewer = { renderer, scene, camera, controls, model: null, mixer: null };
-  const clock = new THREE.Clock();
+  skinPreviewViewer = { renderer, scene, camera, controls, model: null };
 
   (function animate() {
     requestAnimationFrame(animate);
     controls.update();
-    if (skinPreviewViewer.mixer) skinPreviewViewer.mixer.update(clock.getDelta());
-    else clock.getDelta();
     renderer.render(scene, camera);
   })();
 
@@ -4916,7 +4890,6 @@ function loadSkinPreviewModel() {
       applySkinAppearance(fbx, inventory.color);
       viewer.scene.add(fbx);
       viewer.model = fbx;
-      viewer.mixer = startModelAnimation(fbx);
       if (loadingEl) loadingEl.style.display = 'none';
     } catch (err) {
       console.error('Skin preview error:', err);
@@ -8108,7 +8081,7 @@ function renderOnlineIntroAvatar(who, colorKey) {
     const fillLight = new THREE.DirectionalLight(0xffffff, 0.55);
     fillLight.position.set(-5, 2, 8);
     scene.add(fillLight);
-    state = { renderer, scene, camera, model: null, mixer: null, lastColor: null, animLoopRunning: false };
+    state = { renderer, scene, camera, model: null, lastColor: null };
     onlineIntroPreviews[who] = state;
   }
   if (state.model) {
@@ -8117,7 +8090,6 @@ function renderOnlineIntroAvatar(who, colorKey) {
       state.lastColor = colorKey;
     }
     state.renderer.render(state.scene, state.camera);
-    runIntroAvatarAnimLoop(who);
     return;
   }
   new THREE.FBXLoader().load(SKIN_MODEL_FILE, (fbx) => {
@@ -8138,10 +8110,9 @@ function renderOnlineIntroAvatar(who, colorKey) {
       applySkinAppearance(fbx, colorKey);
       state.scene.add(fbx);
       state.model = fbx;
-      state.mixer = startModelAnimation(fbx);
       state.lastColor = colorKey;
       state.renderer.render(state.scene, state.camera);
-      runIntroAvatarAnimLoop(who);
+      requestAnimationFrame(() => state.renderer.render(state.scene, state.camera));
     } catch (err) {
       console.error('Online intro preview error:', err);
     }
@@ -8167,25 +8138,6 @@ function spinIntroAvatar(who, duration) {
     state.model.rotation.y = startY + eased * Math.PI * 2;
     state.renderer.render(state.scene, state.camera);
     if (t < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
-// Haelt die Skelett-Animation waehrend der Versus-Karte am Laufen (rAF-Schleife, die
-// sich selbst beendet, sobald #online-round-intro nicht mehr sichtbar ist) - laeuft nur
-// waehrend der kurzen Anzeigezeit, statt dauerhaft im Hintergrund Rechenzeit zu fressen.
-function runIntroAvatarAnimLoop(who) {
-  const state = onlineIntroPreviews[who];
-  if (!state || state.animLoopRunning) return;
-  state.animLoopRunning = true;
-  const introEl = document.getElementById('online-round-intro');
-  const clock = new THREE.Clock();
-  function tick() {
-    if (!introEl || !introEl.classList.contains('show')) { state.animLoopRunning = false; return; }
-    if (state.mixer) state.mixer.update(clock.getDelta());
-    else clock.getDelta();
-    state.renderer.render(state.scene, state.camera);
-    requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 }
