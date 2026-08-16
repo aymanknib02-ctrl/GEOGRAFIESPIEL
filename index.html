@@ -1121,21 +1121,17 @@
     width: 96px;
     height: 96px;
     border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid rgba(124, 92, 252, 0.6);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 0 22px rgba(124, 92, 252, 0.35);
-  }
-  .online-intro-emoji {
-    width: 96px;
-    height: 96px;
-    border-radius: 50%;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 52px;
-    background: #232a3f;
+    background: radial-gradient(circle at 50% 38%, rgba(124, 92, 252, 0.25), #232a3f 75%);
     border: 3px solid rgba(124, 92, 252, 0.6);
     box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 0 22px rgba(124, 92, 252, 0.35);
+  }
+  .online-intro-avatar canvas {
+    width: 100%;
+    height: 100%;
   }
   .online-intro-name {
     font-weight: bold;
@@ -2499,15 +2495,13 @@
     <div class="online-status-msg" id="online-status-msg"></div>
     <div class="online-round-intro" id="online-round-intro">
       <div class="online-intro-player">
-        <img class="online-intro-avatar" id="online-intro-me-avatar" alt="" style="display:none;" />
-        <div class="online-intro-emoji" id="online-intro-me-emoji">&#128578;</div>
+        <div class="online-intro-avatar"><canvas id="online-intro-me-canvas"></canvas></div>
         <div class="online-intro-name" id="online-intro-me-name">You</div>
         <div class="online-intro-country" id="online-intro-me-country"></div>
       </div>
       <div class="online-intro-vs">VS</div>
       <div class="online-intro-player">
-        <img class="online-intro-avatar" id="online-intro-opp-avatar" alt="" style="display:none;" />
-        <div class="online-intro-emoji" id="online-intro-opp-emoji">&#128578;</div>
+        <div class="online-intro-avatar"><canvas id="online-intro-opp-canvas"></canvas></div>
         <div class="online-intro-name" id="online-intro-opp-name">Opponent</div>
         <div class="online-intro-country" id="online-intro-opp-country"></div>
       </div>
@@ -7056,7 +7050,7 @@ function startOnlineGameScreen(room, opponentId) {
   onlineRoundResolving = false;
 
   hideAllOnlineMenus();
-  document.getElementById('online-me-name').textContent = getOnlineNickname() || 'Du';
+  document.getElementById('online-me-name').textContent = getOnlineNickname() || 'You';
   document.getElementById('online-opponent-name').textContent = onlineOpponentName;
   document.getElementById('online-me-health').textContent = GEO_START_HEALTH;
   document.getElementById('online-opp-health').textContent = GEO_START_HEALTH;
@@ -7139,13 +7133,67 @@ function hideOnlineMultiplierBadge() {
 }
 
 // Zeigt vor jeder Runde kurz beide Spieler (Skin, Name, Herkunftsland) wie bei
-// GeoGuessr, danach folgt die eigentliche Frage.
-// Skins sind 3D-Modelle (.fbx) - für die kleine Rundenintro-Anzeige gibt es keine
-// Live-3D-Vorschau, daher immer das neutrale Emoji zeigen (das große Karussell auf
-// der Startseite bleibt die Stelle, an der Skins tatsächlich in 3D zu sehen sind).
-function setOnlineIntroAvatar(who) {
-  document.getElementById(`online-intro-${who}-avatar`).style.display = 'none';
-  document.getElementById(`online-intro-${who}-emoji`).style.display = 'flex';
+// GeoGuessr, danach folgt die eigentliche Frage. Da es jetzt nur noch das eine
+// Standard-Modell mit waehlbarer Farbe gibt, wird hier ein echter kleiner Live-3D-
+// Viewer pro Spieler gerendert (statt eines Emoji-Platzhalters) - das Modell wird nur
+// beim allerersten Mal geladen, bei Farbwechsel/Folgerunden nur neu eingefaerbt.
+const onlineIntroPreviews = { me: null, opp: null };
+function renderOnlineIntroAvatar(who, colorKey) {
+  const canvas = document.getElementById(`online-intro-${who}-canvas`);
+  if (!canvas) return;
+  let state = onlineIntroPreviews[who];
+  if (!state) {
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const size = canvas.clientWidth || 96;
+    renderer.setSize(size, size, false);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
+    camera.position.set(0, 0.3, 9);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.1));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    keyLight.position.set(5, 8, 6);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    fillLight.position.set(-5, 2, 8);
+    scene.add(fillLight);
+    state = { renderer, scene, camera, model: null, lastColor: null };
+    onlineIntroPreviews[who] = state;
+  }
+  if (state.model) {
+    if (state.lastColor !== colorKey) {
+      applySkinAppearance(state.model, colorKey);
+      state.lastColor = colorKey;
+    }
+    state.renderer.render(state.scene, state.camera);
+    return;
+  }
+  new THREE.FBXLoader().load(SKIN_MODEL_FILE, (fbx) => {
+    try {
+      const box = new THREE.Box3().setFromObject(fbx);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const scale = 6.5 / maxDim;
+      fbx.scale.setScalar(scale);
+      fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+      applySkinAppearance(fbx, colorKey);
+      state.scene.add(fbx);
+      state.model = fbx;
+      state.lastColor = colorKey;
+      state.renderer.render(state.scene, state.camera);
+      requestAnimationFrame(() => state.renderer.render(state.scene, state.camera));
+    } catch (err) {
+      console.error('Online-Intro-Vorschau Fehler:', err);
+    }
+  }, undefined, (err) => {
+    console.error('Online-Intro-Vorschau Ladefehler:', err);
+  });
+}
+function setOnlineIntroAvatar(who, colorKey) {
+  renderOnlineIntroAvatar(who, colorKey || DEFAULT_SKIN_COLOR);
 }
 
 function countryLabel(countryId) {
@@ -7157,7 +7205,7 @@ function countryLabel(countryId) {
 }
 
 function showOnlineRoundIntro() {
-  document.getElementById('online-intro-me-name').textContent = getOnlineNickname() || 'Du';
+  document.getElementById('online-intro-me-name').textContent = getOnlineNickname() || 'You';
   document.getElementById('online-intro-me-country').textContent = countryLabel(getOnlineCountry());
   setOnlineIntroAvatar('me', inventory.color);
 
