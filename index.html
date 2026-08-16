@@ -3935,8 +3935,14 @@ function buildTintedTexture(sourceTex, hex) {
   ctx.putImageData(imageData, 0, 0);
   const tex = new THREE.CanvasTexture(canvas);
   tex.flipY = sourceTex.flipY;
-  tex.wrapS = sourceTex.wrapS;
-  tex.wrapT = sourceTex.wrapT;
+  // ClampToEdge statt der Original-Wrap-Einstellung uebernehmen: bei nicht-Zweierpotenz-
+  // Texturgroessen (haeufig bei generierten Modell-Texturen) deaktiviert WebGL1 sonst
+  // Mipmaps fuer Repeat-Wrapping, was aus der Distanz sehr grobkoernig/verpixelt aussieht.
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
   if (sourceTex.encoding !== undefined) tex.encoding = sourceTex.encoding;
   tex.needsUpdate = true;
   return tex;
