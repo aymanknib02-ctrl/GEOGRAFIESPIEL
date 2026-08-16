@@ -138,11 +138,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Hoeher als die Navbar (1500): .menu-globe-stage bildet einen eigenen Stacking-
-       Context, daher reicht ein hoher z-index NUR am Namens-Chip (Kind-Element) nicht -
-       der ganze Elternblock muss ueber der Navbar liegen, sonst bleibt der Chip trotz
-       eigenem z-index dahinter gefangen. */
-    z-index: 1550;
+    /* NICHT ueber die Navbar (1500) anheben - das zieht den weichen Leuchtschein
+       (::before, radial-gradient) mit nach oben und laesst ihn durch die Navbar
+       "durchbluten" (sichtbar als unscharfer Fleck in der Modus-Auswahl). Der
+       Namens-Chip wird stattdessen dort separat per opacity ausgeblendet (siehe
+       #menu.mode-select .menu-player-name), das braucht keine Stacking-Context-
+       Verrenkung. */
+    z-index: 5;
   }
   body:not(.menu-animated) .menu-globe-stage {
     animation: globeEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s backwards;
@@ -183,9 +185,7 @@
     top: -34px;
     left: 50%;
     transform: translateX(-50%);
-    /* Hoeher als die Navbar (z-index 1500) - der Namens-Chip sitzt bei manchen
-       Bildschirmgroessen so weit oben, dass er sonst hinter der Navbar verschwindet. */
-    z-index: 1600;
+    z-index: 6;
     display: flex;
     align-items: center;
     gap: 8px;
