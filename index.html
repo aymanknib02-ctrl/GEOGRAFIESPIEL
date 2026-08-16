@@ -4503,12 +4503,23 @@ function initMenuGlobeViewer() {
   controls.dampingFactor = 0.08;
   controls.enableZoom = false;
   controls.enablePan = false;
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 1.3;
+  // Kein Auto-Rotate mehr - die Kugel folgt stattdessen aktiv dem Mauszeiger (siehe
+  // mouseFollowYaw-Tracking unten). Die Kamera selbst bleibt unangetastet (siehe
+  // Lektion oben: camera.position/controls.target direkt aendern wird von
+  // controls.update() sofort zurueckgesetzt) - stattdessen dreht sich die "group"
+  // (Kugel+Charakter) selbst um ihre eigene Y-Achse in Richtung Mauszeiger.
   controls.target.set(0, 1.2, 0);
 
   const group = new THREE.Group();
   scene.add(group);
+
+  // Kugel+Charakter drehen sich sanft gedaempft in Richtung Mauszeiger (nur horizontal/
+  // Gieren, kein Neigen - ein Kipp-Effekt wuerde den Charakter, der oberhalb des
+  // Kugelmittelpunkts sitzt, seitlich aus der Balance schwingen lassen).
+  let mouseFollowTargetYaw = 0;
+  window.addEventListener('pointermove', (e) => {
+    mouseFollowTargetYaw = (e.clientX / window.innerWidth) * 2 - 1;
+  });
 
   // Glaenzender "Spielzeug-Globus"-Look wie im Referenzbild: glatte, glaenzende Kugel mit
   // flachen Land-/Ozeanfarben (kein Rauschen/Bump) plus einzelne puschelige 3D-Wolken-
@@ -4572,6 +4583,10 @@ function initMenuGlobeViewer() {
     requestAnimationFrame(animate);
     controls.update();
     cloudGroup.rotation.y += 0.0006;
+    // Sanft gedaempft (nicht sofort) in Richtung Mauszeiger drehen, max. ca. 55° in
+    // jede Richtung, damit es nie komplett "wegdreht" und der Charakter im Bild bleibt.
+    const maxYaw = 0.95;
+    group.rotation.y += (mouseFollowTargetYaw * maxYaw - group.rotation.y) * 0.045;
     renderer.render(scene, camera);
   })();
 
