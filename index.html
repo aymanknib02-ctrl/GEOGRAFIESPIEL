@@ -3609,11 +3609,11 @@ function initMenuGlobeViewer() {
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
   camera.position.set(0, 1.4, 11.5);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.15);
   keyLight.position.set(5, 8, 6);
   scene.add(keyLight);
-  const rimLight = new THREE.DirectionalLight(0x4fd1c5, 0.5);
+  const rimLight = new THREE.DirectionalLight(0x4fd1c5, 0.6);
   rimLight.position.set(-6, 2, -4);
   scene.add(rimLight);
 
@@ -3632,7 +3632,7 @@ function initMenuGlobeViewer() {
   const globeRadius = 3.4;
   const globeMesh = new THREE.Mesh(
     new THREE.SphereGeometry(globeRadius, 96, 64),
-    new THREE.MeshStandardMaterial({ color: 0x0f1a2e, roughness: 0.55, metalness: 0.05 })
+    new THREE.MeshStandardMaterial({ color: 0x0f1a2e, roughness: 0.32, metalness: 0.1 })
   );
   group.add(globeMesh);
 
@@ -3778,6 +3778,16 @@ function buildMenuGlobeTexture(geoData) {
     ctx.lineTo(width, y);
     ctx.stroke();
   }
+
+  // Ins Textur-Bild "eingemalter" Glanzlicht/Schatten-Verlauf - verstaerkt zusaetzlich zur
+  // echten 3D-Beleuchtung den Kugel-Eindruck, statt einer flachen, gleichmaessig hellen
+  // Karte (die auf der Kugel sonst wie ein Sticker statt wie eine echte Kugel wirkt).
+  const shade = ctx.createRadialGradient(width * 0.32, height * 0.28, 0, width * 0.32, height * 0.28, width * 0.55);
+  shade.addColorStop(0, 'rgba(255,255,255,0.18)');
+  shade.addColorStop(0.5, 'rgba(255,255,255,0)');
+  shade.addColorStop(1, 'rgba(0,0,0,0.28)');
+  ctx.fillStyle = shade;
+  ctx.fillRect(0, 0, width, height);
 
   return { colorTexture: new THREE.CanvasTexture(canvas), bumpTexture: null };
 }
