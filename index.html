@@ -7929,7 +7929,8 @@ function renderOnlineIntroAvatar(who, colorKey) {
     renderer.setSize(size, size, false);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
-    camera.position.set(0, 0.3, 9);
+    camera.position.set(0, 0, 9);
+    camera.lookAt(0, 0, 0);
     scene.add(new THREE.AmbientLight(0xffffff, 1.1));
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
     keyLight.position.set(5, 8, 6);
@@ -7955,8 +7956,12 @@ function renderOnlineIntroAvatar(who, colorKey) {
       box.getSize(size);
       const center = new THREE.Vector3();
       box.getCenter(center);
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 6.5 / maxDim;
+      // Auf die tatsaechliche Koerperhoehe fitten (nicht die groesste Dimension über alle
+      // Achsen) und die dabei im Kamera-Frustum sichtbare Hoehe als Referenz nehmen, damit
+      // garantiert der GANZE Skin von Kopf bis Fuss zu sehen ist statt nur ein Ausschnitt.
+      const camDist = state.camera.position.z;
+      const visibleHeight = 2 * camDist * Math.tan((state.camera.fov * Math.PI / 180) / 2);
+      const scale = (visibleHeight * 0.88) / (size.y || 1);
       fbx.scale.setScalar(scale);
       fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
       applySkinAppearance(fbx, colorKey);
