@@ -199,6 +199,15 @@
     font-weight: bold;
     letter-spacing: 0.5px;
     white-space: nowrap;
+    transition: opacity 0.3s ease;
+  }
+  /* In der Modus-Auswahl steht der Name+Muenzen schon oben rechts im Profil-Chip der
+     Navbar - der Namens-Chip ueber dem (dann kleineren, weiter oben sitzenden)
+     Charakter ist dort redundant und ueberlappt unschoen mit der Navbar, daher hier
+     ausgeblendet statt mit ihr zu ueberlappen. */
+  #menu.mode-select .menu-player-name {
+    opacity: 0;
+    pointer-events: none;
   }
   /* Diese "Enter"-Animationen sollen NUR beim allerersten Laden der Seite laufen.
      Da #menu beim Zurueckgehen aus einem Modus per style.display none->grid komplett
