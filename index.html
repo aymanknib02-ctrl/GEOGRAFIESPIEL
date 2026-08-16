@@ -138,13 +138,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /* NICHT ueber die Navbar (1500) anheben - das zieht den weichen Leuchtschein
-       (::before, radial-gradient) mit nach oben und laesst ihn durch die Navbar
-       "durchbluten" (sichtbar als unscharfer Fleck in der Modus-Auswahl). Der
-       Namens-Chip wird stattdessen dort separat per opacity ausgeblendet (siehe
-       #menu.mode-select .menu-player-name), das braucht keine Stacking-Context-
-       Verrenkung. */
-    z-index: 5;
+    /* Hoeher als die Navbar (1500), damit der Namens-Chip (Kind-Element, eigener
+       Stacking-Context) im Hauptmenue nicht dahinter verschwindet. Frueher hat das den
+       Leuchtschein durch die (damals halbtransparente) Navbar durchbluten lassen - seit
+       die Navbar in der Modus-Auswahl komplett unsichtbar wird (opacity:0, siehe
+       #menu.mode-select .menu-navbar), gibt es dort nichts mehr, durch das er bluten
+       koennte. */
+    z-index: 1550;
   }
   body:not(.menu-animated) .menu-globe-stage {
     animation: globeEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s backwards;
