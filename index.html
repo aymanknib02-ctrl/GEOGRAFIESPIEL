@@ -2046,13 +2046,13 @@
       <div class="menu-top-icons">
         <div class="menu-profile-chip">
           <span class="menu-profile-avatar">&#128100;</span>
-          <span class="menu-profile-name" id="navbar-player-name">Spieler</span>
+          <span class="menu-profile-name" id="navbar-player-name">Player</span>
           <span id="btn-rewards" class="coin-badge">
             <span id="menu-coin-value">0</span> &#129689;
           </span>
         </div>
-        <button id="btn-fullscreen" aria-label="Vollbild">&#9974;</button>
-        <button id="btn-settings" aria-label="Einstellungen">&#9881;</button>
+        <button id="btn-fullscreen" aria-label="Fullscreen">&#9974;</button>
+        <button id="btn-settings" aria-label="Settings">&#9881;</button>
       </div>
     </div>
 
@@ -2062,22 +2062,22 @@
         <div class="challenge-box" id="daily-challenge-box"></div>
       </div>
       <div class="menu-quests-panel">
-        <div class="menu-quests-title">Tägliche Quests</div>
+        <div class="menu-quests-title">Daily Quests</div>
         <div class="quest-list" id="daily-quests-list"></div>
       </div>
     </div>
 
     <div class="menu-globe-stage" id="menu-globe-stage">
       <div class="menu-player-name" id="menu-player-name">
-        <span id="menu-player-name-text">Spieler</span><span class="menu-player-badges" id="menu-player-badges"></span>
+        <span id="menu-player-name-text">Player</span><span class="menu-player-badges" id="menu-player-badges"></span>
       </div>
       <canvas id="menu-globe-canvas" style="display:none;"></canvas>
-      <div class="menu-globe-loading" id="menu-globe-loading">Lädt...</div>
+      <div class="menu-globe-loading" id="menu-globe-loading">Loading...</div>
       <div class="menu-online-count" id="menu-online-count"><span class="dot"></span>&#8211;</div>
     </div>
 
     <div class="menu-home-actions" id="menu-home-actions">
-      <button id="btn-menu-play" class="menu-home-btn">&#9654;&#65039; Spielen</button>
+      <button id="btn-menu-play" class="menu-home-btn">&#9654;&#65039; Play</button>
       <button id="btn-menu-skins" class="menu-home-btn">&#128100; Skins</button>
     </div>
 
@@ -2086,11 +2086,11 @@
         <div class="rewards-modes" id="rewards-modes"></div>
       </div>
       <div class="menu-box">
-        <button id="btn-menu-back" class="menu-back-btn">&#8592; Zurück</button>
+        <button id="btn-menu-back" class="menu-back-btn">&#8592; Back</button>
         <div class="buttons">
           <button class="diff-btn" id="btn-open-online">
             <span class="diff-title-row"><span class="diff-icon">&#9876;&#65039;</span><span class="diff-title">Online 1v1</span></span>
-            <span class="diff-desc">Mit Freund per Code oder gegen zufällige Spieler</span>
+            <span class="diff-desc">With a friend via code or against random players</span>
           </button>
           <button class="diff-btn" data-mode="country">
             <span class="diff-title-row"><span class="diff-icon">&#127757;</span><span class="diff-title" data-i18n="menu.country.title">Länder-Quiz</span></span>
@@ -2123,7 +2123,7 @@
 
   <div id="skins-menu">
     <div class="skins-gallery-box">
-      <button id="btn-skins-back" class="menu-back-btn">&#8592; Zurück</button>
+      <button id="btn-skins-back" class="menu-back-btn">&#8592; Back</button>
       <h1 class="skins-gallery-title">Skins</h1>
       <div class="skins-gallery" id="skins-gallery"></div>
     </div>
@@ -2131,11 +2131,11 @@
 
   <div id="category-pick-menu">
     <div class="menu-box">
-      <h1>KATEGORIE</h1>
+      <h1>CATEGORY</h1>
       <div class="buttons" id="category-pick-buttons"></div>
       <div class="category-pick-actions">
-        <button id="btn-category-reroll">Neu mischen</button>
-        <button id="btn-category-pick-back">Zurück</button>
+        <button id="btn-category-reroll">Reroll</button>
+        <button id="btn-category-pick-back">Back</button>
       </div>
     </div>
   </div>
@@ -2145,18 +2145,18 @@
       <h1>FORMAT</h1>
       <div class="buttons">
         <button class="diff-btn" data-subtype="country">
-          <span class="diff-title">Länder</span>
+          <span class="diff-title">Countries</span>
         </button>
         <button class="diff-btn" data-subtype="capital">
-          <span class="diff-title">Städte</span>
+          <span class="diff-title">Cities</span>
         </button>
         <button class="diff-btn" data-subtype="landmark">
-          <span class="diff-title">Sehenswürdigkeiten</span>
+          <span class="diff-title">Landmarks</span>
         </button>
         <button class="diff-btn" data-subtype="silhouette">
-          <span class="diff-title">Silhouetten</span>
+          <span class="diff-title">Silhouettes</span>
         </button>
-        <button id="btn-category-back">Zurück</button>
+        <button id="btn-category-back">Back</button>
       </div>
     </div>
   </div>
@@ -2246,21 +2246,21 @@
       <h1>ONLINE 1V1</h1>
       <div class="buttons">
         <div class="online-nickname-row">
-          <label for="online-nickname-input">Dein Name</label>
-          <input type="text" id="online-nickname-input" maxlength="16" placeholder="Spieler" />
+          <label for="online-nickname-input">Your name</label>
+          <input type="text" id="online-nickname-input" maxlength="16" placeholder="Player" />
         </div>
         <div class="online-nickname-row">
-          <label for="online-country-select">Dein Land</label>
+          <label for="online-country-select">Your country</label>
           <select id="online-country-select"></select>
         </div>
-        <button id="btn-online-create">Raum erstellen (Freund einladen)</button>
-        <button id="btn-online-show-join">Mit Code beitreten</button>
+        <button id="btn-online-create">Create room (invite a friend)</button>
+        <button id="btn-online-show-join">Join with code</button>
         <div class="online-join-row" id="online-join-row" style="display:none;">
           <input type="text" id="online-join-code-input" maxlength="6" placeholder="CODE" autocapitalize="characters" />
-          <button id="btn-online-join">Beitreten</button>
+          <button id="btn-online-join">Join</button>
         </div>
-        <button id="btn-online-matchmaking">Zufälligen Gegner finden</button>
-        <button id="btn-online-back">Zurück</button>
+        <button id="btn-online-matchmaking">Find random opponent</button>
+        <button id="btn-online-back">Back</button>
       </div>
       <div class="online-error" id="online-menu-error"></div>
     </div>
@@ -2268,15 +2268,15 @@
 
   <div id="online-waiting">
     <div class="menu-box">
-      <h1 id="online-waiting-title">WARTE...</h1>
+      <h1 id="online-waiting-title">WAITING...</h1>
       <div class="online-code-display" id="online-code-display" style="display:none;">
-        <div class="online-code-label">Code für deinen Freund</div>
+        <div class="online-code-label">Code for your friend</div>
         <div class="online-code-value" id="online-code-value">-----</div>
-        <button id="btn-online-copy-code">Code kopieren</button>
+        <button id="btn-online-copy-code">Copy code</button>
       </div>
       <div class="online-spinner"></div>
-      <div class="online-waiting-status" id="online-waiting-status">Warte auf Mitspieler...</div>
-      <button id="btn-online-cancel">Abbrechen</button>
+      <div class="online-waiting-status" id="online-waiting-status">Waiting for opponent...</div>
+      <button id="btn-online-cancel">Cancel</button>
     </div>
   </div>
 
@@ -2284,20 +2284,20 @@
     <div class="hud-bar online-hud">
       <div id="online-me-stat">
         <img id="online-me-avatar" alt="" style="display:none;" />
-        <span class="label" id="online-me-name">Du</span>
+        <span class="label" id="online-me-name">You</span>
         <div class="online-health-bar"><div class="online-health-fill" id="online-me-health-fill"></div></div>
         <span class="value" id="online-me-health">5000</span>
       </div>
       <div>
-        <span class="label">Runde</span>
+        <span class="label">Round</span>
         <span class="value" id="online-round-value">1</span>
       </div>
       <div id="online-opp-stat">
-        <span class="label" id="online-opponent-name">Gegner</span>
+        <span class="label" id="online-opponent-name">Opponent</span>
         <div class="online-health-bar"><div class="online-health-fill" id="online-opp-health-fill"></div></div>
         <span class="value" id="online-opp-health">5000</span>
       </div>
-      <button id="btn-online-leave" class="menu-btn">Verlassen</button>
+      <button id="btn-online-leave" class="menu-btn">Leave</button>
     </div>
     <div class="online-multiplier-badge" id="online-multiplier-badge"></div>
     <div class="online-status-msg" id="online-status-msg"></div>
@@ -2305,95 +2305,95 @@
       <div class="online-intro-player">
         <img class="online-intro-avatar" id="online-intro-me-avatar" alt="" style="display:none;" />
         <div class="online-intro-emoji" id="online-intro-me-emoji">&#128578;</div>
-        <div class="online-intro-name" id="online-intro-me-name">Du</div>
+        <div class="online-intro-name" id="online-intro-me-name">You</div>
         <div class="online-intro-country" id="online-intro-me-country"></div>
       </div>
       <div class="online-intro-vs">VS</div>
       <div class="online-intro-player">
         <img class="online-intro-avatar" id="online-intro-opp-avatar" alt="" style="display:none;" />
         <div class="online-intro-emoji" id="online-intro-opp-emoji">&#128578;</div>
-        <div class="online-intro-name" id="online-intro-opp-name">Gegner</div>
+        <div class="online-intro-name" id="online-intro-opp-name">Opponent</div>
         <div class="online-intro-country" id="online-intro-opp-country"></div>
       </div>
     </div>
 
     <div class="geo-photo-area" id="geo-photo-area">
-      <div class="geo-photo-loading" id="geo-photo-loading">Suche Straßenfoto...</div>
-      <img id="geo-street-photo" alt="Straßenansicht" style="display:none;" />
+      <div class="geo-photo-loading" id="geo-photo-loading">Finding street photo...</div>
+      <img id="geo-street-photo" alt="Street view" style="display:none;" />
       <canvas id="geo-pano-canvas" style="display:none;"></canvas>
     </div>
     <div class="geo-guess-panel" id="geo-guess-panel">
       <div id="geo-guess-map"></div>
-      <button id="btn-geo-guess-confirm" disabled>Rätst du hier?</button>
+      <button id="btn-geo-guess-confirm" disabled>Guess here?</button>
     </div>
     <div class="geo-round-result" id="geo-round-result"></div>
   </div>
 
   <div id="online-end-overlay" class="overlay">
     <div class="end-box">
-      <h2 id="online-end-title">Spiel beendet!</h2>
+      <h2 id="online-end-title">Game over!</h2>
       <p id="online-end-text"></p>
       <div class="end-buttons">
-        <button id="btn-online-again">Neues Online-Spiel</button>
-        <button id="btn-online-end-menu">Zum Menü</button>
+        <button id="btn-online-again">New online game</button>
+        <button id="btn-online-end-menu">To menu</button>
       </div>
     </div>
   </div>
 
   <div id="continent-menu">
     <div class="menu-box continent-menu-box">
-      <h1>KONTINENT</h1>
+      <h1>CONTINENT</h1>
       <div class="continent-grid">
         <button class="continent-card" data-continent="">
           <canvas class="continent-thumb-canvas"></canvas>
-          <span class="continent-card-label">Alle Kontinente</span>
+          <span class="continent-card-label">All Continents</span>
         </button>
         <button class="continent-card" data-continent="Europe">
           <canvas class="continent-thumb-canvas"></canvas>
-          <span class="continent-card-label">Europa</span>
+          <span class="continent-card-label">Europe</span>
         </button>
         <button class="continent-card" data-continent="Asia">
           <canvas class="continent-thumb-canvas"></canvas>
-          <span class="continent-card-label">Asien</span>
+          <span class="continent-card-label">Asia</span>
         </button>
         <button class="continent-card" data-continent="Africa">
           <canvas class="continent-thumb-canvas"></canvas>
-          <span class="continent-card-label">Afrika</span>
+          <span class="continent-card-label">Africa</span>
         </button>
         <button class="continent-card" data-continent="North America">
           <canvas class="continent-thumb-canvas"></canvas>
-          <span class="continent-card-label">Nordamerika</span>
+          <span class="continent-card-label">North America</span>
         </button>
         <button class="continent-card" data-continent="South America">
           <canvas class="continent-thumb-canvas"></canvas>
-          <span class="continent-card-label">Südamerika</span>
+          <span class="continent-card-label">South America</span>
         </button>
         <button class="continent-card" data-continent="Oceania">
           <canvas class="continent-thumb-canvas"></canvas>
-          <span class="continent-card-label">Ozeanien</span>
+          <span class="continent-card-label">Oceania</span>
         </button>
       </div>
-      <button id="btn-continent-back">Zurück</button>
+      <button id="btn-continent-back">Back</button>
     </div>
   </div>
 
   <div id="difficulty-menu">
     <div class="menu-box">
-      <h1>SCHWIERIGKEIT</h1>
+      <h1>DIFFICULTY</h1>
       <div class="buttons">
         <button class="diff-btn" data-difficulty="easy">
-          <span class="diff-title">Leicht</span>
-          <span class="diff-desc">Nur bekannte, große Länder &middot; +5 &#129689; pro richtiger Antwort</span>
+          <span class="diff-title">Easy</span>
+          <span class="diff-desc">Only well-known, large countries &middot; +5 &#129689; per correct answer</span>
         </button>
         <button class="diff-btn" data-difficulty="medium">
-          <span class="diff-title">Mittel</span>
-          <span class="diff-desc">Alle Länder gemischt &middot; +10 &#129689; pro richtiger Antwort</span>
+          <span class="diff-title">Medium</span>
+          <span class="diff-desc">All countries mixed &middot; +10 &#129689; per correct answer</span>
         </button>
         <button class="diff-btn" data-difficulty="hard">
-          <span class="diff-title">Schwer</span>
-          <span class="diff-desc">Nur weniger bekannte Länder &middot; +20 &#129689; pro richtiger Antwort</span>
+          <span class="diff-title">Hard</span>
+          <span class="diff-desc">Only lesser-known countries &middot; +20 &#129689; per correct answer</span>
         </button>
-        <button id="btn-diff-back">Zurück</button>
+        <button id="btn-diff-back">Back</button>
       </div>
     </div>
   </div>
@@ -2401,44 +2401,44 @@
   <div id="game">
     <div id="hud" class="hud-bar">
       <div id="target-block">
-        <span class="label" id="target-label">Gesucht</span>
+        <span class="label" id="target-label">Find</span>
         <span class="value" id="target-value">-</span>
       </div>
       <div id="score-block">
-        <span class="label">Richtig</span>
+        <span class="label">Correct</span>
         <span class="value" id="score-value">0</span> / <span id="round-value">0</span>
         <span class="streak-badge" id="streak-badge-main"></span>
       </div>
       <div id="wrong-block">
-        <span class="label">Falsch</span>
+        <span class="label">Wrong</span>
         <span class="value" id="wrong-value">0</span>
       </div>
       <div class="coin-block">
         <span class="label">&#129689;</span>
         <span class="value coin-value">0</span>
       </div>
-      <button id="btn-menu" class="menu-btn">Menü</button>
+      <button id="btn-menu" class="menu-btn">Menu</button>
     </div>
-    <button id="btn-giveup" class="giveup-btn">Aufgeben</button>
-    <button id="btn-check" disabled>Prüfen</button>
+    <button id="btn-giveup" class="giveup-btn">Give up</button>
+    <button id="btn-check" disabled>Check</button>
     <div id="landmark-panel">
-      <img id="landmark-img" alt="Sehenswürdigkeit" />
-      <div id="landmark-caption">In welchem Land steht das?</div>
+      <img id="landmark-img" alt="Landmark" />
+      <div id="landmark-caption">Which country is this in?</div>
     </div>
     <div id="status-msg" class="status-msg"></div>
     <div id="map"></div>
 
     <div id="image-lightbox">
-      <img id="lightbox-img" alt="Sehenswürdigkeit vergrößert" />
+      <img id="lightbox-img" alt="Landmark enlarged" />
     </div>
 
     <div id="end-overlay" class="overlay">
       <div class="end-box">
-        <h2>Runde beendet!</h2>
+        <h2>Round over!</h2>
         <p id="end-text"></p>
         <div class="end-buttons">
-          <button id="btn-replay">Nochmal</button>
-          <button id="btn-back-menu">Zum Menü</button>
+          <button id="btn-replay">Again</button>
+          <button id="btn-back-menu">To menu</button>
         </div>
       </div>
     </div>
@@ -2447,35 +2447,35 @@
   <div id="border-game">
     <div class="hud-bar">
       <div>
-        <span class="label">Ziel</span>
+        <span class="label">Target</span>
         <span class="value" id="border-target-value">-</span>
       </div>
       <div>
-        <span class="label">Schritte übrig &middot; Runde <span id="border-round-value">0</span>/<span id="border-total-value">0</span></span>
+        <span class="label">Steps left &middot; Round <span id="border-round-value">0</span>/<span id="border-total-value">0</span></span>
         <span class="value" id="border-steps-value">0</span>
       </div>
       <div>
-        <span class="label">Weg</span>
+        <span class="label">Path</span>
         <span class="value" id="border-path-value">-</span>
       </div>
       <div class="coin-block">
         <span class="label">&#129689;</span>
         <span class="value coin-value">0</span>
       </div>
-      <button id="btn-border-menu" class="menu-btn">Menü</button>
+      <button id="btn-border-menu" class="menu-btn">Menu</button>
     </div>
-    <button id="btn-border-giveup" class="giveup-btn">Lösung zeigen</button>
-    <button id="btn-border-next" style="display:none;">Weiter</button>
+    <button id="btn-border-giveup" class="giveup-btn">Show solution</button>
+    <button id="btn-border-next" style="display:none;">Next</button>
     <div id="border-status-msg" class="status-msg"></div>
     <div id="border-map"></div>
 
     <div id="border-end-overlay" class="overlay">
       <div class="end-box">
-        <h2>Runde beendet!</h2>
+        <h2>Round over!</h2>
         <p id="border-end-text"></p>
         <div class="end-buttons">
-          <button id="btn-border-replay">Nochmal</button>
-          <button id="btn-border-back-menu">Zum Menü</button>
+          <button id="btn-border-replay">Again</button>
+          <button id="btn-border-back-menu">To menu</button>
         </div>
       </div>
     </div>
@@ -2484,36 +2484,36 @@
   <div id="capital-game">
     <div class="hud-bar">
       <div>
-        <span class="label">Hauptstadt</span>
+        <span class="label">Capital</span>
         <span class="value" id="capital-target-value">-</span>
       </div>
       <div>
-        <span class="label">Richtig</span>
+        <span class="label">Correct</span>
         <span class="value" id="capital-score-value">0</span> / <span id="capital-round-value">0</span>
         <span class="streak-badge" id="streak-badge-capital"></span>
       </div>
       <div>
-        <span class="label">Falsch</span>
+        <span class="label">Wrong</span>
         <span class="value" id="capital-wrong-value">0</span>
       </div>
       <div class="coin-block">
         <span class="label">&#129689;</span>
         <span class="value coin-value">0</span>
       </div>
-      <button id="btn-capital-menu" class="menu-btn">Menü</button>
+      <button id="btn-capital-menu" class="menu-btn">Menu</button>
     </div>
-    <button id="btn-capital-giveup" class="giveup-btn">Aufgeben</button>
-    <button id="btn-capital-check" disabled>Prüfen</button>
+    <button id="btn-capital-giveup" class="giveup-btn">Give up</button>
+    <button id="btn-capital-check" disabled>Check</button>
     <div id="capital-status-msg" class="status-msg"></div>
     <div id="capital-map"></div>
 
     <div id="capital-end-overlay" class="overlay">
       <div class="end-box">
-        <h2>Runde beendet!</h2>
+        <h2>Round over!</h2>
         <p id="capital-end-text"></p>
         <div class="end-buttons">
-          <button id="btn-capital-replay">Nochmal</button>
-          <button id="btn-capital-back-menu">Zum Menü</button>
+          <button id="btn-capital-replay">Again</button>
+          <button id="btn-capital-back-menu">To menu</button>
         </div>
       </div>
     </div>
@@ -2522,19 +2522,19 @@
   <div id="silhouette-game">
     <div class="hud-bar">
       <div>
-        <span class="label">Richtig</span>
+        <span class="label">Correct</span>
         <span class="value" id="sil-score-value">0</span> / <span id="sil-round-value">0</span>
         <span class="streak-badge" id="streak-badge-silhouette"></span>
       </div>
       <div>
-        <span class="label">Falsch</span>
+        <span class="label">Wrong</span>
         <span class="value" id="sil-wrong-value">0</span>
       </div>
       <div class="coin-block">
         <span class="label">&#129689;</span>
         <span class="value coin-value">0</span>
       </div>
-      <button id="btn-sil-menu" class="menu-btn">Menü</button>
+      <button id="btn-sil-menu" class="menu-btn">Menu</button>
     </div>
 
     <div id="silhouette-shape">
@@ -2550,11 +2550,11 @@
 
     <div id="sil-end-overlay" class="overlay">
       <div class="end-box">
-        <h2>Runde beendet!</h2>
+        <h2>Round over!</h2>
         <p id="sil-end-text"></p>
         <div class="end-buttons">
-          <button id="btn-sil-replay">Nochmal</button>
-          <button id="btn-sil-back-menu">Zum Menü</button>
+          <button id="btn-sil-replay">Again</button>
+          <button id="btn-sil-back-menu">To menu</button>
         </div>
       </div>
     </div>
@@ -2717,75 +2717,75 @@ function countryContinent(id) {
 const CATEGORIES = [
   {
     key: 'arabic',
-    label: 'Arabische Länder',
+    label: 'Arab countries',
     ids: new Set(['DZA', 'BHR', 'COM', 'DJI', 'EGY', 'IRQ', 'JOR', 'KWT', 'LBN', 'LBY', 'MRT', 'MAR', 'OMN', 'QAT', 'SAU', 'SOM', 'SDN', 'SYR', 'TUN', 'ARE', 'YEM']),
   },
   {
     key: 'spanish',
-    label: 'Spanischsprachige Länder',
+    label: 'Spanish-speaking countries',
     ids: new Set(['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'DOM', 'ECU', 'SLV', 'GNQ', 'GTM', 'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'ESP', 'URY', 'VEN']),
   },
   {
     key: 'english',
-    label: 'Englischsprachige Länder',
+    label: 'English-speaking countries',
     ids: new Set(['USA', 'GBR', 'CAN', 'AUS', 'NZL', 'IRL', 'ZAF', 'JAM', 'TTO', 'GHA', 'NGA', 'KEN', 'UGA', 'ZMB', 'ZWE', 'IND', 'PAK', 'PHL', 'SGP', 'MLT']),
   },
   {
     key: 'french',
-    label: 'Französischsprachige Länder',
+    label: 'French-speaking countries',
     ids: new Set(['FRA', 'BEL', 'CHE', 'CAN', 'SEN', 'CIV', 'MLI', 'NER', 'BFA', 'TCD', 'COD', 'COG', 'CMR', 'GAB', 'MDG', 'HTI', 'LUX', 'MCO', 'TGO', 'BEN', 'GIN', 'DJI', 'RWA']),
   },
   {
     key: 'ancient',
-    label: 'Länder mit über 1000 Jahren Geschichte',
+    label: 'Countries with over 1000 years of history',
     ids: new Set(['CHN', 'JPN', 'EGY', 'IRN', 'ETH', 'ARM', 'GEO', 'SMR', 'DNK', 'FRA', 'GBR', 'BGR', 'OMN']),
   },
-  { key: 'portuguese', label: 'Portugiesischsprachige Länder', ids: new Set(['PRT', 'BRA', 'AGO', 'MOZ', 'GNB', 'CPV', 'STP', 'TLS']) },
-  { key: 'german', label: 'Deutschsprachige Länder', ids: new Set(['DEU', 'AUT', 'CHE', 'LIE', 'LUX']) },
-  { key: 'russian', label: 'Länder mit bedeutender russischsprachiger Bevölkerung', ids: new Set(['RUS', 'BLR', 'KAZ', 'KGZ', 'TJK', 'UZB', 'ARM', 'GEO', 'AZE', 'MDA']) },
-  { key: 'eu', label: 'EU-Mitgliedsländer', ids: new Set(['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA', 'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE']) },
-  { key: 'nato', label: 'NATO-Mitgliedsländer', ids: new Set(['ALB', 'BEL', 'BGR', 'CAN', 'HRV', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'ISL', 'ITA', 'LVA', 'LTU', 'LUX', 'MNE', 'NLD', 'MKD', 'NOR', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE', 'TUR', 'GBR', 'USA']) },
-  { key: 'g7', label: 'G7-Länder', ids: new Set(['USA', 'GBR', 'FRA', 'DEU', 'ITA', 'JPN', 'CAN']) },
-  { key: 'g20', label: 'G20-Länder', ids: new Set(['ARG', 'AUS', 'BRA', 'CAN', 'CHN', 'FRA', 'DEU', 'IND', 'IDN', 'ITA', 'JPN', 'MEX', 'RUS', 'SAU', 'ZAF', 'KOR', 'TUR', 'GBR', 'USA']) },
-  { key: 'brics', label: 'BRICS-Staaten', ids: new Set(['BRA', 'RUS', 'IND', 'CHN', 'ZAF', 'EGY', 'ETH', 'IRN', 'ARE']) },
-  { key: 'opec', label: 'OPEC-Mitgliedsländer', ids: new Set(['SAU', 'ARE', 'KWT', 'IRQ', 'IRN', 'LBY', 'DZA', 'COG', 'GAB', 'GNQ', 'VEN', 'NGA']) },
-  { key: 'asean', label: 'ASEAN-Staaten', ids: new Set(['BRN', 'KHM', 'IDN', 'LAO', 'MYS', 'MMR', 'PHL', 'SGP', 'THA', 'VNM']) },
-  { key: 'commonwealth', label: 'Commonwealth-Staaten', ids: new Set(['GBR', 'CAN', 'AUS', 'NZL', 'IND', 'ZAF', 'NGA', 'KEN', 'GHA', 'JAM', 'MYS', 'SGP', 'PAK', 'BGD', 'TZA', 'UGA', 'ZMB', 'CYP', 'MLT']) },
-  { key: 'postsoviet', label: 'Ehemalige Sowjetrepubliken', ids: new Set(['RUS', 'UKR', 'BLR', 'EST', 'LVA', 'LTU', 'MDA', 'GEO', 'ARM', 'AZE', 'KAZ', 'UZB', 'TKM', 'KGZ', 'TJK']) },
-  { key: 'exyugoslavia', label: 'Ehemaliges Jugoslawien', ids: new Set(['SVN', 'HRV', 'BIH', 'SRB', 'MNE', 'MKD']) },
-  { key: 'nordic', label: 'Nordische Länder', ids: new Set(['NOR', 'SWE', 'DNK', 'FIN', 'ISL']) },
-  { key: 'balticsea', label: 'Länder an der Ostsee', ids: new Set(['EST', 'LVA', 'LTU', 'POL', 'DEU', 'DNK', 'SWE', 'FIN', 'RUS']) },
-  { key: 'balkan', label: 'Balkanländer', ids: new Set(['ALB', 'BIH', 'BGR', 'HRV', 'GRC', 'MNE', 'MKD', 'ROU', 'SRB', 'SVN']) },
-  { key: 'caribbean', label: 'Karibische Staaten', ids: new Set(['CUB', 'DOM', 'HTI', 'JAM', 'BHS', 'TTO', 'BRB', 'GRD', 'LCA', 'VCT', 'ATG', 'DMA', 'KNA']) },
-  { key: 'centralamerica', label: 'Zentralamerikanische Länder', ids: new Set(['BLZ', 'CRI', 'SLV', 'GTM', 'HND', 'NIC', 'PAN']) },
-  { key: 'southasia', label: 'Südasiatische Länder', ids: new Set(['IND', 'PAK', 'BGD', 'LKA', 'NPL', 'BTN', 'MDV', 'AFG']) },
-  { key: 'eastasia', label: 'Ostasiatische Länder', ids: new Set(['CHN', 'JPN', 'KOR', 'PRK', 'MNG', 'TWN']) },
-  { key: 'centralasia', label: 'Zentralasiatische Länder', ids: new Set(['KAZ', 'UZB', 'TKM', 'KGZ', 'TJK']) },
-  { key: 'middleeast', label: 'Nahost-Länder', ids: new Set(['SAU', 'ARE', 'QAT', 'KWT', 'BHR', 'OMN', 'YEM', 'IRQ', 'IRN', 'SYR', 'LBN', 'JOR', 'ISR']) },
-  { key: 'northafrica', label: 'Nordafrikanische Länder', ids: new Set(['MAR', 'DZA', 'TUN', 'LBY', 'EGY', 'SDN']) },
-  { key: 'westafrica', label: 'Westafrikanische Länder', ids: new Set(['NGA', 'GHA', 'SEN', 'CIV', 'MLI', 'NER', 'BFA', 'GIN', 'BEN', 'TGO', 'SLE', 'LBR', 'GMB', 'GNB', 'MRT']) },
-  { key: 'eastafrica', label: 'Ostafrikanische Länder', ids: new Set(['KEN', 'TZA', 'UGA', 'RWA', 'BDI', 'ETH', 'SOM', 'SSD', 'DJI', 'ERI']) },
-  { key: 'southernafrica', label: 'Länder im südlichen Afrika', ids: new Set(['ZAF', 'NAM', 'BWA', 'ZWE', 'ZMB', 'MOZ', 'MWI', 'LSO', 'SWZ', 'AGO']) },
-  { key: 'centralafrica', label: 'Zentralafrikanische Länder', ids: new Set(['COD', 'COG', 'CMR', 'GAB', 'TCD', 'CAF', 'GNQ']) },
-  { key: 'andean', label: 'Anden-Länder', ids: new Set(['COL', 'ECU', 'PER', 'BOL', 'CHL', 'ARG', 'VEN']) },
-  { key: 'pacificislands', label: 'Pazifikinselstaaten', ids: new Set(['FJI', 'PNG', 'SLB', 'VUT', 'WSM', 'TON', 'KIR', 'FSM', 'MHL', 'PLW', 'NRU', 'TUV']) },
-  { key: 'landlocked', label: 'Binnenländer ohne Meerzugang', ids: new Set(['AUT', 'CHE', 'CZE', 'SVK', 'HUN', 'LUX', 'LIE', 'BLR', 'MDA', 'SRB', 'MKD', 'ARM', 'AZE', 'KAZ', 'UZB', 'TKM', 'KGZ', 'TJK', 'AFG', 'NPL', 'BTN', 'MNG', 'LAO', 'ETH', 'SSD', 'TCD', 'CAF', 'NER', 'MLI', 'BFA', 'RWA', 'BDI', 'UGA', 'ZMB', 'ZWE', 'MWI', 'BWA', 'LSO', 'SWZ', 'PRY', 'BOL']) },
-  { key: 'islands', label: 'Inselstaaten', ids: new Set(['JPN', 'ISL', 'CUB', 'JAM', 'HTI', 'DOM', 'LKA', 'MDG', 'NZL', 'PHL', 'IDN', 'MDV', 'SYC', 'MUS', 'COM', 'FJI', 'WSM', 'TON', 'KIR', 'FSM', 'MHL', 'PLW', 'NRU', 'TUV', 'SGP', 'CPV', 'STP', 'BHS', 'BRB', 'GRD', 'LCA', 'VCT', 'ATG', 'DMA', 'KNA', 'TTO', 'MLT']) },
-  { key: 'mediterranean', label: 'Länder am Mittelmeer', ids: new Set(['ESP', 'FRA', 'ITA', 'MCO', 'SVN', 'HRV', 'BIH', 'MNE', 'ALB', 'GRC', 'TUR', 'SYR', 'LBN', 'ISR', 'EGY', 'LBY', 'TUN', 'DZA', 'MAR', 'MLT', 'CYP']) },
-  { key: 'equator', label: 'Länder am Äquator', ids: new Set(['ECU', 'COL', 'BRA', 'GAB', 'COG', 'COD', 'UGA', 'KEN', 'SOM', 'MDV', 'IDN', 'KIR', 'STP']) },
-  { key: 'persiangulf', label: 'Länder am Persischen Golf', ids: new Set(['SAU', 'ARE', 'QAT', 'KWT', 'BHR', 'OMN', 'IRN', 'IRQ']) },
-  { key: 'alps', label: 'Alpenländer', ids: new Set(['CHE', 'AUT', 'DEU', 'FRA', 'ITA', 'SVN', 'LIE']) },
-  { key: 'monarchies', label: 'Monarchien der Welt', ids: new Set(['GBR', 'ESP', 'NLD', 'BEL', 'SWE', 'NOR', 'DNK', 'LUX', 'MCO', 'LIE', 'AND', 'VAT', 'JPN', 'THA', 'MYS', 'KHM', 'BHR', 'KWT', 'QAT', 'SAU', 'ARE', 'OMN', 'JOR', 'MAR', 'SWZ', 'LSO', 'BTN', 'BRN', 'TON']) },
-  { key: 'deserts', label: 'Wüstenländer', ids: new Set(['DZA', 'LBY', 'EGY', 'SDN', 'MRT', 'MLI', 'NER', 'TCD', 'SAU', 'ARE', 'QAT', 'KWT', 'OMN', 'YEM', 'IRQ', 'IRN', 'AFG', 'TKM', 'UZB', 'MNG', 'AUS', 'NAM', 'BWA']) },
-  { key: 'manyneighbors', label: 'Länder mit besonders vielen Nachbarländern', ids: new Set(['CHN', 'RUS', 'BRA', 'COD', 'DEU', 'AUT', 'TUR']) },
-  { key: 'colonialpowers', label: 'Frühere Kolonialmächte', ids: new Set(['GBR', 'FRA', 'ESP', 'PRT', 'NLD', 'BEL', 'DEU', 'ITA']) },
-  { key: 'ringoffire', label: 'Länder am Pazifischen Feuerring', ids: new Set(['JPN', 'PHL', 'IDN', 'PNG', 'NZL', 'CHL', 'PER', 'ECU', 'MEX', 'USA', 'CAN', 'RUS', 'GTM', 'SLV', 'NIC', 'CRI', 'PAN']) },
-  { key: 'largestarea', label: 'Größte Länder nach Fläche', ids: new Set(['RUS', 'CAN', 'USA', 'CHN', 'BRA', 'AUS', 'IND', 'ARG', 'KAZ', 'DZA', 'COD', 'SAU', 'MEX', 'IDN', 'SDN']) },
-  { key: 'smalleststates', label: 'Kleinste Länder der Welt', ids: new Set(['VAT', 'MCO', 'NRU', 'TUV', 'SMR', 'LIE', 'MHL', 'KNA', 'MDV', 'MLT']) },
-  { key: 'mostpopulous', label: 'Bevölkerungsreichste Länder', ids: new Set(['CHN', 'IND', 'USA', 'IDN', 'PAK', 'NGA', 'BRA', 'BGD', 'RUS', 'MEX']) },
-  { key: 'wine', label: 'Weinanbauländer', ids: new Set(['FRA', 'ITA', 'ESP', 'PRT', 'DEU', 'ARG', 'CHL', 'ZAF', 'AUS', 'USA', 'GEO']) },
-  { key: 'coffee', label: 'Kaffeeanbauländer', ids: new Set(['BRA', 'COL', 'VNM', 'IDN', 'ETH', 'HND', 'UGA', 'MEX', 'GTM', 'PER', 'IND']) },
-  { key: 'tea', label: 'Tee-Anbauländer', ids: new Set(['CHN', 'IND', 'KEN', 'LKA', 'TUR', 'VNM', 'IDN']) },
+  { key: 'portuguese', label: 'Portuguese-speaking countries', ids: new Set(['PRT', 'BRA', 'AGO', 'MOZ', 'GNB', 'CPV', 'STP', 'TLS']) },
+  { key: 'german', label: 'German-speaking countries', ids: new Set(['DEU', 'AUT', 'CHE', 'LIE', 'LUX']) },
+  { key: 'russian', label: 'Countries with a significant Russian-speaking population', ids: new Set(['RUS', 'BLR', 'KAZ', 'KGZ', 'TJK', 'UZB', 'ARM', 'GEO', 'AZE', 'MDA']) },
+  { key: 'eu', label: 'EU member states', ids: new Set(['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA', 'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE']) },
+  { key: 'nato', label: 'NATO member states', ids: new Set(['ALB', 'BEL', 'BGR', 'CAN', 'HRV', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'ISL', 'ITA', 'LVA', 'LTU', 'LUX', 'MNE', 'NLD', 'MKD', 'NOR', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE', 'TUR', 'GBR', 'USA']) },
+  { key: 'g7', label: 'G7 countries', ids: new Set(['USA', 'GBR', 'FRA', 'DEU', 'ITA', 'JPN', 'CAN']) },
+  { key: 'g20', label: 'G20 countries', ids: new Set(['ARG', 'AUS', 'BRA', 'CAN', 'CHN', 'FRA', 'DEU', 'IND', 'IDN', 'ITA', 'JPN', 'MEX', 'RUS', 'SAU', 'ZAF', 'KOR', 'TUR', 'GBR', 'USA']) },
+  { key: 'brics', label: 'BRICS countries', ids: new Set(['BRA', 'RUS', 'IND', 'CHN', 'ZAF', 'EGY', 'ETH', 'IRN', 'ARE']) },
+  { key: 'opec', label: 'OPEC member states', ids: new Set(['SAU', 'ARE', 'KWT', 'IRQ', 'IRN', 'LBY', 'DZA', 'COG', 'GAB', 'GNQ', 'VEN', 'NGA']) },
+  { key: 'asean', label: 'ASEAN countries', ids: new Set(['BRN', 'KHM', 'IDN', 'LAO', 'MYS', 'MMR', 'PHL', 'SGP', 'THA', 'VNM']) },
+  { key: 'commonwealth', label: 'Commonwealth countries', ids: new Set(['GBR', 'CAN', 'AUS', 'NZL', 'IND', 'ZAF', 'NGA', 'KEN', 'GHA', 'JAM', 'MYS', 'SGP', 'PAK', 'BGD', 'TZA', 'UGA', 'ZMB', 'CYP', 'MLT']) },
+  { key: 'postsoviet', label: 'Former Soviet republics', ids: new Set(['RUS', 'UKR', 'BLR', 'EST', 'LVA', 'LTU', 'MDA', 'GEO', 'ARM', 'AZE', 'KAZ', 'UZB', 'TKM', 'KGZ', 'TJK']) },
+  { key: 'exyugoslavia', label: 'Former Yugoslavia', ids: new Set(['SVN', 'HRV', 'BIH', 'SRB', 'MNE', 'MKD']) },
+  { key: 'nordic', label: 'Nordic countries', ids: new Set(['NOR', 'SWE', 'DNK', 'FIN', 'ISL']) },
+  { key: 'balticsea', label: 'Baltic Sea countries', ids: new Set(['EST', 'LVA', 'LTU', 'POL', 'DEU', 'DNK', 'SWE', 'FIN', 'RUS']) },
+  { key: 'balkan', label: 'Balkan countries', ids: new Set(['ALB', 'BIH', 'BGR', 'HRV', 'GRC', 'MNE', 'MKD', 'ROU', 'SRB', 'SVN']) },
+  { key: 'caribbean', label: 'Caribbean countries', ids: new Set(['CUB', 'DOM', 'HTI', 'JAM', 'BHS', 'TTO', 'BRB', 'GRD', 'LCA', 'VCT', 'ATG', 'DMA', 'KNA']) },
+  { key: 'centralamerica', label: 'Central American countries', ids: new Set(['BLZ', 'CRI', 'SLV', 'GTM', 'HND', 'NIC', 'PAN']) },
+  { key: 'southasia', label: 'South Asian countries', ids: new Set(['IND', 'PAK', 'BGD', 'LKA', 'NPL', 'BTN', 'MDV', 'AFG']) },
+  { key: 'eastasia', label: 'East Asian countries', ids: new Set(['CHN', 'JPN', 'KOR', 'PRK', 'MNG', 'TWN']) },
+  { key: 'centralasia', label: 'Central Asian countries', ids: new Set(['KAZ', 'UZB', 'TKM', 'KGZ', 'TJK']) },
+  { key: 'middleeast', label: 'Middle Eastern countries', ids: new Set(['SAU', 'ARE', 'QAT', 'KWT', 'BHR', 'OMN', 'YEM', 'IRQ', 'IRN', 'SYR', 'LBN', 'JOR', 'ISR']) },
+  { key: 'northafrica', label: 'North African countries', ids: new Set(['MAR', 'DZA', 'TUN', 'LBY', 'EGY', 'SDN']) },
+  { key: 'westafrica', label: 'West African countries', ids: new Set(['NGA', 'GHA', 'SEN', 'CIV', 'MLI', 'NER', 'BFA', 'GIN', 'BEN', 'TGO', 'SLE', 'LBR', 'GMB', 'GNB', 'MRT']) },
+  { key: 'eastafrica', label: 'East African countries', ids: new Set(['KEN', 'TZA', 'UGA', 'RWA', 'BDI', 'ETH', 'SOM', 'SSD', 'DJI', 'ERI']) },
+  { key: 'southernafrica', label: 'Southern African countries', ids: new Set(['ZAF', 'NAM', 'BWA', 'ZWE', 'ZMB', 'MOZ', 'MWI', 'LSO', 'SWZ', 'AGO']) },
+  { key: 'centralafrica', label: 'Central African countries', ids: new Set(['COD', 'COG', 'CMR', 'GAB', 'TCD', 'CAF', 'GNQ']) },
+  { key: 'andean', label: 'Andean countries', ids: new Set(['COL', 'ECU', 'PER', 'BOL', 'CHL', 'ARG', 'VEN']) },
+  { key: 'pacificislands', label: 'Pacific Island states', ids: new Set(['FJI', 'PNG', 'SLB', 'VUT', 'WSM', 'TON', 'KIR', 'FSM', 'MHL', 'PLW', 'NRU', 'TUV']) },
+  { key: 'landlocked', label: 'Landlocked countries', ids: new Set(['AUT', 'CHE', 'CZE', 'SVK', 'HUN', 'LUX', 'LIE', 'BLR', 'MDA', 'SRB', 'MKD', 'ARM', 'AZE', 'KAZ', 'UZB', 'TKM', 'KGZ', 'TJK', 'AFG', 'NPL', 'BTN', 'MNG', 'LAO', 'ETH', 'SSD', 'TCD', 'CAF', 'NER', 'MLI', 'BFA', 'RWA', 'BDI', 'UGA', 'ZMB', 'ZWE', 'MWI', 'BWA', 'LSO', 'SWZ', 'PRY', 'BOL']) },
+  { key: 'islands', label: 'Island states', ids: new Set(['JPN', 'ISL', 'CUB', 'JAM', 'HTI', 'DOM', 'LKA', 'MDG', 'NZL', 'PHL', 'IDN', 'MDV', 'SYC', 'MUS', 'COM', 'FJI', 'WSM', 'TON', 'KIR', 'FSM', 'MHL', 'PLW', 'NRU', 'TUV', 'SGP', 'CPV', 'STP', 'BHS', 'BRB', 'GRD', 'LCA', 'VCT', 'ATG', 'DMA', 'KNA', 'TTO', 'MLT']) },
+  { key: 'mediterranean', label: 'Mediterranean countries', ids: new Set(['ESP', 'FRA', 'ITA', 'MCO', 'SVN', 'HRV', 'BIH', 'MNE', 'ALB', 'GRC', 'TUR', 'SYR', 'LBN', 'ISR', 'EGY', 'LBY', 'TUN', 'DZA', 'MAR', 'MLT', 'CYP']) },
+  { key: 'equator', label: 'Equatorial countries', ids: new Set(['ECU', 'COL', 'BRA', 'GAB', 'COG', 'COD', 'UGA', 'KEN', 'SOM', 'MDV', 'IDN', 'KIR', 'STP']) },
+  { key: 'persiangulf', label: 'Persian Gulf countries', ids: new Set(['SAU', 'ARE', 'QAT', 'KWT', 'BHR', 'OMN', 'IRN', 'IRQ']) },
+  { key: 'alps', label: 'Alpine countries', ids: new Set(['CHE', 'AUT', 'DEU', 'FRA', 'ITA', 'SVN', 'LIE']) },
+  { key: 'monarchies', label: 'Monarchies of the world', ids: new Set(['GBR', 'ESP', 'NLD', 'BEL', 'SWE', 'NOR', 'DNK', 'LUX', 'MCO', 'LIE', 'AND', 'VAT', 'JPN', 'THA', 'MYS', 'KHM', 'BHR', 'KWT', 'QAT', 'SAU', 'ARE', 'OMN', 'JOR', 'MAR', 'SWZ', 'LSO', 'BTN', 'BRN', 'TON']) },
+  { key: 'deserts', label: 'Desert countries', ids: new Set(['DZA', 'LBY', 'EGY', 'SDN', 'MRT', 'MLI', 'NER', 'TCD', 'SAU', 'ARE', 'QAT', 'KWT', 'OMN', 'YEM', 'IRQ', 'IRN', 'AFG', 'TKM', 'UZB', 'MNG', 'AUS', 'NAM', 'BWA']) },
+  { key: 'manyneighbors', label: 'Countries with especially many neighbors', ids: new Set(['CHN', 'RUS', 'BRA', 'COD', 'DEU', 'AUT', 'TUR']) },
+  { key: 'colonialpowers', label: 'Former colonial powers', ids: new Set(['GBR', 'FRA', 'ESP', 'PRT', 'NLD', 'BEL', 'DEU', 'ITA']) },
+  { key: 'ringoffire', label: 'Countries on the Pacific Ring of Fire', ids: new Set(['JPN', 'PHL', 'IDN', 'PNG', 'NZL', 'CHL', 'PER', 'ECU', 'MEX', 'USA', 'CAN', 'RUS', 'GTM', 'SLV', 'NIC', 'CRI', 'PAN']) },
+  { key: 'largestarea', label: 'Largest countries by area', ids: new Set(['RUS', 'CAN', 'USA', 'CHN', 'BRA', 'AUS', 'IND', 'ARG', 'KAZ', 'DZA', 'COD', 'SAU', 'MEX', 'IDN', 'SDN']) },
+  { key: 'smalleststates', label: 'Smallest countries in the world', ids: new Set(['VAT', 'MCO', 'NRU', 'TUV', 'SMR', 'LIE', 'MHL', 'KNA', 'MDV', 'MLT']) },
+  { key: 'mostpopulous', label: 'Most populous countries', ids: new Set(['CHN', 'IND', 'USA', 'IDN', 'PAK', 'NGA', 'BRA', 'BGD', 'RUS', 'MEX']) },
+  { key: 'wine', label: 'Wine-growing countries', ids: new Set(['FRA', 'ITA', 'ESP', 'PRT', 'DEU', 'ARG', 'CHL', 'ZAF', 'AUS', 'USA', 'GEO']) },
+  { key: 'coffee', label: 'Coffee-growing countries', ids: new Set(['BRA', 'COL', 'VNM', 'IDN', 'ETH', 'HND', 'UGA', 'MEX', 'GTM', 'PER', 'IND']) },
+  { key: 'tea', label: 'Tea-growing countries', ids: new Set(['CHN', 'IND', 'KEN', 'LKA', 'TUR', 'VNM', 'IDN']) },
 ];
 
 let categoryFilterIds = null;
@@ -3074,11 +3074,11 @@ function saveSettings() {
 // Kasse. Persistiert in localStorage, damit der Fortschritt erhalten bleibt.
 const REWARD_MODES = ['country', 'landmark', 'silhouette', 'capital', 'border'];
 const MODE_LABELS = {
-  country: 'Länder-Quiz',
-  landmark: 'Sehenswürdigkeiten',
+  country: 'Country Quiz',
+  landmark: 'Landmarks',
   silhouette: 'Silhouette',
-  capital: 'Hauptstädte',
-  border: 'Länderkette',
+  capital: 'Capitals',
+  border: 'Border Chain',
 };
 // Je höher der Schwierigkeitsgrad, desto mehr Münzen pro richtiger Antwort - Länderkette
 // hat keine eigene Schwierigkeitsauswahl und zählt daher immer als "Mittel".
@@ -3088,16 +3088,16 @@ function coinsForDifficulty(mode) {
   return COINS_BY_DIFFICULTY[diff] || COINS_BY_DIFFICULTY.medium;
 }
 const REWARD_MILESTONES = [
-  { threshold: 5, icon: '🥉', label: 'Erste Schritte' },
-  { threshold: 15, icon: '🥈', label: 'Geübter Geograf' },
-  { threshold: 30, icon: '🥇', label: 'Kartenkenner' },
-  { threshold: 50, icon: '🎖️', label: 'Weltenbummler' },
-  { threshold: 75, icon: '🏅', label: 'Länderprofi' },
-  { threshold: 100, icon: '🏆', label: 'Geo-Experte' },
-  { threshold: 150, icon: '💎', label: 'Kartenmeister' },
-  { threshold: 200, icon: '👑', label: 'Weltmeister' },
-  { threshold: 300, icon: '🌍', label: 'Erdkugel-Legende' },
-  { threshold: 500, icon: '⭐', label: 'Geo-Genie' },
+  { threshold: 5, icon: '🥉', label: 'First Steps' },
+  { threshold: 15, icon: '🥈', label: 'Practiced Geographer' },
+  { threshold: 30, icon: '🥇', label: 'Map Connoisseur' },
+  { threshold: 50, icon: '🎖️', label: 'Globetrotter' },
+  { threshold: 75, icon: '🏅', label: 'Country Pro' },
+  { threshold: 100, icon: '🏆', label: 'Geo Expert' },
+  { threshold: 150, icon: '💎', label: 'Map Master' },
+  { threshold: 200, icon: '👑', label: 'World Champion' },
+  { threshold: 300, icon: '🌍', label: 'Globe Legend' },
+  { threshold: 500, icon: '⭐', label: 'Geo Genius' },
 ];
 
 function emptyModeStats() {
@@ -3159,7 +3159,7 @@ function showCoinPopup(amount) {
 function showRewardToast(milestone, mode) {
   const toast = document.createElement('div');
   toast.className = 'reward-toast';
-  toast.innerHTML = `<span class="reward-icon">${milestone.icon}</span><span>${MODE_LABELS[mode]}: ${milestone.label} freigeschaltet!</span>`;
+  toast.innerHTML = `<span class="reward-icon">${milestone.icon}</span><span>${MODE_LABELS[mode]}: ${milestone.label} unlocked!</span>`;
   document.body.appendChild(toast);
   launchConfetti(45);
   setTimeout(() => toast.remove(), 3000);
@@ -3172,16 +3172,16 @@ function showRewardToast(milestone, mode) {
 // Antwort in JEDEM Modus (auch online) bereits aufgerufen wird - dadurch braucht keine
 // einzelne Spielmodus-Datei angefasst zu werden.
 const QUEST_POOL = [
-  { id: 'any5', desc: '5 richtige Antworten (egal welcher Modus)', target: 5, track: 'any' },
-  { id: 'any10', desc: '10 richtige Antworten (egal welcher Modus)', target: 10, track: 'any' },
-  { id: 'country3', desc: '3 richtige im Länder-Quiz', target: 3, track: 'mode', mode: 'country' },
-  { id: 'landmark3', desc: '3 richtige bei Sehenswürdigkeiten', target: 3, track: 'mode', mode: 'landmark' },
-  { id: 'silhouette3', desc: '3 richtige Silhouetten', target: 3, track: 'mode', mode: 'silhouette' },
-  { id: 'capital3', desc: '3 richtige Hauptstädte', target: 3, track: 'mode', mode: 'capital' },
-  { id: 'border3', desc: '3 richtige Länderketten-Runden', target: 3, track: 'mode', mode: 'border' },
-  { id: 'category3', desc: '3 richtige in Kategorien', target: 3, track: 'mode', mode: 'category' },
-  { id: 'online1', desc: 'Gewinne 1 Runde im Online-Duell', target: 1, track: 'mode', mode: 'online' },
-  { id: 'streak5', desc: 'Erreiche eine Serie von 5 in einem Modus', target: 5, track: 'streak' },
+  { id: 'any5', desc: '5 correct answers (any mode)', target: 5, track: 'any' },
+  { id: 'any10', desc: '10 correct answers (any mode)', target: 10, track: 'any' },
+  { id: 'country3', desc: '3 correct in Country Quiz', target: 3, track: 'mode', mode: 'country' },
+  { id: 'landmark3', desc: '3 correct in Landmarks', target: 3, track: 'mode', mode: 'landmark' },
+  { id: 'silhouette3', desc: '3 correct silhouettes', target: 3, track: 'mode', mode: 'silhouette' },
+  { id: 'capital3', desc: '3 correct capitals', target: 3, track: 'mode', mode: 'capital' },
+  { id: 'border3', desc: '3 correct border chain rounds', target: 3, track: 'mode', mode: 'border' },
+  { id: 'category3', desc: '3 correct in Categories', target: 3, track: 'mode', mode: 'category' },
+  { id: 'online1', desc: 'Win 1 round in Online Duel', target: 1, track: 'mode', mode: 'online' },
+  { id: 'streak5', desc: 'Reach a streak of 5 in one mode', target: 5, track: 'streak' },
 ];
 const DAILY_QUEST_COUNT = 3;
 const DAILY_QUEST_REWARD = 100;
@@ -3301,13 +3301,13 @@ function renderDailyQuests() {
     if (completed && !claimed) {
       const claimBtn = document.createElement('button');
       claimBtn.className = 'quest-claim-btn';
-      claimBtn.textContent = `Einsammeln (+${DAILY_QUEST_REWARD} 🪙)`;
+      claimBtn.textContent = `Claim (+${DAILY_QUEST_REWARD} 🪙)`;
       claimBtn.addEventListener('click', () => claimDailyQuest(id));
       item.appendChild(claimBtn);
     } else {
       const textEl = document.createElement('div');
       textEl.className = 'quest-progress-text';
-      textEl.textContent = claimed ? `Abgeholt · +${DAILY_QUEST_REWARD} 🪙` : `${progress}/${def.target} · +${DAILY_QUEST_REWARD} 🪙`;
+      textEl.textContent = claimed ? `Claimed · +${DAILY_QUEST_REWARD} 🪙` : `${progress}/${def.target} · +${DAILY_QUEST_REWARD} 🪙`;
       item.appendChild(textEl);
     }
     listEl.appendChild(item);
@@ -3321,13 +3321,13 @@ function renderDailyQuests() {
 // bereits vorhandenen Kontinent-Filter, statt einzelne Länder zu tracken, damit keine
 // der Spielmodus-Dateien selbst angefasst werden muss) oder "gewinne N Online-Runden".
 const DAILY_CHALLENGE_POOL = [
-  { id: 'chal_asia', type: 'continent', continent: 'Asia', label: 'Asien' },
-  { id: 'chal_europe', type: 'continent', continent: 'Europe', label: 'Europa' },
-  { id: 'chal_africa', type: 'continent', continent: 'Africa', label: 'Afrika' },
-  { id: 'chal_namerica', type: 'continent', continent: 'North America', label: 'Nordamerika' },
-  { id: 'chal_samerica', type: 'continent', continent: 'South America', label: 'Südamerika' },
-  { id: 'chal_oceania', type: 'continent', continent: 'Oceania', label: 'Ozeanien' },
-  { id: 'chal_online10', type: 'mode', mode: 'online', target: 10, label: 'Online-Duell' },
+  { id: 'chal_asia', type: 'continent', continent: 'Asia', label: 'Asia' },
+  { id: 'chal_europe', type: 'continent', continent: 'Europe', label: 'Europe' },
+  { id: 'chal_africa', type: 'continent', continent: 'Africa', label: 'Africa' },
+  { id: 'chal_namerica', type: 'continent', continent: 'North America', label: 'North America' },
+  { id: 'chal_samerica', type: 'continent', continent: 'South America', label: 'South America' },
+  { id: 'chal_oceania', type: 'continent', continent: 'Oceania', label: 'Oceania' },
+  { id: 'chal_online10', type: 'mode', mode: 'online', target: 10, label: 'Online Duel' },
 ];
 const DAILY_CHALLENGE_REWARD = 300;
 
@@ -3340,8 +3340,8 @@ function getChallengeTarget(def) {
   return count > 0 ? count : 20;
 }
 function getChallengeDesc(def) {
-  if (def.type === 'mode') return `Gewinne ${def.target} Runden im Online-Duell`;
-  return `Beantworte ${getChallengeTarget(def)} Fragen richtig, während "${def.label}" als Kontinent ausgewählt ist`;
+  if (def.type === 'mode') return `Win ${def.target} rounds in Online Duel`;
+  return `Answer ${getChallengeTarget(def)} questions correctly while "${def.label}" is selected as the continent`;
 }
 
 function pickDailyChallengeId(dateStr) {
@@ -3426,13 +3426,13 @@ function renderDailyChallenge() {
   if (completed && !claimed) {
     const claimBtn = document.createElement('button');
     claimBtn.className = 'quest-claim-btn';
-    claimBtn.textContent = `Einsammeln (+${DAILY_CHALLENGE_REWARD} 🪙)`;
+    claimBtn.textContent = `Claim (+${DAILY_CHALLENGE_REWARD} 🪙)`;
     claimBtn.addEventListener('click', claimDailyChallenge);
     item.appendChild(claimBtn);
   } else {
     const textEl = document.createElement('div');
     textEl.className = 'quest-progress-text';
-    textEl.textContent = claimed ? `Abgeholt · +${DAILY_CHALLENGE_REWARD} 🪙` : `${progress}/${target} · +${DAILY_CHALLENGE_REWARD} 🪙`;
+    textEl.textContent = claimed ? `Claimed · +${DAILY_CHALLENGE_REWARD} 🪙` : `${progress}/${target} · +${DAILY_CHALLENGE_REWARD} 🪙`;
     item.appendChild(textEl);
   }
   boxEl.appendChild(item);
@@ -3488,10 +3488,10 @@ function renderRewardsScreen() {
       const prevThreshold = [...REWARD_MILESTONES].reverse().find(m => m.threshold <= correct);
       const base = prevThreshold ? prevThreshold.threshold : 0;
       pct = Math.max(4, Math.round(((correct - base) / (nextMilestone.threshold - base)) * 100));
-      progressLabel = `${correct} / ${nextMilestone.threshold} bis "${nextMilestone.label}" ${nextMilestone.icon}`;
+      progressLabel = `${correct} / ${nextMilestone.threshold} to "${nextMilestone.label}" ${nextMilestone.icon}`;
     } else {
       pct = 100;
-      progressLabel = 'Alle Belohnungen freigeschaltet! 🎉';
+      progressLabel = 'All rewards unlocked! 🎉';
     }
 
     const section = document.createElement('div');
@@ -3499,7 +3499,7 @@ function renderRewardsScreen() {
     section.innerHTML = `
       <div class="rewards-mode-header">
         <span class="rewards-mode-title">${MODE_LABELS[mode]}</span>
-        <span class="rewards-mode-stats">${correct} richtig &middot; beste Serie ${bestStreak} &#128293;</span>
+        <span class="rewards-mode-stats">${correct} correct &middot; best streak ${bestStreak} &#128293;</span>
       </div>
       <div class="rewards-mode-progress-label">${progressLabel}</div>
       <div class="rewards-mode-progress-track"><div class="rewards-mode-progress-fill" style="width:${pct}%"></div></div>
@@ -3521,9 +3521,9 @@ function renderRewardsScreen() {
 // Jeder Skin ist ein eigenes 3D-Modell (name.fbx) im Projektordner, das im Shop-
 // Karussell live per Three.js gerendert und automatisch gedreht wird.
 const SKINS = [
-  { key: 'entdecker', name: 'Entdecker', file: 'entdeckerskin.fbx', price: 200 },
+  { key: 'entdecker', name: 'Explorer', file: 'entdeckerskin.fbx', price: 200 },
   { key: 'zombie', name: 'Zombie', file: 'zombieskin.fbx', price: 300 },
-  { key: 'drache', name: 'Drache', file: 'drachenskin.fbx', price: 600 },
+  { key: 'drache', name: 'Dragon', file: 'drachenskin.fbx', price: 600 },
 ];
 const DEFAULT_SKIN_KEY = 'default';
 
@@ -3567,7 +3567,7 @@ function buySkin(key) {
   launchConfetti(40);
   const toast = document.createElement('div');
   toast.className = 'reward-toast';
-  toast.innerHTML = `<span class="reward-icon">🛍️</span><span>${skin.name}-Skin gekauft!</span>`;
+  toast.innerHTML = `<span class="reward-icon">🛍️</span><span>${skin.name} skin purchased!</span>`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
@@ -3889,7 +3889,7 @@ function loadMenuGlobeCharacter(file) {
   const myToken = ++menuGlobeModelToken;
   const loadingEl = document.getElementById('menu-globe-loading');
   const canvasEl = document.getElementById('menu-globe-canvas');
-  loadingEl.textContent = 'Lädt...';
+  loadingEl.textContent = 'Loading...';
   loadingEl.style.display = 'block';
   canvasEl.style.display = 'none';
 
@@ -3924,12 +3924,12 @@ function loadMenuGlobeCharacter(file) {
       canvasEl.style.display = 'block';
     } catch (err) {
       console.error('Globus-Charakter Verarbeitungsfehler:', file, err);
-      loadingEl.textContent = 'Fehler beim Anzeigen';
+      loadingEl.textContent = 'Display error';
     }
   }, undefined, (err) => {
     if (myToken !== menuGlobeModelToken) return;
     console.error('Globus-Charakter Ladefehler:', file, err);
-    loadingEl.textContent = 'Ladefehler';
+    loadingEl.textContent = 'Load error';
   });
 }
 
@@ -4014,22 +4014,22 @@ function renderSkinsGallery() {
     const statusEl = document.createElement('div');
     statusEl.className = 'skin-card-status';
     statusEl.textContent = isDefault
-      ? (equipped ? 'Ausgerüstet' : 'Immer verfügbar')
-      : (owned ? (equipped ? 'Ausgerüstet' : 'Freigeschaltet') : item.price + ' 🪙');
+      ? (equipped ? 'Equipped' : 'Always available')
+      : (owned ? (equipped ? 'Equipped' : 'Unlocked') : item.price + ' 🪙');
     card.appendChild(statusEl);
 
     const btn = document.createElement('button');
     if (equipped) {
       btn.className = 'skin-card-btn equipped-btn';
-      btn.textContent = 'Ausgerüstet';
+      btn.textContent = 'Equipped';
       btn.disabled = true;
     } else if (owned) {
       btn.className = 'skin-card-btn equip-btn';
-      btn.textContent = 'Ausrüsten';
+      btn.textContent = 'Equip';
       btn.addEventListener('click', () => equipSkin(item.key));
     } else {
       btn.className = 'skin-card-btn';
-      btn.textContent = 'Kaufen';
+      btn.textContent = 'Buy';
       btn.disabled = rewards.coins < item.price;
       btn.addEventListener('click', () => buySkin(item.key));
     }
@@ -4247,7 +4247,7 @@ function loadCountryData(onReady) {
       onReady(data);
     })
     .catch(() => {
-      targetValueEl.textContent = 'Fehler beim Laden der Karte';
+      targetValueEl.textContent = 'Error loading the map';
     });
 }
 
@@ -4273,7 +4273,7 @@ function loadCapitalsData(onReady) {
       onReady();
     })
     .catch(() => {
-      showStatus('Fehler beim Laden der Hauptstadt-Daten', 'wrong');
+      showStatus('Error loading capital data', 'wrong');
     });
 }
 
@@ -4398,7 +4398,7 @@ function loadBorderGraph(onReady) {
       onReady();
     })
     .catch(() => {
-      showBorderStatus('Fehler beim Laden der Grenzdaten', 'wrong');
+      showBorderStatus('Error loading border data', 'wrong');
     });
 }
 
@@ -4538,7 +4538,7 @@ function nextBorderRound() {
   if (startLayer) {
     borderMap.flyToBounds(startLayer.getBounds(), { padding: [150, 150], maxZoom: 5, duration: 1.4, easeLinearity: 0.25 });
   }
-  showBorderStatus(`Von ${borderCurrentChallenge.startName} nach ${borderCurrentChallenge.targetName}`, 'reveal');
+  showBorderStatus(`From ${borderCurrentChallenge.startName} to ${borderCurrentChallenge.targetName}`, 'reveal');
 }
 
 function updateBorderPathDisplay() {
@@ -4563,7 +4563,7 @@ function handleBorderClick(feature, layer) {
 
   if (!isBorderReachable(clickedId)) {
     // Grenzt an kein Land in deinem Gebiet - einfach ignorieren, kein Schritt verbraucht
-    showBorderStatus('Das grenzt an kein Land in deinem Gebiet', 'reveal');
+    showBorderStatus("That doesn't border any country in your territory", 'reveal');
     return;
   }
 
@@ -4583,7 +4583,7 @@ function handleBorderClick(feature, layer) {
     if (targetLayer) targetLayer.setStyle(correctStyle);
     borderWins++;
     awardCorrect('border');
-    showBorderStatus(`Geschafft! Grenze zu ${borderCurrentChallenge.targetName} in ${borderSteps} Schritten erreicht.`, 'correct');
+    showBorderStatus(`Made it! Reached the border with ${borderCurrentChallenge.targetName} in ${borderSteps} steps.`, 'correct');
     flyToBorderOverview(borderTargetId);
     borderRoundOver = true;
     btnBorderNextEl.style.display = 'block';
@@ -4593,8 +4593,8 @@ function handleBorderClick(feature, layer) {
     borderLosses++;
     resetStreak('border');
     const path = bfsPathFromTerritory(borderGraph, borderTerritory, borderTargetId);
-    const hint = path ? ` Kürzester Weg: ${path.map(countryName).join(' → ')}` : '';
-    showBorderStatus(`Verloren! Ziel nicht erreicht.${hint}`, 'wrong');
+    const hint = path ? ` Shortest path: ${path.map(countryName).join(' → ')}` : '';
+    showBorderStatus(`Lost! Target not reached.${hint}`, 'wrong');
     flyToBorderOverview(borderTargetId);
     borderRoundOver = true;
     btnBorderNextEl.style.display = 'block';
@@ -4609,7 +4609,7 @@ function giveUpBorderRound() {
   resetStreak('border');
   const path = bfsPathFromTerritory(borderGraph, borderTerritory, borderTargetId);
   if (path) {
-    showBorderStatus(`Aufgegeben. Kürzester Weg: ${path.map(countryName).join(' → ')}`, 'wrong');
+    showBorderStatus(`Given up. Shortest path: ${path.map(countryName).join(' → ')}`, 'wrong');
   }
   borderRoundOver = true;
   btnBorderNextEl.style.display = 'block';
@@ -4645,7 +4645,7 @@ function endBorderGame() {
   borderTerritory = new Set();
   borderTargetId = null;
   btnBorderNextEl.style.display = 'none';
-  borderEndTextEl.textContent = `${borderWins} von ${borderChallenges.length} Ketten geschafft, ${borderLosses} verloren.`;
+  borderEndTextEl.textContent = `${borderWins} of ${borderChallenges.length} chains completed, ${borderLosses} lost.`;
   borderEndOverlayEl.classList.add('show');
   maybeCelebrate(borderWins, borderChallenges.length);
 }
@@ -4856,13 +4856,13 @@ function handleCapitalMarkerClick(point, marker) {
 
 function updateCapitalCheckButton() {
   if (capitalCheckPhase === 'selected') {
-    btnCapitalCheckEl.textContent = 'Prüfen';
+    btnCapitalCheckEl.textContent = 'Check';
     btnCapitalCheckEl.disabled = false;
   } else if (capitalCheckPhase === 'checked') {
-    btnCapitalCheckEl.textContent = 'Weiter';
+    btnCapitalCheckEl.textContent = 'Next';
     btnCapitalCheckEl.disabled = false;
   } else {
-    btnCapitalCheckEl.textContent = 'Prüfen';
+    btnCapitalCheckEl.textContent = 'Check';
     btnCapitalCheckEl.disabled = true;
   }
 }
@@ -4883,7 +4883,7 @@ function resolveCapitalSelection() {
     bumpValue(capitalScoreValueEl);
     awardCorrect('capital');
     updateStreakBadge('streak-badge-capital', 'capital');
-    showCapitalStatus('Richtig!', 'correct');
+    showCapitalStatus('Correct!', 'correct');
   } else {
     capitalSelectedMarker.setStyle({ fillColor: WRONG_COLOR, color: WRONG_BORDER });
     capitalWrong++;
@@ -4891,7 +4891,7 @@ function resolveCapitalSelection() {
     bumpValue(capitalWrongValueEl);
     resetStreak('capital');
     updateStreakBadge('streak-badge-capital', 'capital');
-    showCapitalStatus(`Falsch! Das war: ${capitalCurrentTarget.capitalName}`, 'wrong');
+    showCapitalStatus(`Wrong! It was: ${capitalCurrentTarget.capitalName}`, 'wrong');
 
     capitalMarkersLayer.eachLayer(l => {
       const latlng = l.getLatLng();
@@ -4919,7 +4919,7 @@ function giveUpCapitalRound() {
       capitalMap.flyTo(latlng, 6, { duration: 1 });
     }
   });
-  showCapitalStatus(`Das war: ${capitalCurrentTarget.capitalName} (${capitalCurrentTarget.countryName})`, 'reveal');
+  showCapitalStatus(`It was: ${capitalCurrentTarget.capitalName} (${capitalCurrentTarget.countryName})`, 'reveal');
   capitalCheckPhase = 'checked';
   updateCapitalCheckButton();
 }
@@ -4951,7 +4951,7 @@ function endCapitalGame() {
   capitalCurrentTarget = null;
   capitalCheckPhase = 'idle';
   updateCapitalCheckButton();
-  capitalEndTextEl.textContent = `Du hattest ${capitalScore} richtig und ${capitalWrong} falsch (von ${capitalChallenges.length}).`;
+  capitalEndTextEl.textContent = `You got ${capitalScore} correct and ${capitalWrong} wrong (out of ${capitalChallenges.length}).`;
   capitalEndOverlayEl.classList.add('show');
   maybeCelebrate(capitalScore, capitalChallenges.length);
 }
@@ -5062,13 +5062,13 @@ function handleCountryClick(feature, layer) {
 
 function updateCheckButton() {
   if (checkPhase === 'selected') {
-    btnCheckEl.textContent = 'Prüfen';
+    btnCheckEl.textContent = 'Check';
     btnCheckEl.disabled = false;
   } else if (checkPhase === 'checked') {
-    btnCheckEl.textContent = 'Weiter';
+    btnCheckEl.textContent = 'Next';
     btnCheckEl.disabled = false;
   } else {
-    btnCheckEl.textContent = 'Prüfen';
+    btnCheckEl.textContent = 'Check';
     btnCheckEl.disabled = true;
   }
 }
@@ -5092,7 +5092,7 @@ function resolveSelection() {
     bumpValue(scoreValueEl);
     awardCorrect(gameMode);
     updateStreakBadge('streak-badge-main', gameMode);
-    showStatus('Richtig!', 'correct');
+    showStatus('Correct!', 'correct');
   } else {
     selectedLayer.setStyle(wrongStyle);
     wrongCount++;
@@ -5100,7 +5100,7 @@ function resolveSelection() {
     bumpValue(wrongValueEl);
     resetStreak(gameMode);
     updateStreakBadge('streak-badge-main', gameMode);
-    showStatus('Falsch!', 'wrong');
+    showStatus('Wrong!', 'wrong');
 
     const correctLayer = geoLayer.getLayers().find(l => l.feature.properties.name === target);
     if (correctLayer && correctLayer !== selectedLayer) {
@@ -5143,7 +5143,7 @@ function revealAnswer() {
     map.flyToBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 6, duration: 1.4, easeLinearity: 0.25 });
     pendingCorrectLayer = layer;
   }
-  showStatus(`Das war: ${target}`, 'reveal');
+  showStatus(`It was: ${target}`, 'reveal');
   checkPhase = 'checked';
   updateCheckButton();
 }
@@ -5171,14 +5171,14 @@ function nextRound() {
     landmarkPanelEl.style.display = 'block';
     landmarkImgEl.classList.remove('loaded');
     landmarkImgEl.src = '';
-    landmarkCaptionEl.textContent = 'Lädt...';
+    landmarkCaptionEl.textContent = 'Loading...';
     fetchLandmarkImage(item.imageTitle).then(src => {
       if (src) landmarkImgEl.src = src;
-      landmarkCaptionEl.textContent = 'In welchem Land steht das?';
+      landmarkCaptionEl.textContent = 'Which country is this in?';
     });
   } else {
     targetBlockEl.style.display = '';
-    targetLabelEl.textContent = 'Gesucht';
+    targetLabelEl.textContent = 'Find';
     targetValueEl.textContent = currentTarget;
   }
 }
@@ -5240,9 +5240,9 @@ function endRound() {
   updateCheckButton();
   landmarkPanelEl.style.display = 'none';
   targetBlockEl.style.display = '';
-  targetLabelEl.textContent = 'Gesucht';
+  targetLabelEl.textContent = 'Find';
   targetValueEl.textContent = '-';
-  endTextEl.textContent = `Du hattest ${score} richtig und ${wrongCount} falsch (von ${totalRounds}).`;
+  endTextEl.textContent = `You got ${score} correct and ${wrongCount} wrong (out of ${totalRounds}).`;
   endOverlayEl.classList.add('show');
   maybeCelebrate(score, totalRounds);
 }
@@ -5335,7 +5335,7 @@ function startSilhouetteRound() {
 
 function endSilhouetteRound() {
   silCurrentTarget = null;
-  silEndTextEl.textContent = `Du hattest ${silScore} richtig und ${silWrong} falsch (von ${silTotalRounds}).`;
+  silEndTextEl.textContent = `You got ${silScore} correct and ${silWrong} wrong (out of ${silTotalRounds}).`;
   silEndOverlayEl.classList.add('show');
   maybeCelebrate(silScore, silTotalRounds);
 }
@@ -6016,7 +6016,7 @@ function setupOnlinePresence() {
 function updateOnlinePlayerCountDisplay(count) {
   const el = document.getElementById('menu-online-count');
   if (!el) return;
-  el.innerHTML = `<span class="dot"></span>${count} Spieler weltweit online`;
+  el.innerHTML = `<span class="dot"></span>${count} players online worldwide`;
 }
 setupOnlinePresence();
 
@@ -6038,26 +6038,26 @@ const GEOGUESSR_LOCATIONS = [
   { name: 'Berlin', lat: 52.5200, lng: 13.4050 },
   { name: 'Amsterdam', lat: 52.3676, lng: 4.9041 },
   { name: 'Madrid', lat: 40.4168, lng: -3.7038 },
-  { name: 'Rom', lat: 41.9028, lng: 12.4964 },
-  { name: 'Wien', lat: 48.2082, lng: 16.3738 },
-  { name: 'Prag', lat: 50.0755, lng: 14.4378 },
-  { name: 'Warschau', lat: 52.2297, lng: 21.0122 },
+  { name: 'Rome', lat: 41.9028, lng: 12.4964 },
+  { name: 'Vienna', lat: 48.2082, lng: 16.3738 },
+  { name: 'Prague', lat: 50.0755, lng: 14.4378 },
+  { name: 'Warsaw', lat: 52.2297, lng: 21.0122 },
   { name: 'Stockholm', lat: 59.3293, lng: 18.0686 },
   { name: 'Oslo', lat: 59.9139, lng: 10.7522 },
-  { name: 'Kopenhagen', lat: 55.6761, lng: 12.5683 },
+  { name: 'Copenhagen', lat: 55.6761, lng: 12.5683 },
   { name: 'Dublin', lat: 53.3498, lng: -6.2603 },
-  { name: 'Lissabon', lat: 38.7223, lng: -9.1393 },
-  { name: 'Athen', lat: 37.9838, lng: 23.7275 },
+  { name: 'Lisbon', lat: 38.7223, lng: -9.1393 },
+  { name: 'Athens', lat: 37.9838, lng: 23.7275 },
   { name: 'Budapest', lat: 47.4979, lng: 19.0402 },
-  { name: 'Zürich', lat: 47.3769, lng: 8.5417 },
-  { name: 'Brüssel', lat: 50.8503, lng: 4.3517 },
+  { name: 'Zurich', lat: 47.3769, lng: 8.5417 },
+  { name: 'Brussels', lat: 50.8503, lng: 4.3517 },
   { name: 'New York', lat: 40.7128, lng: -74.0060 },
   { name: 'San Francisco', lat: 37.7749, lng: -122.4194 },
   { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
   { name: 'Chicago', lat: 41.8781, lng: -87.6298 },
   { name: 'Toronto', lat: 43.6532, lng: -79.3832 },
   { name: 'Vancouver', lat: 49.2827, lng: -123.1207 },
-  { name: 'Mexiko-Stadt', lat: 19.4326, lng: -99.1332 },
+  { name: 'Mexico City', lat: 19.4326, lng: -99.1332 },
   { name: 'Miami', lat: 25.7617, lng: -80.1918 },
   { name: 'Seattle', lat: 47.6062, lng: -122.3321 },
   { name: 'Boston', lat: 42.3601, lng: -71.0589 },
@@ -6067,12 +6067,12 @@ const GEOGUESSR_LOCATIONS = [
   { name: 'Santiago', lat: -33.4489, lng: -70.6693 },
   { name: 'Bogotá', lat: 4.7110, lng: -74.0721 },
   { name: 'Lima', lat: -12.0464, lng: -77.0428 },
-  { name: 'Tokio', lat: 35.6762, lng: 139.6503 },
+  { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
   { name: 'Seoul', lat: 37.5665, lng: 126.9780 },
   { name: 'Bangkok', lat: 13.7563, lng: 100.5018 },
-  { name: 'Singapur', lat: 1.3521, lng: 103.8198 },
-  { name: 'Taipeh', lat: 25.0330, lng: 121.5654 },
-  { name: 'Hongkong', lat: 22.3193, lng: 114.1694 },
+  { name: 'Singapore', lat: 1.3521, lng: 103.8198 },
+  { name: 'Taipei', lat: 25.0330, lng: 121.5654 },
+  { name: 'Hong Kong', lat: 22.3193, lng: 114.1694 },
   { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
   { name: 'Delhi', lat: 28.7041, lng: 77.1025 },
   { name: 'Jakarta', lat: -6.2088, lng: 106.8456 },
@@ -6080,11 +6080,11 @@ const GEOGUESSR_LOCATIONS = [
   { name: 'Istanbul', lat: 41.0082, lng: 28.9784 },
   { name: 'Dubai', lat: 25.2048, lng: 55.2708 },
   { name: 'Tel Aviv', lat: 32.0853, lng: 34.7818 },
-  { name: 'Kapstadt', lat: -33.9249, lng: 18.4241 },
+  { name: 'Cape Town', lat: -33.9249, lng: 18.4241 },
   { name: 'Nairobi', lat: -1.2921, lng: 36.8219 },
-  { name: 'Kairo', lat: 30.0444, lng: 31.2357 },
+  { name: 'Cairo', lat: 30.0444, lng: 31.2357 },
   { name: 'Lagos', lat: 6.5244, lng: 3.3792 },
-  { name: 'Marrakesch', lat: 31.6295, lng: -7.9811 },
+  { name: 'Marrakesh', lat: 31.6295, lng: -7.9811 },
   { name: 'Sydney', lat: -33.8688, lng: 151.2093 },
   { name: 'Melbourne', lat: -37.8136, lng: 144.9631 },
   { name: 'Auckland', lat: -36.8485, lng: 174.7633 },
@@ -6376,7 +6376,7 @@ function setOnlineNickname(name) {
   updateMenuPlayerNameDisplay();
 }
 function updateMenuPlayerNameDisplay() {
-  const name = getOnlineNickname() || 'Spieler';
+  const name = getOnlineNickname() || 'Player';
   const el = document.getElementById('menu-player-name-text');
   if (el) el.textContent = name;
   const navEl = document.getElementById('navbar-player-name');
@@ -6434,7 +6434,7 @@ let onlineTotalRounds = ONLINE_ROUNDS_COUNT;
 let onlineMyHealth = GEO_START_HEALTH;
 let onlineOpponentHealth = GEO_START_HEALTH;
 let onlineOpponentId = null;
-let onlineOpponentName = 'Gegner';
+let onlineOpponentName = 'Opponent';
 let onlineOpponentCountry = null;
 let onlineOpponentSkin = null;
 let onlineAnswered = false;
@@ -6500,23 +6500,23 @@ function showOnlineWaitingScreen({ isHost, code, matchmaking }) {
   const statusEl = document.getElementById('online-waiting-status');
   if (matchmaking && isHost === null) {
     codeDisplay.style.display = 'none';
-    titleEl.textContent = 'SUCHE GEGNER';
-    statusEl.textContent = 'Suche einen Gegner für ein GeoGuessr-Duell...';
+    titleEl.textContent = 'FINDING OPPONENT';
+    statusEl.textContent = 'Searching for an opponent for a GeoGuessr duel...';
   } else if (isHost) {
     codeDisplay.style.display = 'block';
     document.getElementById('online-code-value').textContent = code;
-    titleEl.textContent = 'RAUM ERSTELLT';
-    statusEl.textContent = 'Warte auf deinen Freund...';
+    titleEl.textContent = 'ROOM CREATED';
+    statusEl.textContent = 'Waiting for your friend...';
   } else {
     codeDisplay.style.display = 'none';
-    titleEl.textContent = 'BEIGETRETEN';
-    statusEl.textContent = 'Warte auf den Spielstart...';
+    titleEl.textContent = 'JOINED';
+    statusEl.textContent = 'Waiting for the game to start...';
   }
 }
 
 function createOnlineRoom() {
   const code = makeRoomCode();
-  const myName = getOnlineNickname() || 'Spieler';
+  const myName = getOnlineNickname() || 'Player';
   onlineIsHost = true;
   onlineRoomCode = code;
   onlineRoomRef = onlineDb.ref('rooms/' + code);
@@ -6529,7 +6529,7 @@ function createOnlineRoom() {
     showOnlineWaitingScreen({ isHost: true, code });
     listenToOnlineRoom();
   }).catch(err => {
-    showOnlineMenuError('Fehler beim Erstellen: ' + err.message);
+    showOnlineMenuError('Error creating room: ' + err.message);
   });
 }
 
@@ -6540,19 +6540,19 @@ function joinOnlineRoomByCode(rawCode) {
   const ref = onlineDb.ref('rooms/' + code);
   ref.get().then(snap => {
     if (!snap.exists()) {
-      showOnlineMenuError('Diesen Code gibt es nicht.');
+      showOnlineMenuError("This code doesn't exist.");
       return;
     }
     const room = snap.val();
     const playerCount = room.players ? Object.keys(room.players).length : 0;
     if (room.status !== 'waiting' || playerCount >= 2) {
-      showOnlineMenuError('Dieser Raum ist voll oder das Spiel läuft schon.');
+      showOnlineMenuError('This room is full or the game has already started.');
       return;
     }
     onlineIsHost = false;
     onlineRoomCode = code;
     onlineRoomRef = ref;
-    const myName = getOnlineNickname() || 'Spieler';
+    const myName = getOnlineNickname() || 'Player';
     ref.child('players/' + onlinePlayerId).set(buildOnlinePlayerProfile(myName, false))
       .then(() => ref.child('health/' + onlinePlayerId).set(GEO_START_HEALTH))
       .then(() => {
@@ -6560,13 +6560,13 @@ function joinOnlineRoomByCode(rawCode) {
         listenToOnlineRoom();
       });
   }).catch(err => {
-    showOnlineMenuError('Fehler beim Beitreten: ' + err.message);
+    showOnlineMenuError('Error joining: ' + err.message);
   });
 }
 
 function startOnlineMatchmaking() {
   const modeKey = 'geoguessr';
-  const myName = getOnlineNickname() || 'Spieler';
+  const myName = getOnlineNickname() || 'Player';
   showOnlineWaitingScreen({ isHost: null, code: null, matchmaking: true });
 
   const slotRef = onlineDb.ref('matchmaking/' + modeKey + '/waitingPlayer');
@@ -6655,13 +6655,13 @@ function handleOnlineRoomUpdate(room) {
   if (room.status === 'waiting') {
     if (opponentId) {
       const statusEl = document.getElementById('online-waiting-status');
-      if (statusEl) statusEl.textContent = `${players[opponentId].name} ist beigetreten! Spiel startet...`;
+      if (statusEl) statusEl.textContent = `${players[opponentId].name} has joined! Starting game...`;
       if (onlineIsHost && !onlineRoundsBeingGenerated) {
         onlineRoundsBeingGenerated = true;
         generateGeoGuessrRounds(ONLINE_ROUNDS_COUNT).then(rounds => {
           if (!rounds.length) {
             onlineRoundsBeingGenerated = false;
-            showOnlineMenuError('Konnte keine Straßenfotos laden. Bitte versuche es erneut.');
+            showOnlineMenuError('Could not load street photos. Please try again.');
             return;
           }
           onlineRoomRef.update({ status: 'playing', rounds, totalRounds: rounds.length });
@@ -6688,7 +6688,7 @@ function startOnlineGameScreen(room, opponentId) {
   onlineRounds = room.rounds || [];
   onlineTotalRounds = room.totalRounds || onlineRounds.length;
   onlineOpponentId = opponentId;
-  onlineOpponentName = (room.players[opponentId] && room.players[opponentId].name) || 'Gegner';
+  onlineOpponentName = (room.players[opponentId] && room.players[opponentId].name) || 'Opponent';
   onlineOpponentCountry = (room.players[opponentId] && room.players[opponentId].country) || null;
   onlineOpponentSkin = (room.players[opponentId] && room.players[opponentId].skin) || null;
   onlineCurrentRound = 0;
@@ -6770,7 +6770,7 @@ function flashOnlineHealthHit(who) {
 
 function showOnlineMultiplierBadge(multiplier) {
   const el = document.getElementById('online-multiplier-badge');
-  el.textContent = `⚔️ Schaden ×${multiplier.toFixed(1)}`;
+  el.textContent = `⚔️ Damage ×${multiplier.toFixed(1)}`;
   el.classList.remove('show');
   void el.offsetWidth;
   el.classList.add('show');
@@ -7083,7 +7083,7 @@ function submitGeoGuess() {
   if (onlineAnswered || !geoMyGuess) return;
   onlineAnswered = true;
   document.getElementById('btn-geo-guess-confirm').disabled = true;
-  showOnlineStatus('Warte auf Gegner...');
+  showOnlineStatus('Waiting for opponent...');
   onlineRoomRef.child(`guesses/${onlineCurrentRound}/${onlinePlayerId}`).set(geoMyGuess).catch(() => {});
 }
 
@@ -7134,7 +7134,7 @@ function handleOnlineRoundResult(room) {
   geoGuessMap.flyToBounds(L.latLngBounds([actualLatLng, myLatLng, oppLatLng]), { padding: [40, 40], maxZoom: 8, animate: true, duration: 0.9 });
 
   const resultEl = document.getElementById('geo-round-result');
-  resultEl.innerHTML = `<b>Du:</b> <span class="dist-value" id="geo-my-dist">0 m</span> entfernt &nbsp;|&nbsp; <b>${onlineOpponentName}:</b> <span class="dist-value" id="geo-opp-dist">0 m</span> entfernt`;
+  resultEl.innerHTML = `<b>You:</b> <span class="dist-value" id="geo-my-dist">0 m</span> away &nbsp;|&nbsp; <b>${onlineOpponentName}:</b> <span class="dist-value" id="geo-opp-dist">0 m</span> away`;
   resultEl.classList.add('show');
   animateNumberTo(document.getElementById('geo-my-dist'), 0, myDist, 900, fmtDistKm);
   animateNumberTo(document.getElementById('geo-opp-dist'), 0, oppDist, 900, fmtDistKm);
@@ -7209,12 +7209,12 @@ function endOnlineGame() {
   onlineGameEl.classList.remove('show');
   const myFinal = Math.max(0, Math.round(onlineMyHealth));
   const oppFinal = Math.max(0, Math.round(onlineOpponentHealth));
-  const title = onlineMyHealth > onlineOpponentHealth ? 'Du hast gewonnen! 🎉' : onlineMyHealth < onlineOpponentHealth ? 'Verloren!' : 'Unentschieden!';
+  const title = onlineMyHealth > onlineOpponentHealth ? 'You won! 🎉' : onlineMyHealth < onlineOpponentHealth ? 'You lost!' : 'Draw!';
   const titleEl = document.getElementById('online-end-title');
   const textEl = document.getElementById('online-end-text');
   titleEl.textContent = title;
   bumpValue(titleEl);
-  textEl.textContent = `0 HP : 0 HP gegen ${onlineOpponentName}`;
+  textEl.textContent = `0 HP : 0 HP vs ${onlineOpponentName}`;
   onlineEndOverlayEl.classList.add('show');
   let animMy = 0, animOpp = 0;
   const start = performance.now();
@@ -7223,7 +7223,7 @@ function endOnlineGame() {
     const eased = 1 - Math.pow(1 - t, 3);
     animMy = Math.round(myFinal * eased);
     animOpp = Math.round(oppFinal * eased);
-    textEl.textContent = `${animMy} HP : ${animOpp} HP gegen ${onlineOpponentName}`;
+    textEl.textContent = `${animMy} HP : ${animOpp} HP vs ${onlineOpponentName}`;
     if (t < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -7321,7 +7321,7 @@ function isFullscreenActive() {
 }
 function updateFullscreenIcon() {
   btnFullscreenEl.innerHTML = isFullscreenActive() ? '&#10005;' : '&#9974;';
-  btnFullscreenEl.setAttribute('aria-label', isFullscreenActive() ? 'Vollbild verlassen' : 'Vollbild');
+  btnFullscreenEl.setAttribute('aria-label', isFullscreenActive() ? 'Exit fullscreen' : 'Fullscreen');
 }
 btnFullscreenEl.addEventListener('click', () => {
   const el = document.documentElement;
