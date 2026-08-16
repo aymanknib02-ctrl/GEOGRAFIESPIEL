@@ -3517,28 +3517,33 @@ function renderRewardsScreen() {
   });
 }
 
-// ================= SHOP: Skins gegen Münzen kaufen =================
-// Jeder Skin ist ein eigenes 3D-Modell (name.fbx) im Projektordner, das im Shop-
-// Karussell live per Three.js gerendert und automatisch gedreht wird.
-const SKINS = [
-  { key: 'entdecker', name: 'Explorer', file: 'entdeckerskin.fbx', price: 200 },
-  { key: 'zombie', name: 'Zombie', file: 'zombieskin.fbx', price: 300 },
-  { key: 'drache', name: 'Dragon', file: 'drachenskin.fbx', price: 600 },
+// ================= Skin-Farben: nur noch der Standard-Skin, dafuer frei einfaerbbar =================
+// Es gibt nur noch ein 3D-Modell (standartskin.fbx) - "Skins" bedeutet jetzt Farbwahl
+// statt verschiedener Modelle. hex:null = Originalfarben des Modells (kein Tint).
+const SKIN_COLORS = [
+  { key: 'default', name: 'Original', hex: null },
+  { key: 'red', name: 'Red', hex: 0xe74c3c },
+  { key: 'orange', name: 'Orange', hex: 0xff8c42 },
+  { key: 'yellow', name: 'Yellow', hex: 0xf1c40f },
+  { key: 'green', name: 'Green', hex: 0x2ecc71 },
+  { key: 'blue', name: 'Blue', hex: 0x3b82f6 },
+  { key: 'purple', name: 'Purple', hex: 0x7c5cfc },
+  { key: 'pink', name: 'Pink', hex: 0xff6ec7 },
+  { key: 'black', name: 'Black', hex: 0x222222 },
+  { key: 'white', name: 'White', hex: 0xf5f5f5 },
 ];
-const DEFAULT_SKIN_KEY = 'default';
+const DEFAULT_SKIN_COLOR = 'default';
+const SKIN_MODEL_FILE = 'standartskin.fbx';
 
 let inventory = loadInventory();
 
 function loadInventory() {
-  const fresh = { owned: [DEFAULT_SKIN_KEY], equipped: DEFAULT_SKIN_KEY };
+  const fresh = { color: DEFAULT_SKIN_COLOR };
   try {
     const raw = localStorage.getItem('geoquiz-inventory');
     if (!raw) return fresh;
     const parsed = JSON.parse(raw);
-    return {
-      owned: Array.isArray(parsed.owned) ? parsed.owned : fresh.owned,
-      equipped: parsed.equipped || DEFAULT_SKIN_KEY,
-    };
+    return { color: SKIN_COLORS.some(c => c.key === parsed.color) ? parsed.color : DEFAULT_SKIN_COLOR };
   } catch (e) {
     return fresh;
   }
@@ -3547,34 +3552,13 @@ function saveInventory() {
   try { localStorage.setItem('geoquiz-inventory', JSON.stringify(inventory)); } catch (e) { /* ignore */ }
 }
 
-function getSkinByKey(key) {
-  return SKINS.find(s => s.key === key) || null;
-}
-function equippedSkinFile() {
-  const skin = getSkinByKey(inventory.equipped);
-  return skin ? skin.file : null;
+function getSkinColorByKey(key) {
+  return SKIN_COLORS.find(c => c.key === key) || SKIN_COLORS[0];
 }
 
-function buySkin(key) {
-  const skin = getSkinByKey(key);
-  if (!skin || inventory.owned.includes(key) || rewards.coins < skin.price) return;
-  rewards.coins -= skin.price;
-  inventory.owned.push(key);
-  saveRewards();
-  saveInventory();
-  updateCoinDisplays();
-  renderSkinsGallery();
-  launchConfetti(40);
-  const toast = document.createElement('div');
-  toast.className = 'reward-toast';
-  toast.innerHTML = `<span class="reward-icon">🛍️</span><span>${skin.name} skin purchased!</span>`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-function equipSkin(key) {
-  if (key !== DEFAULT_SKIN_KEY && !inventory.owned.includes(key)) return;
-  inventory.equipped = key;
+function setSkinColor(key) {
+  if (!SKIN_COLORS.some(c => c.key === key)) return;
+  inventory.color = key;
   saveInventory();
   renderSkinsGallery();
   updateEquippedSkinDisplays();
@@ -3885,7 +3869,10 @@ function resizeMenuGlobeViewer() {
 // Skins sollen komplett matt aussehen, kein Glanz/Hochglanz - FBX-Modelle bringen
 // aber oft Materialien mit eigenem Glanz (Phong shininess/specular oder Standard-
 // Material metalness) mit, deshalb hier nach dem Laden hart auf 100% matt umstellen.
-function flattenToMatte(root) {
+// Faerbt zusaetzlich per Material-Farbe ein (colorKey='default' laesst die Original-
+// Texturfarben unangetastet), da es nur noch das eine Modell mit waehlbarer Farbe gibt.
+function applySkinAppearance(root, colorKey) {
+  const colorDef = getSkinColorByKey(colorKey);
   root.traverse(obj => {
     if (!obj.isMesh || !obj.material) return;
     const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -3896,6 +3883,7 @@ function flattenToMatte(root) {
       if (mat.shininess !== undefined) mat.shininess = 0;
       if (mat.specular) mat.specular.setScalar(0);
       if (mat.envMapIntensity !== undefined) mat.envMapIntensity = 0;
+      if (colorDef.hex !== null && mat.color) mat.color.set(colorDef.hex);
       mat.needsUpdate = true;
     });
   });
@@ -3924,7 +3912,7 @@ function loadMenuGlobeCharacter(file) {
       const scale = 3.7 / maxDim;
       fbx.scale.setScalar(scale);
       fbx.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
-      flattenToMatte(fbx);
+      applySkinAppearance(fbx, inventory.color);
       viewer.charGroup.add(fbx);
 
       // Kugel+Charakter (die ganze "group") so skalieren/verschieben, dass sie
@@ -3954,21 +3942,16 @@ function loadMenuGlobeCharacter(file) {
 }
 
 function refreshMenuGlobeCharacter() {
-  loadMenuGlobeCharacter(equippedSkinFile() || 'standartskin.fbx');
+  loadMenuGlobeCharacter(SKIN_MODEL_FILE);
 }
 
-// "Standard" + alle Skins zusammen - jetzt als Galerie nebeneinander gezeigt statt
-// als Karussell zum Durchblättern.
-const SHOP_ITEMS = [{ key: DEFAULT_SKIN_KEY, name: 'Standard', file: 'standartskin.fbx', price: 0 }, ...SKINS];
-
-// Vorschau je Karte: eigener kleiner Live-3D-Viewer pro Skin, der EINMAL rendert (kein
-// Animations-Loop nötig - WebGL-Canvases behalten ihr zuletzt gezeichnetes Bild von
-// selbst). Bewusst OHNE toDataURL()/Offscreen-Snapshot: Brave blockiert bzw. verfälscht
-// aus Anti-Fingerprinting-Gründen standardmäßig genau solche Canvas/WebGL-Datenauslesen,
-// wodurch vorher sogar der komplett unabhängige Startbildschirm-Globus abgestürzt ist.
-// Reines Live-Rendern auf sichtbare Canvases (wie das Shop-Karussell die ganze Session
-// über zuverlässig gemacht hat) umgeht dieses Problem vollständig.
-function initSkinCardPreview(canvas, file) {
+// Vorschau je Karte: eigener kleiner Live-3D-Viewer pro Farboption, der EINMAL rendert
+// (kein Animations-Loop nötig - WebGL-Canvases behalten ihr zuletzt gezeichnetes Bild
+// von selbst). Bewusst OHNE toDataURL()/Offscreen-Snapshot: Brave blockiert bzw.
+// verfälscht aus Anti-Fingerprinting-Gründen standardmäßig genau solche Canvas/WebGL-
+// Datenauslesen, wodurch vorher sogar der komplett unabhängige Startbildschirm-Globus
+// abgestürzt ist. Reines Live-Rendern auf sichtbare Canvases umgeht das vollständig.
+function initSkinCardPreview(canvas, colorKey) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   const size = canvas.clientWidth || 190;
@@ -3985,7 +3968,7 @@ function initSkinCardPreview(canvas, file) {
   fillLight.position.set(-5, 2, 8);
   scene.add(fillLight);
 
-  new THREE.FBXLoader().load(file, (fbx) => {
+  new THREE.FBXLoader().load(SKIN_MODEL_FILE, (fbx) => {
     try {
       const box = new THREE.Box3().setFromObject(fbx);
       const boxSize = new THREE.Vector3();
@@ -3996,30 +3979,28 @@ function initSkinCardPreview(canvas, file) {
       const scale = 4.4 / maxDim;
       fbx.scale.setScalar(scale);
       fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-      flattenToMatte(fbx);
+      applySkinAppearance(fbx, colorKey);
       scene.add(fbx);
       renderer.render(scene, camera);
       requestAnimationFrame(() => renderer.render(scene, camera));
     } catch (err) {
-      console.error('Skin-Vorschau Fehler:', file, err);
+      console.error('Skin-Vorschau Fehler:', colorKey, err);
     }
   }, undefined, (err) => {
-    console.error('Skin-Vorschau Ladefehler:', file, err);
+    console.error('Skin-Vorschau Ladefehler:', colorKey, err);
   });
 }
 
-// Baut die Skins-Galerie neu auf (z.B. nach Kauf/Ausrüsten oder beim ersten Öffnen).
+// Baut die Skins-Galerie neu auf (jetzt eine Farbauswahl fuer den einen Standard-Skin).
 function renderSkinsGallery() {
   const galleryEl = document.getElementById('skins-gallery');
   if (!galleryEl) return;
   galleryEl.innerHTML = '';
-  SHOP_ITEMS.forEach(item => {
-    const isDefault = item.key === DEFAULT_SKIN_KEY;
-    const owned = isDefault || inventory.owned.includes(item.key);
-    const equipped = inventory.equipped === item.key;
+  SKIN_COLORS.forEach(colorDef => {
+    const equipped = inventory.color === colorDef.key;
 
     const card = document.createElement('div');
-    card.className = 'skin-card' + (equipped ? ' equipped' : '') + (!owned ? ' locked' : '');
+    card.className = 'skin-card' + (equipped ? ' equipped' : '');
 
     const thumb = document.createElement('div');
     thumb.className = 'skin-card-thumb';
@@ -4029,14 +4010,12 @@ function renderSkinsGallery() {
 
     const nameEl = document.createElement('div');
     nameEl.className = 'skin-card-name';
-    nameEl.textContent = item.name;
+    nameEl.textContent = colorDef.name;
     card.appendChild(nameEl);
 
     const statusEl = document.createElement('div');
     statusEl.className = 'skin-card-status';
-    statusEl.textContent = isDefault
-      ? (equipped ? 'Equipped' : 'Always available')
-      : (owned ? (equipped ? 'Equipped' : 'Unlocked') : item.price + ' 🪙');
+    statusEl.textContent = equipped ? 'Equipped' : 'Available';
     card.appendChild(statusEl);
 
     const btn = document.createElement('button');
@@ -4044,22 +4023,17 @@ function renderSkinsGallery() {
       btn.className = 'skin-card-btn equipped-btn';
       btn.textContent = 'Equipped';
       btn.disabled = true;
-    } else if (owned) {
+    } else {
       btn.className = 'skin-card-btn equip-btn';
       btn.textContent = 'Equip';
-      btn.addEventListener('click', () => equipSkin(item.key));
-    } else {
-      btn.className = 'skin-card-btn';
-      btn.textContent = 'Buy';
-      btn.disabled = rewards.coins < item.price;
-      btn.addEventListener('click', () => buySkin(item.key));
+      btn.addEventListener('click', () => setSkinColor(colorDef.key));
     }
     card.appendChild(btn);
 
     galleryEl.appendChild(card);
     // Canvas muss erst im DOM sein (für eine korrekte clientWidth-Messung), bevor der
     // Viewer dafür aufgesetzt wird.
-    initSkinCardPreview(canvas, item.file);
+    initSkinCardPreview(canvas, colorDef.key);
   });
 }
 
@@ -6486,7 +6460,7 @@ function makeRoomCode() {
 }
 
 function buildOnlinePlayerProfile(name, isHost) {
-  return { name, host: isHost, country: getOnlineCountry() || null, skin: inventory.equipped || null };
+  return { name, host: isHost, country: getOnlineCountry() || null, skin: inventory.color || null };
 }
 
 const onlineMenuEl = document.getElementById('online-menu');
@@ -6821,7 +6795,7 @@ function countryLabel(countryId) {
 function showOnlineRoundIntro() {
   document.getElementById('online-intro-me-name').textContent = getOnlineNickname() || 'Du';
   document.getElementById('online-intro-me-country').textContent = countryLabel(getOnlineCountry());
-  setOnlineIntroAvatar('me', inventory.equipped);
+  setOnlineIntroAvatar('me', inventory.color);
 
   document.getElementById('online-intro-opp-name').textContent = onlineOpponentName;
   document.getElementById('online-intro-opp-country').textContent = countryLabel(onlineOpponentCountry);
