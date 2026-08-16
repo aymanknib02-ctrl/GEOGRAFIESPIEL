@@ -179,7 +179,9 @@
     top: -34px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 6;
+    /* Hoeher als die Navbar (z-index 1500) - der Namens-Chip sitzt bei manchen
+       Bildschirmgroessen so weit oben, dass er sonst hinter der Navbar verschwindet. */
+    z-index: 1600;
     display: flex;
     align-items: center;
     gap: 8px;
