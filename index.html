@@ -1298,6 +1298,114 @@
     font-size: 13px;
     margin-top: 10px;
   }
+  .online-friends-section {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+  }
+  .online-friends-title {
+    font-size: 13px;
+    font-weight: bold;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .online-friends-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .online-friends-empty {
+    font-size: 13px;
+    opacity: 0.55;
+    text-align: center;
+    padding: 8px 0;
+  }
+  .online-friend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px 10px;
+  }
+  .online-friend-item.is-online {
+    border-color: rgba(46, 204, 113, 0.4);
+  }
+  .online-friend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #666;
+    flex-shrink: 0;
+  }
+  .online-friend-dot.online {
+    background: #2ecc71;
+    box-shadow: 0 0 6px #2ecc71;
+    animation: onlineDotPulse 1.6s ease-in-out infinite;
+  }
+  .online-friend-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.9;
+  }
+  .online-friend-item:not(.is-online) .online-friend-name {
+    opacity: 0.45;
+  }
+  .online-friend-invite-btn {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    flex-shrink: 0;
+  }
+  #invite-toast {
+    display: none;
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9500;
+    background: linear-gradient(135deg, #9575ff, #6344d6);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    padding: 16px 22px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(124, 92, 252, 0.6);
+    animation: inviteToastPulse 1.6s ease-in-out infinite;
+  }
+  #invite-toast.show {
+    display: block;
+    animation: rewardToastIn 0.35s cubic-bezier(0.34,1.56,0.64,1), inviteToastPulse 1.6s ease-in-out infinite 0.35s;
+  }
+  @keyframes inviteToastPulse {
+    0%, 100% { box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 22px rgba(124, 92, 252, 0.5); }
+    50% { box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 38px rgba(124, 92, 252, 0.9); }
+  }
+  .invite-toast-text {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+  .invite-toast-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  #btn-invite-accept {
+    background: linear-gradient(135deg, #2ecc71, #1e9e57);
+  }
+  #btn-invite-decline {
+    background: rgba(255, 255, 255, 0.15);
+  }
   .online-code-display {
     margin-bottom: 20px;
   }
@@ -2632,6 +2740,14 @@
     </div>
   </div>
 
+  <div id="invite-toast">
+    <div class="invite-toast-text"><b id="invite-toast-name">Friend</b> invited you to a duel!</div>
+    <div class="invite-toast-actions">
+      <button id="btn-invite-accept">Accept</button>
+      <button id="btn-invite-decline">Decline</button>
+    </div>
+  </div>
+
   <div id="skins-menu">
     <div class="skins-gallery-box">
       <button id="btn-skins-back" class="menu-back-btn">&#8592; Back</button>
@@ -2778,6 +2894,10 @@
         </div>
         <button id="btn-online-matchmaking">Find random opponent</button>
         <button id="btn-online-back">Back</button>
+      </div>
+      <div class="online-friends-section">
+        <div class="online-friends-title">Invite a friend</div>
+        <div class="online-friends-list" id="online-friends-invite-list"></div>
       </div>
       <div class="online-error" id="online-menu-error"></div>
     </div>
@@ -7144,11 +7264,82 @@ function watchFriend(id) {
   onlineDb.ref('publicProfiles/' + id).on('value', snap => {
     friendProfilesCache[id] = snap.val();
     renderFriendsList();
+    renderOnlineFriendsInviteList();
   });
   onlineDb.ref('presenceById/' + id).on('value', snap => {
     friendPresenceOnline[id] = snap.exists();
     renderFriendsList();
+    renderOnlineFriendsInviteList();
   });
+}
+
+// ---------- Freunde direkt einladen (ohne Code) im Online-1v1-Menü ----------
+// Zeigt alle Freunde mit Online/Offline-Status; nur online Freunde koennen eingeladen
+// werden. Klick auf "Invite" erstellt einen Raum UND schickt eine Einladung an genau
+// diesen Freund (siehe createOnlineRoom()/listenForIncomingInvites()).
+function renderOnlineFriendsInviteList() {
+  const listEl = document.getElementById('online-friends-invite-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  if (!friendIds.length) {
+    const empty = document.createElement('div');
+    empty.className = 'online-friends-empty';
+    empty.textContent = 'Add friends from the home screen to invite them here.';
+    listEl.appendChild(empty);
+    return;
+  }
+  friendIds.forEach(id => {
+    const profile = friendProfilesCache[id];
+    const online = !!friendPresenceOnline[id];
+    const item = document.createElement('div');
+    item.className = 'online-friend-item' + (online ? ' is-online' : '');
+    item.innerHTML = `
+      <span class="online-friend-dot${online ? ' online' : ''}"></span>
+      <span class="online-friend-name">${profile ? profile.name : 'Loading...'}</span>
+    `;
+    const btn = document.createElement('button');
+    btn.className = 'online-friend-invite-btn';
+    btn.textContent = 'Invite';
+    btn.disabled = !online;
+    btn.addEventListener('click', () => createOnlineRoom(id));
+    item.appendChild(btn);
+    listEl.appendChild(item);
+  });
+}
+
+let pendingInvite = null;
+function listenForIncomingInvites() {
+  onlineDb.ref('invites/' + onlinePlayerId).on('child_added', snap => {
+    showIncomingInvite(snap.val(), snap.key);
+  });
+}
+function showIncomingInvite(invite, inviteKey) {
+  pendingInvite = { ...invite, key: inviteKey };
+  const nameEl = document.getElementById('invite-toast-name');
+  if (nameEl) nameEl.textContent = invite.fromName || 'A friend';
+  const toastEl = document.getElementById('invite-toast');
+  if (toastEl) toastEl.classList.add('show');
+}
+function clearPendingInvite() {
+  if (pendingInvite) {
+    onlineDb.ref('invites/' + onlinePlayerId + '/' + pendingInvite.key).remove().catch(() => { /* ignore */ });
+  }
+  pendingInvite = null;
+  const toastEl = document.getElementById('invite-toast');
+  if (toastEl) toastEl.classList.remove('show');
+}
+function acceptPendingInvite() {
+  if (!pendingInvite) return;
+  const code = pendingInvite.roomCode;
+  clearPendingInvite();
+  menuEl.style.display = 'none';
+  gameEl.classList.remove('show');
+  borderGameEl.classList.remove('show');
+  capitalGameEl.classList.remove('show');
+  silhouetteGameEl.classList.remove('show');
+  loadCountryData(() => { populateOnlineCountrySelect(); });
+  loadCapitalsData(() => {});
+  joinOnlineRoomByCode(code);
 }
 
 function addFriend(rawId) {
@@ -7274,13 +7465,19 @@ function initFriendsUI() {
     closeBtn.addEventListener('click', () => overlay.classList.remove('show'));
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('show'); });
   }
+  const acceptBtn = document.getElementById('btn-invite-accept');
+  const declineBtn = document.getElementById('btn-invite-decline');
+  if (acceptBtn) acceptBtn.addEventListener('click', acceptPendingInvite);
+  if (declineBtn) declineBtn.addEventListener('click', clearPendingInvite);
   renderFriendsList();
+  renderOnlineFriendsInviteList();
   friendIds.forEach(watchFriend);
 }
 
 setupFriendPresence();
 publishMyPublicProfile();
 initFriendsUI();
+listenForIncomingInvites();
 
 // "Flex": zeigt die besten Abzeichen (höchste erreichte Meilenstein-Stufe, egal aus
 // welchem Modus, dedupliziert) direkt neben dem Namen - nutzt die schon vorhandenen
@@ -7413,7 +7610,10 @@ function showOnlineWaitingScreen({ isHost, code, matchmaking }) {
   }
 }
 
-function createOnlineRoom() {
+// inviteFriendId (optional): wenn gesetzt, wird zusaetzlich zum normalen Raum-Erstellen
+// noch eine Einladung an genau diesen Freund geschickt (siehe listenForIncomingInvites) -
+// dadurch braucht der eingeladene Freund keinen Code einzutippen.
+function createOnlineRoom(inviteFriendId) {
   const code = makeRoomCode();
   const myName = getOnlineNickname() || 'Player';
   onlineIsHost = true;
@@ -7427,6 +7627,14 @@ function createOnlineRoom() {
   }).then(() => {
     showOnlineWaitingScreen({ isHost: true, code });
     listenToOnlineRoom();
+    if (inviteFriendId) {
+      onlineDb.ref('invites/' + inviteFriendId).push({
+        fromId: onlinePlayerId,
+        fromName: myName,
+        roomCode: code,
+        ts: firebase.database.ServerValue.TIMESTAMP,
+      }).catch(() => { /* ignore */ });
+    }
   }).catch(err => {
     showOnlineMenuError('Error creating room: ' + err.message);
   });
@@ -8197,6 +8405,7 @@ document.getElementById('btn-open-online').addEventListener('click', () => {
   document.getElementById('online-nickname-input').value = getOnlineNickname();
   showOnlineMenuError('');
   document.getElementById('online-join-row').style.display = 'none';
+  renderOnlineFriendsInviteList();
   showOnlineScreen(onlineMenuEl);
 });
 document.getElementById('online-country-select').addEventListener('change', (e) => {
