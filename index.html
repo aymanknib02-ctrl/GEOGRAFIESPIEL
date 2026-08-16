@@ -123,8 +123,8 @@
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
   @keyframes globeGlowPulse {
-    0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
-    50% { opacity: 0.65; transform: translate(-50%, -50%) scale(1.07); }
+    0%, 100% { opacity: 0.65; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.07); }
   }
   .menu-globe-stage {
     position: absolute;
@@ -151,7 +151,7 @@
     width: 106%;
     height: 106%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(124, 92, 252, 0.14), rgba(167, 139, 250, 0.05) 55%, transparent 75%);
+    background: radial-gradient(circle, rgba(124, 92, 252, 0.28), rgba(167, 139, 250, 0.12) 55%, transparent 75%);
     transform: translate(-50%, -50%);
     animation: globeGlowPulse 4.5s ease-in-out infinite;
     animation-delay: 0.9s;
@@ -2275,6 +2275,9 @@
   }
 
   /* GeoGuessr-artige Navbar-Leiste ganz oben: Logo links, Profil-Chip + Icons rechts. */
+  /* Wie bei GeoGuessr: die obere Navbar ist ein klar abgegrenzter, durchgehend dunkler
+     Balken statt eines nach unten ausfadenden Verlaufs - dadurch wirkt sie sichtbar vom
+     Rest der Seite getrennt statt ineinander zu verlaufen. */
   .menu-navbar {
     position: absolute;
     top: 0;
@@ -2286,8 +2289,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: linear-gradient(180deg, rgba(8, 9, 20, 0.75), rgba(8, 9, 20, 0));
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: #05060c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
   }
   .menu-navbar-logo {
     font-size: 28px;
