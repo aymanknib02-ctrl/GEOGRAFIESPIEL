@@ -3905,11 +3905,45 @@ function resizeMenuGlobeViewer() {
   menuGlobeViewer.camera.updateProjectionMatrix();
 }
 
+// Das Modell hat nur EIN Material/EINE Textur fuer den ganzen Charakter (kein separates
+// Augen-Material) - eine reine Flaechenfarbe wuerde also auch die Augen mitfaerben. Statt
+// dessen wird die Original-Textur pixelweise neu gezeichnet: dunkle Pixel (Augen, Pupillen,
+// Outlines) bleiben unangetastet, helle/mittlere Pixel (Koerper/Kleidung) werden durch die
+// gewaehlte Farbe ersetzt - dadurch bleiben Augen etc. immer schwarz wie im Original.
+function buildTintedTexture(sourceTex, hex) {
+  const img = sourceTex.image;
+  if (!img || !img.width) return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = imageData.data;
+  const r = (hex >> 16) & 255, g = (hex >> 8) & 255, b = hex & 255;
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) / 255;
+    if (lum > 0.22) {
+      d[i] = r; d[i + 1] = g; d[i + 2] = b;
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = sourceTex.flipY;
+  tex.wrapS = sourceTex.wrapS;
+  tex.wrapT = sourceTex.wrapT;
+  if (sourceTex.encoding !== undefined) tex.encoding = sourceTex.encoding;
+  tex.needsUpdate = true;
+  return tex;
+}
+
 // Skins sollen komplett matt aussehen, kein Glanz/Hochglanz - FBX-Modelle bringen
 // aber oft Materialien mit eigenem Glanz (Phong shininess/specular oder Standard-
 // Material metalness) mit, deshalb hier nach dem Laden hart auf 100% matt umstellen.
-// Faerbt zusaetzlich per Material-Farbe ein (colorKey='default' laesst die Original-
-// Texturfarben unangetastet), da es nur noch das eine Modell mit waehlbarer Farbe gibt.
+// Faerbt zusaetzlich ein (colorKey='default' stellt die Original-Textur wieder her).
+// Die echte Original-Textur wird einmalig in mat.userData.origMap zwischengespeichert,
+// damit wiederholtes Umfaerben immer von der Original-Textur ausgeht statt von einer
+// schon eingefaerbten Version (sonst wuerden sich Farben bei jedem Wechsel vermischen).
 function applySkinAppearance(root, colorKey) {
   const colorDef = getSkinColorByKey(colorKey);
   root.traverse(obj => {
@@ -3922,13 +3956,15 @@ function applySkinAppearance(root, colorKey) {
       if (mat.shininess !== undefined) mat.shininess = 0;
       if (mat.specular) mat.specular.setScalar(0);
       if (mat.envMapIntensity !== undefined) mat.envMapIntensity = 0;
-      // mat.color multipliziert nur mit der vorhandenen Textur (mat.map) - bei einer
-      // hellen Textur bleibt z.B. "Weiß" dadurch praktisch unveraendert (sieht dann aus
-      // wie die Originalfarbe). Fuer eine exakte, garantiert stimmige Farbe die Textur
-      // entfernen und die Wahl-Farbe als reine Flaechenfarbe setzen.
-      if (colorDef.hex !== null) {
-        if (mat.map) mat.map = null;
-        if (mat.color) mat.color.set(colorDef.hex);
+      if (!mat.userData.origMap && mat.map) mat.userData.origMap = mat.map;
+      if (colorDef.hex === null) {
+        if (mat.userData.origMap) mat.map = mat.userData.origMap;
+      } else if (mat.userData.origMap) {
+        const tinted = buildTintedTexture(mat.userData.origMap, colorDef.hex);
+        if (tinted) mat.map = tinted;
+        else if (mat.color) mat.color.set(colorDef.hex);
+      } else if (mat.color) {
+        mat.color.set(colorDef.hex);
       }
       mat.needsUpdate = true;
     });
