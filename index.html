@@ -138,7 +138,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 5;
+    /* Hoeher als die Navbar (1500): .menu-globe-stage bildet einen eigenen Stacking-
+       Context, daher reicht ein hoher z-index NUR am Namens-Chip (Kind-Element) nicht -
+       der ganze Elternblock muss ueber der Navbar liegen, sonst bleibt der Chip trotz
+       eigenem z-index dahinter gefangen. */
+    z-index: 1550;
   }
   body:not(.menu-animated) .menu-globe-stage {
     animation: globeEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s backwards;
