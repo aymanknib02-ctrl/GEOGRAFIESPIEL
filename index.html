@@ -513,8 +513,9 @@
     width: 75vw;
     height: 75vh;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 36px;
     text-align: center;
     animation: popIn 0.35s ease;
     background: rgba(22, 26, 42, 0.55);
@@ -529,6 +530,36 @@
     position: absolute;
     top: 24px;
     left: 24px;
+    z-index: 5;
+  }
+  .skin-preview-panel {
+    position: relative;
+    flex: 0 0 40%;
+    min-width: 0;
+    border-radius: 20px;
+    background: radial-gradient(circle at 50% 38%, rgba(124, 92, 252, 0.16), transparent 70%), rgba(10, 12, 20, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+  #skin-preview-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .skin-preview-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 15px;
+    opacity: 0.6;
+  }
+  .skins-gallery-right {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .skins-gallery-title {
     font-size: 32px;
@@ -542,7 +573,7 @@
     align-content: center;
     justify-content: center;
     align-items: stretch;
-    gap: 28px;
+    gap: 20px;
     width: 100%;
     height: 100%;
     flex: 1;
@@ -550,9 +581,9 @@
     overflow-y: auto;
   }
   .skin-card {
-    width: 280px;
+    width: 140px;
     box-sizing: border-box;
-    padding: 16px;
+    padding: 14px;
     border-radius: 18px;
     background: rgba(15, 18, 26, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -578,23 +609,24 @@
   }
   .skin-card-thumb {
     width: 100%;
-    flex: 1;
-    min-height: 0;
+    aspect-ratio: 1;
     border-radius: 14px;
     background: radial-gradient(circle at 50% 42%, rgba(124, 92, 252, 0.16), transparent 70%);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     overflow: hidden;
-    font-size: 80px;
   }
-  .skin-card-thumb canvas {
-    width: 100%;
-    height: 100%;
+  .skin-color-dot {
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.25), inset 0 -3px 8px rgba(255, 255, 255, 0.15);
   }
-  .skin-card.locked .skin-card-thumb canvas {
-    filter: grayscale(1) brightness(0.55);
+  .skin-color-dot.is-default {
+    background: conic-gradient(from 0deg, #e74c3c, #f1c40f, #2ecc71, #3b82f6, #7c5cfc, #ff6ec7, #e74c3c);
   }
   .skin-card-name {
     font-weight: bold;
@@ -2124,8 +2156,14 @@
   <div id="skins-menu">
     <div class="skins-gallery-box">
       <button id="btn-skins-back" class="menu-back-btn">&#8592; Back</button>
-      <h1 class="skins-gallery-title">Skins</h1>
-      <div class="skins-gallery" id="skins-gallery"></div>
+      <div class="skin-preview-panel" id="skin-preview-stage">
+        <canvas id="skin-preview-canvas"></canvas>
+        <div class="skin-preview-loading" id="skin-preview-loading">Loading...</div>
+      </div>
+      <div class="skins-gallery-right">
+        <h1 class="skins-gallery-title">Skins</h1>
+        <div class="skins-gallery" id="skins-gallery"></div>
+      </div>
     </div>
   </div>
 
@@ -3562,6 +3600,7 @@ function setSkinColor(key) {
   saveInventory();
   renderSkinsGallery();
   updateEquippedSkinDisplays();
+  if (skinPreviewViewer && skinPreviewViewer.model) applySkinAppearance(skinPreviewViewer.model, key);
 }
 
 // Aktualisiert alle Stellen außerhalb des Shop-Karussells selbst, die den aktuell
@@ -3883,7 +3922,14 @@ function applySkinAppearance(root, colorKey) {
       if (mat.shininess !== undefined) mat.shininess = 0;
       if (mat.specular) mat.specular.setScalar(0);
       if (mat.envMapIntensity !== undefined) mat.envMapIntensity = 0;
-      if (colorDef.hex !== null && mat.color) mat.color.set(colorDef.hex);
+      // mat.color multipliziert nur mit der vorhandenen Textur (mat.map) - bei einer
+      // hellen Textur bleibt z.B. "Weiß" dadurch praktisch unveraendert (sieht dann aus
+      // wie die Originalfarbe). Fuer eine exakte, garantiert stimmige Farbe die Textur
+      // entfernen und die Wahl-Farbe als reine Flaechenfarbe setzen.
+      if (colorDef.hex !== null) {
+        if (mat.map) mat.map = null;
+        if (mat.color) mat.color.set(colorDef.hex);
+      }
       mat.needsUpdate = true;
     });
   });
@@ -3945,53 +3991,97 @@ function refreshMenuGlobeCharacter() {
   loadMenuGlobeCharacter(SKIN_MODEL_FILE);
 }
 
-// Vorschau je Karte: eigener kleiner Live-3D-Viewer pro Farboption, der EINMAL rendert
-// (kein Animations-Loop nötig - WebGL-Canvases behalten ihr zuletzt gezeichnetes Bild
-// von selbst). Bewusst OHNE toDataURL()/Offscreen-Snapshot: Brave blockiert bzw.
-// verfälscht aus Anti-Fingerprinting-Gründen standardmäßig genau solche Canvas/WebGL-
-// Datenauslesen, wodurch vorher sogar der komplett unabhängige Startbildschirm-Globus
-// abgestürzt ist. Reines Live-Rendern auf sichtbare Canvases umgeht das vollständig.
-function initSkinCardPreview(canvas, colorKey) {
+// Große, live drehende Vorschau links im Skins-Menü - EIN Viewer statt vieler kleiner,
+// zeigt immer die aktuell gewählte Farbe live am Modell (siehe setSkinColor()). Das
+// Modell wird nur einmal geladen und bei Farbwechsel per applySkinAppearance() neu
+// eingefärbt statt neu geladen zu werden.
+let skinPreviewViewer = null;
+
+function initSkinPreviewViewer() {
+  if (skinPreviewViewer) return skinPreviewViewer;
+  const canvas = document.getElementById('skin-preview-canvas');
+  if (!canvas) return null;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  const size = canvas.clientWidth || 190;
-  renderer.setSize(size, size, false);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
-  camera.position.set(0, 0, 10);
-  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  camera.position.set(0, 0.2, 11);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.1));
   const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
   keyLight.position.set(5, 8, 6);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.55);
   fillLight.position.set(-5, 2, 8);
   scene.add(fillLight);
 
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.enableZoom = false;
+  controls.enablePan = false;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.6;
+  controls.target.set(0, 0.2, 0);
+
+  skinPreviewViewer = { renderer, scene, camera, controls, model: null };
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+
+  window.addEventListener('resize', resizeSkinPreviewViewer);
+  return skinPreviewViewer;
+}
+
+function resizeSkinPreviewViewer() {
+  if (!skinPreviewViewer) return;
+  const stageEl = document.getElementById('skin-preview-stage');
+  if (!stageEl) return;
+  const w = stageEl.clientWidth || 300;
+  const h = stageEl.clientHeight || 300;
+  skinPreviewViewer.renderer.setSize(w, h, false);
+  skinPreviewViewer.camera.aspect = w / h;
+  skinPreviewViewer.camera.updateProjectionMatrix();
+}
+
+function loadSkinPreviewModel() {
+  const viewer = initSkinPreviewViewer();
+  if (!viewer) return;
+  resizeSkinPreviewViewer();
+  if (viewer.model) {
+    applySkinAppearance(viewer.model, inventory.color);
+    return;
+  }
+  const loadingEl = document.getElementById('skin-preview-loading');
   new THREE.FBXLoader().load(SKIN_MODEL_FILE, (fbx) => {
     try {
       const box = new THREE.Box3().setFromObject(fbx);
-      const boxSize = new THREE.Vector3();
-      box.getSize(boxSize);
+      const size = new THREE.Vector3();
+      box.getSize(size);
       const center = new THREE.Vector3();
       box.getCenter(center);
-      const maxDim = Math.max(boxSize.x, boxSize.y, boxSize.z) || 1;
-      const scale = 4.4 / maxDim;
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const scale = 7 / maxDim;
       fbx.scale.setScalar(scale);
       fbx.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-      applySkinAppearance(fbx, colorKey);
-      scene.add(fbx);
-      renderer.render(scene, camera);
-      requestAnimationFrame(() => renderer.render(scene, camera));
+      applySkinAppearance(fbx, inventory.color);
+      viewer.scene.add(fbx);
+      viewer.model = fbx;
+      if (loadingEl) loadingEl.style.display = 'none';
     } catch (err) {
-      console.error('Skin-Vorschau Fehler:', colorKey, err);
+      console.error('Skin-Vorschau Fehler:', err);
     }
   }, undefined, (err) => {
-    console.error('Skin-Vorschau Ladefehler:', colorKey, err);
+    console.error('Skin-Vorschau Ladefehler:', err);
   });
 }
 
-// Baut die Skins-Galerie neu auf (jetzt eine Farbauswahl fuer den einen Standard-Skin).
+// Baut die Skins-Galerie neu auf (jetzt eine Farbauswahl fuer den einen Standard-Skin) -
+// einfache Farb-Kreise statt eigener 3D-Vorschau pro Karte, da die große Live-Vorschau
+// links das schon übernimmt.
 function renderSkinsGallery() {
   const galleryEl = document.getElementById('skins-gallery');
   if (!galleryEl) return;
@@ -4004,8 +4094,10 @@ function renderSkinsGallery() {
 
     const thumb = document.createElement('div');
     thumb.className = 'skin-card-thumb';
-    const canvas = document.createElement('canvas');
-    thumb.appendChild(canvas);
+    const dot = document.createElement('div');
+    dot.className = 'skin-color-dot' + (colorDef.hex === null ? ' is-default' : '');
+    if (colorDef.hex !== null) dot.style.background = '#' + colorDef.hex.toString(16).padStart(6, '0');
+    thumb.appendChild(dot);
     card.appendChild(thumb);
 
     const nameEl = document.createElement('div');
@@ -4031,9 +4123,6 @@ function renderSkinsGallery() {
     card.appendChild(btn);
 
     galleryEl.appendChild(card);
-    // Canvas muss erst im DOM sein (für eine korrekte clientWidth-Messung), bevor der
-    // Viewer dafür aufgesetzt wird.
-    initSkinCardPreview(canvas, colorDef.key);
   });
 }
 
@@ -4041,6 +4130,7 @@ function openSkinsGallery() {
   menuEl.style.display = 'none';
   document.getElementById('skins-menu').classList.add('show');
   renderSkinsGallery();
+  loadSkinPreviewModel();
 }
 
 // Kartenstile: zwei echte Kachel-Hintergruende zur Auswahl (Satelliten-artiges 'ocean'
