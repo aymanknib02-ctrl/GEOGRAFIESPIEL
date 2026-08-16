@@ -359,6 +359,66 @@
     margin-bottom: 14px;
     letter-spacing: 0.5px;
   }
+  .menu-quests-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .menu-quests-title-row .menu-quests-title {
+    margin-bottom: 0;
+  }
+  .quest-countdown {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, rgba(124, 92, 252, 0.28), rgba(255, 217, 61, 0.16));
+    border: 1px solid rgba(124, 92, 252, 0.5);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 0 10px rgba(124, 92, 252, 0.35);
+    animation: questCountdownPulse 2s ease-in-out infinite;
+  }
+  .quest-countdown-icon {
+    display: inline-block;
+    transform-origin: 50% 15%;
+    animation: questCountdownSwing 1.6s ease-in-out infinite;
+  }
+  .quest-countdown-time {
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(120deg, #b197fc, #ffd93d);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: titleShift 4s ease-in-out infinite;
+  }
+  @keyframes questCountdownPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(124, 92, 252, 0.35); }
+    50% { box-shadow: 0 0 20px rgba(124, 92, 252, 0.7); }
+  }
+  @keyframes questCountdownSwing {
+    0%, 100% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+  }
+  .quest-countdown.urgent {
+    border-color: rgba(255, 92, 92, 0.85);
+    background: linear-gradient(135deg, rgba(255, 92, 92, 0.32), rgba(255, 159, 67, 0.2));
+    animation: questCountdownUrgent 0.6s ease-in-out infinite;
+  }
+  .quest-countdown.urgent .quest-countdown-time {
+    background: linear-gradient(120deg, #ff5c5c, #ffd93d);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  @keyframes questCountdownUrgent {
+    0%, 100% { box-shadow: 0 0 12px rgba(255, 92, 92, 0.5); transform: scale(1); }
+    50% { box-shadow: 0 0 26px rgba(255, 92, 92, 0.9); transform: scale(1.08); }
+  }
   .challenge-box .quest-desc {
     font-size: 13px;
   }
@@ -2264,7 +2324,13 @@
         <div class="challenge-box" id="daily-challenge-box"></div>
       </div>
       <div class="menu-quests-panel">
-        <div class="menu-quests-title">Daily Quests</div>
+        <div class="menu-quests-title-row">
+          <div class="menu-quests-title">Hourly Quests</div>
+          <div class="quest-countdown" id="quest-countdown">
+            <span class="quest-countdown-icon">&#8987;</span>
+            <span class="quest-countdown-time" id="quest-countdown-time">60:00</span>
+          </div>
+        </div>
         <div class="quest-list" id="daily-quests-list"></div>
       </div>
     </div>
@@ -3408,12 +3474,13 @@ function showRewardToast(milestone, mode) {
   setTimeout(() => toast.remove(), tier >= 4 ? 4200 : 3000);
 }
 
-// ================= Tägliche Quests =================
-// Jeden Tag werden 3 Quests aus einem festen Pool ausgewählt (deterministisch aus dem
-// Datum, damit sie beim Neuladen gleich bleiben, aber am nächsten Tag wechseln). Der
-// Fortschritt hängt sich an awardCorrect() - dieselbe Stelle, die für JEDE richtige
-// Antwort in JEDEM Modus (auch online) bereits aufgerufen wird - dadurch braucht keine
-// einzelne Spielmodus-Datei angefasst zu werden.
+// ================= Stündliche Quests =================
+// Jede Stunde werden 3 Quests aus einem festen Pool ausgewählt (deterministisch aus dem
+// Stunden-Schlüssel, damit sie beim Neuladen gleich bleiben, aber zur nächsten vollen
+// Stunde wechseln - inkl. Live-Countdown, der bei Ablauf automatisch neu laedt, auch
+// ohne Seiten-Reload). Der Fortschritt hängt sich an awardCorrect() - dieselbe Stelle,
+// die für JEDE richtige Antwort in JEDEM Modus (auch online) bereits aufgerufen wird -
+// dadurch braucht keine einzelne Spielmodus-Datei angefasst zu werden.
 const QUEST_POOL = [
   { id: 'any5', desc: '5 correct answers (any mode)', target: 5, track: 'any' },
   { id: 'any10', desc: '10 correct answers (any mode)', target: 10, track: 'any' },
@@ -3432,6 +3499,16 @@ const DAILY_QUEST_REWARD = 100;
 function todayDateString() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+// Stunden-genauer Schlüssel (Tag + Stunde) fürs Quest-Reset-Intervall.
+function currentHourKey() {
+  const d = new Date();
+  return `${todayDateString()}T${String(d.getHours()).padStart(2, '0')}`;
+}
+function msUntilNextHour() {
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 0, 0);
+  return next - now;
 }
 function dateSeed(dateStr) {
   let h = 0;
@@ -3455,16 +3532,16 @@ function getQuestDef(id) {
 }
 
 function loadDailyQuests() {
-  const today = todayDateString();
+  const period = currentHourKey();
   try {
     const raw = localStorage.getItem('geoquiz-daily-quests');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.date === today && Array.isArray(parsed.selected)) return parsed;
+      if (parsed && parsed.date === period && Array.isArray(parsed.selected)) return parsed;
     }
   } catch (e) { /* ignore */ }
-  const selected = pickDailyQuestIds(today);
-  const fresh = { date: today, selected, progress: {}, claimed: {} };
+  const selected = pickDailyQuestIds(period);
+  const fresh = { date: period, selected, progress: {}, claimed: {} };
   selected.forEach(id => { fresh.progress[id] = 0; fresh.claimed[id] = false; });
   saveDailyQuests(fresh);
   return fresh;
@@ -3556,6 +3633,25 @@ function renderDailyQuests() {
     listEl.appendChild(item);
   });
 }
+
+// Tickt jede Sekunde: aktualisiert die Countdown-Anzeige bis zur naechsten vollen
+// Stunde, und laedt die Quests automatisch neu, sobald die Stunde tatsaechlich
+// gewechselt hat - funktioniert auch, wenn der Tab die ganze Zeit offen bleibt.
+function updateQuestCountdown() {
+  if (currentHourKey() !== dailyQuests.date) {
+    dailyQuests = loadDailyQuests();
+    renderDailyQuests();
+  }
+  const totalSeconds = Math.max(0, Math.floor(msUntilNextHour() / 1000));
+  const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+  const ss = String(totalSeconds % 60).padStart(2, '0');
+  const timeEl = document.getElementById('quest-countdown-time');
+  if (timeEl) timeEl.textContent = `${mm}:${ss}`;
+  const wrapEl = document.getElementById('quest-countdown');
+  if (wrapEl) wrapEl.classList.toggle('urgent', totalSeconds <= 60);
+}
+updateQuestCountdown();
+setInterval(updateQuestCountdown, 1000);
 
 // ================= Daily Challenge =================
 // Eine einzelne, größere/schwerere Aufgabe pro Tag (deutlich mehr Belohnung als die
