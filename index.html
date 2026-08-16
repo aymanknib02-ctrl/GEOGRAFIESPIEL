@@ -1959,9 +1959,10 @@
     font-variant-numeric: tabular-nums;
   }
   @keyframes coinPopup {
-    0% { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
-    25% { opacity: 1; transform: translate(-50%, -10px) scale(1.1); }
-    100% { opacity: 0; transform: translate(-50%, -46px) scale(1); }
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.5) rotate(0deg); }
+    20% { opacity: 1; transform: translate(-50%, -14px) scale(1.5) rotate(-6deg); }
+    40% { transform: translate(-50%, -20px) scale(1.15) rotate(4deg); }
+    100% { opacity: 0; transform: translate(-50%, -60px) scale(1) rotate(0deg); }
   }
   .coin-popup {
     position: absolute;
@@ -1969,12 +1970,65 @@
     left: 50%;
     transform: translate(-50%, 0);
     z-index: 1600;
-    font-size: 20px;
-    font-weight: bold;
-    color: #f1c40f;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    font-size: 26px;
+    font-weight: 800;
+    color: #ffd93d;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6), 0 0 16px rgba(255, 217, 61, 0.9);
     pointer-events: none;
-    animation: coinPopup 1s ease forwards;
+    animation: coinPopup 1s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  /* Kurzer Farb-Blitz am Bildschirmrand + Funken-Ausbruch bei jeder richtigen/falschen
+     Antwort in JEDEM Spielmodus (haengt zentral an awardCorrect()/resetStreak()). */
+  .screen-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 8000;
+    pointer-events: none;
+    opacity: 0;
+    animation: screenFlashPulse 0.55s ease-out forwards;
+  }
+  .screen-flash.correct {
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(92, 230, 140, 0.35) 100%);
+  }
+  .screen-flash.wrong {
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(255, 92, 92, 0.4) 100%);
+  }
+  @keyframes screenFlashPulse {
+    0% { opacity: 0; }
+    25% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .correct-burst-piece {
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    z-index: 7000;
+    pointer-events: none;
+    transform: translate(-50%, 0);
+    animation: correctBurstFly 0.75s cubic-bezier(0.2,0.8,0.3,1) forwards;
+  }
+  @keyframes correctBurstFly {
+    0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), var(--dy)) scale(0.3); opacity: 0; }
+  }
+  .streak-toast {
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5000;
+    background: linear-gradient(135deg, #ff9f43, #e8590c);
+    color: #2b1200;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 17px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 26px rgba(255, 159, 67, 0.7);
+    animation: rewardToastIn 0.35s cubic-bezier(0.34,1.56,0.64,1), fadeIn 0.3s ease 1.4s reverse forwards;
+    pointer-events: none;
   }
   @keyframes rewardToastIn {
     from { opacity: 0; transform: translateX(-50%) translateY(-16px) scale(0.9); }
@@ -3281,6 +3335,39 @@ function saveRewards() {
   } catch (e) { /* ignore */ }
 }
 
+const CORRECT_BURST_COLORS = ['#5ce68c', '#ffd93d', '#5aa9ff', '#ff8fc7', '#b197fc', '#ff9f43'];
+function spawnCorrectBurst() {
+  for (let i = 0; i < 16; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'correct-burst-piece';
+    const angle = (Math.PI * 2 * i) / 16 + Math.random() * 0.3;
+    const dist = 60 + Math.random() * 90;
+    piece.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    piece.style.setProperty('--dy', (Math.sin(angle) * dist - 20) + 'px');
+    piece.style.background = CORRECT_BURST_COLORS[i % CORRECT_BURST_COLORS.length];
+    document.body.appendChild(piece);
+    piece.addEventListener('animationend', () => piece.remove());
+    setTimeout(() => piece.remove(), 900);
+  }
+  const flash = document.createElement('div');
+  flash.className = 'screen-flash correct';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 600);
+}
+function spawnWrongFlash() {
+  const flash = document.createElement('div');
+  flash.className = 'screen-flash wrong';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 600);
+}
+function showStreakToast(streak) {
+  const toast = document.createElement('div');
+  toast.className = 'streak-toast';
+  toast.textContent = `🔥 ${streak} in a row!`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 1700);
+}
+
 function updateCoinDisplays() {
   document.querySelectorAll('.coin-value').forEach(el => {
     el.textContent = rewards.coins;
@@ -3605,8 +3692,13 @@ function awardCorrect(mode) {
   saveRewards();
   updateCoinDisplays();
   showCoinPopup(coinsEarned);
+  spawnCorrectBurst();
   renderRewardsScreen();
   if (newlyUnlocked) { showRewardToast(newlyUnlocked, mode); updateMenuPlayerBadges(); }
+  if (rewards.streaks[mode] >= 5 && rewards.streaks[mode] % 5 === 0) {
+    showStreakToast(rewards.streaks[mode]);
+    launchConfetti(30);
+  }
   trackDailyQuestProgress(mode);
   trackDailyChallengeProgress(mode);
 }
@@ -3614,6 +3706,7 @@ function awardCorrect(mode) {
 // Wird bei falscher Antwort oder Aufgeben aufgerufen - beendet nur die Serie des
 // jeweiligen Modus, ändert aber nichts an bereits verdienten Münzen/Abzeichen.
 function resetStreak(mode) {
+  spawnWrongFlash();
   if (!rewards.streaks[mode]) return;
   rewards.streaks[mode] = 0;
   saveRewards();
