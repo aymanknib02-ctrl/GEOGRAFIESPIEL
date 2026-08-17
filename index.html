@@ -3402,8 +3402,12 @@ window.addEventListener('error', function (e) {
 // Natural Earth 1:50m Admin-0 - deutlich präzisere Küsten-/Grenzlinien als die
 // stark vereinfachte Standardquelle (die 10m-Variante wäre noch genauer, ist mit
 // ~13 MB aber für den Erstladevorgang zu groß).
-const GEOJSON_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson';
-const BORDERS_URL = 'https://raw.githubusercontent.com/mledoze/countries/master/countries.json';
+// Lokal im Repo mitgeliefert statt von raw.githubusercontent.com live geladen - dieser
+// Host rate-limitet unvorhersehbar (429 Too Many Requests), was praktisch das GANZE
+// Spiel lahmgelegt hat (fast jeder Modus haengt an diesen beiden Datensaetzen). Lokale
+// Kopien laufen ueber dasselbe GitHub-Pages-CDN wie der Rest der Seite, kein Rate-Limit.
+const GEOJSON_URL = 'data/ne_50m_admin_0_countries.geojson';
+const BORDERS_URL = 'data/countries.json';
 const TOTAL_ROUNDS = 15;
 const BORDER_ROUNDS = 5;
 const BORDER_STEP_BUDGET = 7;
