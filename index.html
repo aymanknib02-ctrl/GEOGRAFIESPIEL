@@ -4566,6 +4566,56 @@ function initMenuGlobeViewer() {
   );
   group.add(globeMesh);
 
+  // Atmosphaeren-Leuchtschein am Kugelrand (Fresnel-Shader: leuchtet nur am Rand, wo die
+  // Oberflaechen-Normale fast senkrecht zur Kamera steht) - der klassische "Planeten"-VFX-
+  // Look, additiv geblendet damit es sich mit dem Sternenhintergrund uebereinander legt.
+  const atmosphereMat = new THREE.ShaderMaterial({
+    uniforms: { glowColor: { value: new THREE.Color(0x7c5cfc) }, pulse: { value: 0 } },
+    vertexShader: `
+      varying vec3 vNormal;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 glowColor;
+      uniform float pulse;
+      varying vec3 vNormal;
+      void main() {
+        float edge = clamp(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
+        float intensity = pow(edge, 3.0);
+        gl_FragColor = vec4(glowColor, intensity * (0.8 + pulse * 0.35));
+      }
+    `,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    depthWrite: false,
+  });
+  const atmosphereMesh = new THREE.Mesh(new THREE.SphereGeometry(globeRadius * 1.14, 64, 48), atmosphereMat);
+  group.add(atmosphereMesh);
+
+  // Kleine bunte Lichtfunken, die auf zufaellig geneigten Bahnen um die Kugel kreisen -
+  // je eine eigene Pivot-Gruppe pro Funken (dieselbe Rotations-Technik wie cloudGroup),
+  // statt die Position jedes Frames manuell per Sinus/Kosinus neu zu berechnen.
+  const sparkleContainer = new THREE.Group();
+  const SPARKLE_COLORS = [0x7c5cfc, 0xffd166, 0x4fd1c5, 0xff8fc7, 0xa78bfa];
+  const sparklePivots = [];
+  for (let i = 0; i < 16; i++) {
+    const pivot = new THREE.Group();
+    pivot.rotation.x = (Math.random() - 0.5) * Math.PI * 0.9;
+    pivot.rotation.z = (Math.random() - 0.5) * Math.PI * 0.9;
+    const sparkMat = new THREE.MeshBasicMaterial({ color: SPARKLE_COLORS[i % SPARKLE_COLORS.length] });
+    const sparkMesh = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), sparkMat);
+    sparkMesh.position.set(globeRadius * (1.25 + Math.random() * 0.4), 0, 0);
+    pivot.add(sparkMesh);
+    pivot.userData.speed = (0.0025 + Math.random() * 0.004) * (Math.random() < 0.5 ? 1 : -1);
+    sparklePivots.push(pivot);
+    sparkleContainer.add(pivot);
+  }
+  group.add(sparkleContainer);
+
   const cloudGroup = new THREE.Group();
   const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.75, metalness: 0 });
   function makeCloudPuff(size) {
@@ -4614,10 +4664,13 @@ function initMenuGlobeViewer() {
   menuGlobeViewer = { renderer, scene, camera, controls, group, charGroup, globeMesh, cloudGroup, globeRadius, visibleHeightAtTarget };
   menuGlobeLoader = new THREE.FBXLoader();
 
+  const globeClock = new THREE.Clock();
   (function animate() {
     requestAnimationFrame(animate);
     controls.update();
     cloudGroup.rotation.y += 0.0006;
+    sparklePivots.forEach(p => { p.rotation.y += p.userData.speed; });
+    atmosphereMat.uniforms.pulse.value = Math.sin(globeClock.getElapsedTime() * 1.3) * 0.5 + 0.5;
     // Sanft gedaempft (nicht sofort) in Richtung Mauszeiger drehen, max. ca. 55° in
     // jede Richtung, damit es nie komplett "wegdreht" und der Charakter im Bild bleibt.
     const maxYaw = 0.95;
@@ -4651,8 +4704,8 @@ function applyMenuGlobeContinents() {
 // und die Laender-Umrisse werden in derselben Farbe wie die Flaeche gezeichnet (statt
 // einer dunklen Linie), damit die Kontinente wie EIN durchgehendes Landstueck aussehen,
 // nicht wie eine politische Karte mit Grenzen.
-const GLOBE_LAND_COLOR = '#4fd16b';
-const GLOBE_OCEAN_COLOR = '#1c6fd6';
+const GLOBE_LAND_COLOR = '#38e878';
+const GLOBE_OCEAN_COLOR = '#1462e8';
 
 function buildMenuGlobeTexture(geoData) {
   const width = 1600, height = 800;
