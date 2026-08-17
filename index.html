@@ -1836,10 +1836,17 @@
   #geo-pano-canvas.dragging {
     cursor: grabbing;
   }
+  /* Die kleine Eck-Karte waechst nach jeder Runde zu einem echten Vollbild-Reveal
+     (siehe .reveal) - right/bottom/width/height/border-radius sind alle animierbare
+     Zahlenwerte (kein "auto"), damit die Kugel-Groessen-Aenderung sauber ueberblendet
+     statt zu springen. */
   .geo-guess-panel {
-    position: absolute;
+    position: fixed;
     right: 24px;
     bottom: 24px;
+    width: 420px;
+    height: 380px;
+    box-sizing: border-box;
     z-index: 1200;
     display: flex;
     flex-direction: column;
@@ -1851,20 +1858,154 @@
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 16px;
     padding: 12px;
-    transition: transform 0.25s ease;
+    transition: right 0.7s cubic-bezier(0.65, 0, 0.35, 1), bottom 0.7s cubic-bezier(0.65, 0, 0.35, 1),
+                width 0.7s cubic-bezier(0.65, 0, 0.35, 1), height 0.7s cubic-bezier(0.65, 0, 0.35, 1),
+                border-radius 0.6s ease, padding 0.6s ease;
   }
-  .geo-guess-panel:hover {
-    transform: scale(1.04);
+  .geo-guess-panel.reveal {
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    padding: 0;
+    z-index: 2600;
   }
   #geo-guess-map {
-    width: 420px;
-    height: 300px;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
     border-radius: 10px;
     overflow: hidden;
     cursor: crosshair;
+    transition: border-radius 0.6s ease;
+  }
+  .geo-guess-panel.reveal #geo-guess-map {
+    border-radius: 0;
   }
   #btn-geo-guess-confirm {
     width: 100%;
+    flex-shrink: 0;
+    transition: opacity 0.25s ease;
+  }
+  .geo-guess-panel.reveal #btn-geo-guess-confirm {
+    display: none;
+  }
+  /* Pulsierende "Ping"-Ringe an den Guess-Markern beim Vollbild-Reveal - der eigene in
+     Blau, der gegnerische in Rot, der naeher dran war leuchtet golden statt seiner
+     Grundfarbe. */
+  .geo-ping-marker {
+    position: relative;
+    width: 20px;
+    height: 20px;
+  }
+  .geo-ping-marker::before, .geo-ping-marker::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--ping-color, #3388ff);
+    animation: geoPingRing 1.6s ease-out infinite;
+  }
+  .geo-ping-marker::after {
+    animation-delay: 0.8s;
+  }
+  .geo-ping-marker-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: var(--ping-color, #3388ff);
+    box-shadow: 0 0 12px 3px var(--ping-color, #3388ff);
+  }
+  @keyframes geoPingRing {
+    0% { transform: scale(0.3); opacity: 0.9; }
+    100% { transform: scale(2.8); opacity: 0; }
+  }
+  .geo-ping-marker.winner .geo-ping-marker-dot {
+    background: #ffd166;
+    box-shadow: 0 0 20px 5px #ffd166;
+  }
+  .geo-ping-marker.winner::before, .geo-ping-marker.winner::after {
+    border-color: #ffd166;
+  }
+  /* Grosser animierter 15-Sekunden-Countdown, sichtbar bei beiden Spielern sobald einer
+     geguesst hat - Fortschrittsring per SVG stroke-dashoffset, wird unter 5s "urgent"
+     (Rot, schnellerer Puls, staerkerer Glow). */
+  .geo-countdown {
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1900;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .geo-countdown.show {
+    display: flex;
+    animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .geo-countdown-ring-wrap {
+    position: relative;
+    width: 84px;
+    height: 84px;
+  }
+  .geo-countdown-ring {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .geo-countdown-ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.15);
+    stroke-width: 8;
+  }
+  .geo-countdown-ring-fg {
+    fill: none;
+    stroke: #7c5cfc;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+    filter: drop-shadow(0 0 8px rgba(124, 92, 252, 0.8));
+  }
+  .geo-countdown-number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    font-weight: 800;
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+  }
+  .geo-countdown-label {
+    font-size: 13px;
+    font-weight: bold;
+    background: rgba(15, 18, 26, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 5px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .geo-countdown.urgent .geo-countdown-ring-fg {
+    stroke: #e74c3c;
+    filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.9));
+  }
+  .geo-countdown.urgent .geo-countdown-number {
+    color: #ff6b6b;
+    animation: geoCountdownPulse 0.5s ease-in-out infinite;
+  }
+  @keyframes geoCountdownPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.24); }
   }
   .geo-round-result {
     display: none;
@@ -1872,7 +2013,7 @@
     top: 150px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1600;
+    z-index: 2700;
     background: rgba(15, 18, 26, 0.9);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -3149,6 +3290,16 @@
       <button id="btn-geo-guess-confirm" disabled>Guess here?</button>
     </div>
     <div class="geo-round-result" id="geo-round-result"></div>
+    <div class="geo-countdown" id="geo-countdown">
+      <div class="geo-countdown-ring-wrap">
+        <svg class="geo-countdown-ring" viewBox="0 0 100 100">
+          <circle class="geo-countdown-ring-bg" cx="50" cy="50" r="45"></circle>
+          <circle class="geo-countdown-ring-fg" id="geo-countdown-ring-fg" cx="50" cy="50" r="45"></circle>
+        </svg>
+        <div class="geo-countdown-number" id="geo-countdown-number">15</div>
+      </div>
+      <div class="geo-countdown-label" id="geo-countdown-label">Guess now!</div>
+    </div>
   </div>
 
   <div id="online-end-overlay" class="overlay">
@@ -8051,6 +8202,7 @@ function handleOnlineRoomUpdate(room) {
       return;
     }
     updateOnlineHealthFromRoom(room);
+    checkOnlineGuessCountdown(room);
     handleOnlineRoundResult(room);
   }
 }
@@ -8528,9 +8680,89 @@ function swapGeoStreetPhoto(url, isPano) {
   }
 }
 
+// ---------- 15-Sekunden-Guess-Timer: sobald EIN Spieler geguesst hat, laeuft bei
+// BEIDEN Clients (unabhaengig ueber den Firebase-Room-Sync) derselbe lokale Countdown
+// an. Laeuft er ab, ohne dass dieser Client selbst schon geguesst hat, wird automatisch
+// der aktuell gesetzte Pin (oder ein Fallback) abgeschickt, damit die Runde nicht ewig
+// haengen bleibt. ----------
+const GEO_GUESS_TIME_LIMIT = 15;
+let onlineGuessCountdownRound = null;
+let onlineGuessCountdownInterval = null;
+
+function checkOnlineGuessCountdown(room) {
+  if (!onlineGameStarted || onlineRoundResolving) return;
+  const guesses = (room.guesses && room.guesses[onlineCurrentRound]) || {};
+  const myGuessed = !!guesses[onlinePlayerId];
+  const oppGuessed = !!guesses[onlineOpponentId];
+  const exactlyOne = (myGuessed || oppGuessed) && !(myGuessed && oppGuessed);
+  if (!exactlyOne) {
+    stopOnlineGuessCountdown();
+    return;
+  }
+  if (onlineGuessCountdownRound !== onlineCurrentRound) {
+    startOnlineGuessCountdown(myGuessed);
+  } else {
+    const labelEl = document.getElementById('geo-countdown-label');
+    if (labelEl) labelEl.textContent = myGuessed ? 'Waiting for opponent...' : 'Guess now!';
+  }
+}
+
+function startOnlineGuessCountdown(alreadyGuessed) {
+  stopOnlineGuessCountdown();
+  onlineGuessCountdownRound = onlineCurrentRound;
+  let remaining = GEO_GUESS_TIME_LIMIT;
+  const el = document.getElementById('geo-countdown');
+  const numberEl = document.getElementById('geo-countdown-number');
+  const labelEl = document.getElementById('geo-countdown-label');
+  const ringEl = document.getElementById('geo-countdown-ring-fg');
+  const CIRCUMFERENCE = 283;
+  el.classList.add('show');
+  labelEl.textContent = alreadyGuessed ? 'Waiting for opponent...' : 'Guess now!';
+
+  const render = () => {
+    numberEl.textContent = remaining;
+    ringEl.style.strokeDashoffset = CIRCUMFERENCE * (1 - remaining / GEO_GUESS_TIME_LIMIT);
+    el.classList.toggle('urgent', remaining <= 5);
+    if (remaining <= 5 && remaining > 0) playToggleSound();
+  };
+  render();
+  onlineGuessCountdownInterval = setInterval(() => {
+    remaining--;
+    if (remaining < 0) {
+      stopOnlineGuessCountdown();
+      if (!onlineAnswered) forceSubmitGeoGuess();
+      return;
+    }
+    render();
+  }, 1000);
+}
+
+function stopOnlineGuessCountdown() {
+  if (onlineGuessCountdownInterval) {
+    clearInterval(onlineGuessCountdownInterval);
+    onlineGuessCountdownInterval = null;
+  }
+  onlineGuessCountdownRound = null;
+  const el = document.getElementById('geo-countdown');
+  if (el) el.classList.remove('show', 'urgent');
+}
+
+// Wird nur aufgerufen, wenn die 15 Sekunden abgelaufen sind und DIESER Client noch nicht
+// geguesst hat - schickt den aktuell gesetzten Pin ab, oder ohne Pin einen Fallback-Punkt
+// (zaehlt praktisch als kompletter Fehlschuss), damit die Runde trotzdem aufgeloest wird.
+function forceSubmitGeoGuess() {
+  if (onlineAnswered) return;
+  onlineAnswered = true;
+  document.getElementById('btn-geo-guess-confirm').disabled = true;
+  const guess = geoMyGuess || { lat: 0, lng: 0 };
+  showOnlineStatus("Time's up!");
+  onlineRoomRef.child(`guesses/${onlineCurrentRound}/${onlinePlayerId}`).set(guess).catch(() => {});
+}
+
 function renderGeoGuessrRoundQuestion(round) {
   geoMyGuess = null;
   document.getElementById('btn-geo-guess-confirm').disabled = true;
+  stopOnlineGuessCountdown();
   const resultEl = document.getElementById('geo-round-result');
   resultEl.classList.remove('show');
   resultEl.innerHTML = '';
@@ -8574,10 +8806,12 @@ function handleOnlineRoundResult(room) {
   if (!myGuess || !oppGuess) return;
 
   onlineRoundResolving = true;
+  stopOnlineGuessCountdown();
   const round = onlineRounds[onlineCurrentRound];
   const myDist = geoDistanceKm(myGuess.lat, myGuess.lng, round.lat, round.lng);
   const oppDist = geoDistanceKm(oppGuess.lat, oppGuess.lng, round.lat, round.lng);
   const multiplier = 1 + onlineCurrentRound * GEO_DAMAGE_STEP;
+  const iWonRound = myDist < oppDist;
 
   let damage = 0, loser = null;
   if (myDist > oppDist) {
@@ -8596,13 +8830,29 @@ function handleOnlineRoundResult(room) {
   const actualLatLng = [round.lat, round.lng];
   const myLatLng = [myGuess.lat, myGuess.lng];
   const oppLatLng = [oppGuess.lat, oppGuess.lng];
-  const pinIcon = L.divIcon({ className: '', html: '<div style="font-size:30px;line-height:30px;animation:pinDrop 0.6s ease;">📍</div>', iconSize: [30, 30], iconAnchor: [15, 30] });
+  const pinIcon = L.divIcon({ className: '', html: '<div style="font-size:38px;line-height:38px;animation:pinDrop 0.6s ease;">📍</div>', iconSize: [38, 38], iconAnchor: [19, 38] });
+
+  // Krasser Vollbild-Reveal: die kleine Eck-Karte waechst auf den kompletten Bildschirm
+  // (siehe .geo-guess-panel.reveal), begleitet von Partikel-Explosion + Einschlag-Sound,
+  // damit jede Runde wie ein grosser Moment wirkt statt nur einer kleinen Karten-Anzeige.
+  const panelEl = document.getElementById('geo-guess-panel');
+  panelEl.classList.add('reveal');
+  spawnIntroClashBurst();
+  playIntroClashSound();
 
   if (geoGuessMarker) { geoGuessMap.removeLayer(geoGuessMarker); geoGuessMarker = null; }
   const revealGroup = L.layerGroup().addTo(geoGuessMap);
   geoRevealLayer = revealGroup;
   L.marker(actualLatLng, { icon: pinIcon }).addTo(revealGroup);
-  geoGuessMap.flyToBounds(L.latLngBounds([actualLatLng, myLatLng, oppLatLng]), { padding: [40, 40], maxZoom: 8, animate: true, duration: 0.9 });
+
+  // Erst NACH der Vollbild-Ausdehnung (0.7s Transition) die Karte neu vermessen und dann
+  // erst zur Wahrheit rauszoomen - sonst rechnet flyToBounds noch mit der alten kleinen
+  // Eck-Groesse und zoomt falsch.
+  setTimeout(() => {
+    if (!geoGuessMap) return;
+    geoGuessMap.invalidateSize();
+    geoGuessMap.flyToBounds(L.latLngBounds([actualLatLng, myLatLng, oppLatLng]), { padding: [80, 80], maxZoom: 8, animate: true, duration: 1.1 });
+  }, 720);
 
   const resultEl = document.getElementById('geo-round-result');
   resultEl.innerHTML = `<b>You:</b> <span class="dist-value" id="geo-my-dist">0 m</span> away &nbsp;|&nbsp; <b>${onlineOpponentName}:</b> <span class="dist-value" id="geo-opp-dist">0 m</span> away`;
@@ -8620,20 +8870,33 @@ function handleOnlineRoundResult(room) {
       if (r >= 8) clearInterval(grow);
     }, 16);
   }
+  // Pulsierender "Ping"-Ring am Marker (siehe .geo-ping-marker) - der naeher dran war
+  // leuchtet golden statt in seiner Spielerfarbe.
+  function makePingMarker(latlng, color, isWinner) {
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="geo-ping-marker${isWinner ? ' winner' : ''}" style="--ping-color:${color}"><div class="geo-ping-marker-dot"></div></div>`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+    });
+    return L.marker(latlng, { icon }).addTo(revealGroup);
+  }
   setTimeout(() => {
     if (!geoGuessMap) return;
     const myMarker = L.circleMarker(myLatLng, { radius: 8, color: '#fff', weight: 2, fillColor: '#3388ff', fillOpacity: 1 }).addTo(revealGroup);
     L.polyline([myLatLng, actualLatLng], { color: '#3388ff', dashArray: '4,6', weight: 2 }).addTo(revealGroup);
     growMarker(myMarker);
-  }, 350);
+    makePingMarker(myLatLng, '#3388ff', iWonRound);
+  }, 950);
   setTimeout(() => {
     if (!geoGuessMap) return;
     const oppMarker = L.circleMarker(oppLatLng, { radius: 8, color: '#fff', weight: 2, fillColor: '#ff4444', fillOpacity: 1 }).addTo(revealGroup);
     L.polyline([oppLatLng, actualLatLng], { color: '#ff4444', dashArray: '4,6', weight: 2 }).addTo(revealGroup);
     growMarker(oppMarker);
-  }, 650);
+    makePingMarker(oppLatLng, '#ff4444', !iWonRound);
+  }, 1250);
 
-  setTimeout(() => showOnlineMultiplierBadge(multiplier), 1200);
+  setTimeout(() => showOnlineMultiplierBadge(multiplier), 1800);
 
   setTimeout(() => {
     if (loser === 'me') {
@@ -8641,23 +8904,27 @@ function handleOnlineRoundResult(room) {
       setOnlineHealthDisplay('me', onlineMyHealth);
       flashOnlineHealthHit('me');
       showOnlineDamageFloat('me', damage);
+      playWrongSound();
     } else if (loser === 'opp') {
       onlineOpponentHealth = Math.max(0, onlineOpponentHealth - damage);
       setOnlineHealthDisplay('opp', onlineOpponentHealth);
       flashOnlineHealthHit('opp');
       showOnlineDamageFloat('opp', damage);
+      playVictorySound();
     }
-  }, 1700);
+  }, 2300);
 
   setTimeout(() => {
+    panelEl.classList.remove('reveal');
     onlineRoundResolving = false;
     onlineCurrentRound++;
     if (onlineCurrentRound >= onlineTotalRounds || onlineMyHealth <= 0 || onlineOpponentHealth <= 0) {
       endOnlineGame();
     } else {
       renderOnlineRound();
+      setTimeout(() => { if (geoGuessMap) geoGuessMap.invalidateSize(); }, 720);
     }
-  }, 4200);
+  }, 5200);
 }
 
 function cleanupOnlineRoom() {
