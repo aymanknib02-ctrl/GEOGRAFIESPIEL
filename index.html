@@ -2061,7 +2061,11 @@
     border-radius: 14px;
     display: flex;
     align-items: center;
-    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 24px;
+    max-width: 94vw;
+    box-sizing: border-box;
     font-size: 18px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 24px rgba(124, 92, 252, 0.15);
     animation: hudEnter 0.4s cubic-bezier(0.34,1.56,0.64,1) backwards;
@@ -2991,6 +2995,15 @@
       width: min(78vw, 50vh, 460px);
       height: min(78vw, 50vh, 460px);
     }
+    /* Ohne dieses Override gewinnt die Desktop-Regel #menu.mode-select .menu-globe-stage
+       (top:50%; left:25%; hoehere Spezifitaet durch die #menu-ID) weiterhin gegen die
+       obige einfache .menu-globe-stage-Regel - der Globus blieb dadurch mitten in der
+       jetzt zentrierten Modus-Liste stehen und ueberlappte den Text. Auf schmalen
+       Bildschirmen komplett ausblenden, statt ihn zu verschieben (kein Platz dafuer). */
+    #menu.mode-select .menu-globe-stage {
+      opacity: 0;
+      pointer-events: none;
+    }
     .menu-home-actions {
       top: auto;
       bottom: 3vh;
@@ -3046,16 +3059,27 @@
       width: 100%;
     }
 
-    /* HUD-Leiste (alle Spielmodi): umbrechen statt seitlich ueber den
-       Bildschirmrand hinauszuragen - dort wurden Menue-Knopf/Punktestand
-       durch das globale overflow:hidden unsichtbar und unklickbar. */
+    /* HUD-Leiste (alle Spielmodi): das Umbrechen selbst ist jetzt schon in der
+       Basis-Regel (flex-wrap:wrap + max-width:94vw, wirkt auf jeder
+       Bildschirmgroesse), hier nur noch kompaktere Masse fuer schmale
+       Bildschirme. */
     .hud-bar {
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px 14px;
+      gap: 6px 12px;
       padding: 10px 16px;
-      width: min(94vw, 480px);
       font-size: 14px;
+    }
+    /* Aufgeben/Check-Knoepfe: auf schmalen Bildschirmen etwas kompakter,
+       damit sie nicht mit der jetzt evtl. mehrzeiligen HUD-Leiste kollidieren. */
+    .giveup-btn {
+      top: 8px;
+      right: 8px;
+      padding: 9px 14px;
+      font-size: 13px;
+    }
+    #btn-check, #btn-border-next, #btn-capital-check {
+      bottom: 16px;
+      padding: 12px 28px;
+      font-size: 15px;
     }
 
     /* Online-Duell */
