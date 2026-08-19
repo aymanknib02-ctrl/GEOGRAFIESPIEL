@@ -35,6 +35,14 @@
     color: #fff;
     overflow: hidden;
     position: relative;
+    /* Mobile Browser (v.a. Android Chrome) vergroessern Text automatisch ("Font
+       Boosting"), wenn sie eine stark herausgezoomte Desktop-Seite erkennen (genau das,
+       was der feste width=2400-Viewport bewirkt) - der Text wird dann groesser als die
+       Buttons/Boxen, die ihn umgeben, und wird abgeschnitten. Fest auf 100% pinnen,
+       damit Text IMMER exakt so gross skaliert wie der Rest der Seite. */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   /* Scrollbalken ueberall im Spiel unsichtbar machen (bleibt weiterhin scrollbar, nur
      der weisse Standard-Rahmen/Track verschwindet) - alle Browser-Engines abgedeckt. */
