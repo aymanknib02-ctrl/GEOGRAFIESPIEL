@@ -2,7 +2,13 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!-- Feste Breite statt device-width: das Spiel ist reines Desktop-Layout (keine
+     @media-Regeln), auf einem schmalen "device-width"-Viewport wuerden feste Pixel-
+     Breiten ueberlappen/abgeschnitten werden. Mit einer festen Layout-Breite skaliert
+     das Handy stattdessen die GESAMTE Seite automatisch verkleinert - sieht dadurch
+     exakt wie am PC aus, nur kleiner, statt umgebaut zu werden. Pinch-Zoom bleibt
+     erlaubt, damit man trotzdem noch genau tippen/lesen kann. -->
+<meta name="viewport" content="width=1280, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
